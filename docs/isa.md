@@ -107,16 +107,41 @@ These hard-code the full 24-bit address. All offsets are sign-extended into 24 b
 | 0x1d | st.l | reg, `reg8:reg16 + reg16` | 4 | Store to pair address + sign-extended reg offset | 8, 16 |
 | 0x1e-0x7f | Reserved | < | < | < | < |
 
+> [!todo] Add block move instructions
+> Add and document instructions like 65816's MVP/MVN
+
 ## Math (category 2)
 
 Unless stated otherwise, these instructions implicitly use and update the `flags` register. Notice the lack of long addressing;
 dereferencing 24-bit pointers for arithmetic must go through a long load first e.g. `ld.l a, [$012345]` -> `add b, a`. All pointer
 source operands implicitly dereference from `dp:ptr` with the exception of the stack pointer which is hardwired to use bank 4.
 
+Keep in mind that `mul` and `div` clobber `hi`: `mul` sets it to the high word of the multiplication and `div` sets it to the remainder.
+8-bit multiplication and division store an 8-bit byte in `mul` and zero-extends it.
+
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
 | 0x00 | add | reg, reg | 2 | Set reg1 = reg1 + reg2 | 8, 16 |
-| 0x01 | add | reg, imm | 2 | Set reg = reg + imm | 8, 16 |
+| 0x01 | add | reg, imm | 3 | Set reg = reg + imm | 8, 16 |
 | 0x02 | add | reg, regptr | 2 | Set reg = reg + value stored in `dp:regptr` | 8, 16 |
-| 0x03 | add | reg, immptr | 2 | Set reg = reg + value stored in `dp:immptr` | 8, 16 |
-| 0x04 | add | reg, regptr | 2 | Set reg = reg + value stored in `dp:immptr` | 8, 16 |
+| 0x03 | add | reg, immptr | 3 | Set reg = reg + value stored in `dp:immptr` | 8, 16 |
+| 0x04 | add | reg, regptr + simm16 | 3 | Set reg = reg + value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x05 | add | reg, regptr + reg16 | 3 | Set reg = reg + value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x06 | sub | reg, reg | 2 | Set reg1 = reg1 - reg2 | 8, 16 |
+| 0x07 | sub | reg, imm | 3 | Set reg = reg - imm | 8, 16 |
+| 0x08 | sub | reg, regptr | 2 | Set reg = reg - value stored in `dp:regptr` | 8, 16 |
+| 0x09 | sub | reg, immptr | 3 | Set reg = reg - value stored in `dp:immptr` | 8, 16 |
+| 0x0a | sub | reg, regptr + simm16 | 3 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x0b | sub | reg, regptr + reg16 | 3 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x0c | mul | reg, reg | 8 | Set reg1 = reg1 * reg2 | 8, 16 |
+| 0x0d | mul | reg, imm | 9 | Set reg = reg * imm | 8, 16 |
+| 0x0e | mul | reg, regptr | 8 | Set reg = reg * value stored in `dp:regptr` | 8, 16 |
+| 0x0f | mul | reg, immptr | 9 | Set reg = reg * value stored in `dp:immptr` | 8, 16 |
+| 0x10 | mul | reg, regptr + simm16 | 9 | Set reg = reg * value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x11 | mul | reg, regptr + reg16 | 9 | Set reg = reg * value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x12 | div | reg, reg | 10 | Set reg1 = reg1 / reg2| 8, 16 |
+| 0x13 | div | reg, imm | 11 | Set reg = reg / imm | 8, 16 |
+| 0x14 | div | reg, regptr | 10 | Set reg = reg / value stored in `dp:regptr` | 8, 16 |
+| 0x15 | div | reg, immptr | 11 | Set reg = reg / value stored in `dp:immptr` | 8, 16 |
+| 0x16 | div | reg, regptr + simm16 | 11 | Set reg = reg / value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x17 | div | reg, regptr + reg16 | 11 | Set reg = reg / value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
