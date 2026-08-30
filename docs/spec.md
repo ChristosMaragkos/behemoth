@@ -61,6 +61,7 @@ Thus, in bit notation, an opcode word looks like this: `rrr_rrr_s_ooooooooo`
 Effectively, the size bit serves only semantic purposes. This encoding format has its drawbacks:
 It's wasted space for instructions with fewer than two operands or only immediate operands,
 as those do not fit within the 6 operand bits.
+3 bits for each register operand maps, from 0-7, to: `a` through `f`, `sp`, `flags`.
 
 ## Opcode byte layout
 
