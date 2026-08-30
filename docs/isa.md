@@ -133,10 +133,37 @@ These hard-code the full 24-bit address. All offsets are sign-extended into 24 b
 | 0x1b | st.l | reg, `reg8:reg16` | 4 | Store to address formed by pair | 8, 16 |
 | 0x1c | st.l | reg, `reg8:reg16 + simm16` | 5 | Store to pair address + simm16 | 8, 16 |
 | 0x1d | st.l | reg, `reg8:reg16 + reg16` | 4 | Store to pair address + sign-extended reg offset | 8, 16 |
-| 0x1e-0x7f | Reserved | < | < | < | < |
 
-> [!todo] Add block move instructions
-> Add and document instructions like 65816's MVP/MVN
+### Block moves
+
+Block move instructions can be used to move data across the 24-bit address space without tedious `ld.l` -> `st.l` loops.
+They implicitly update both their register pair operands (as one 24-bit integer, so addition is carried) as well as their amount parameter,
+and the program counter is kept on that instruction until `amount = 0xFFFF`, meaning they are interruptible. No status flags are altered in the
+process. Consider this example:
+```asm
+ld al, $00
+ld b, $FFFF
+
+ld cl, $01
+ld d, $0000
+
+ld e, #299 ; N - 1 bytes
+
+blkcp al:b, cl:d, e
+; Every loop iteration:
+; - Copies one byte
+; - Increments b and d
+; - If b or d overflows, al or cl respectively is incremented
+; - Decrements e and stops if its new value is 0xFFFF
+```
+
+
+| Opcode | Mnemonic | Operands | Cycles | Notes | Size |
+| :---------------: | :---------------: | --------------- | :---------------: | --------------- | - |
+| 0x1e | BLKCP | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves (last register value + 1) bytes from first 24-bit pointer to second 24-bit pointer. | - |
+| 0x1f | BLKMV | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves bytes like `BLKCP` but in reverse order. | - |
+| 0x20-0x7f | Reserved | < | < | < | < |
+
 
 ## Math (category 2)
 
