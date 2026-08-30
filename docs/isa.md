@@ -19,8 +19,7 @@ For reference on instruction encoding, see [Specification - Encoding](./spec.md#
   - regptr: 16-bit register as pointer
   - immptr: 16-bit immediate as pointer
 - Cycles: how many cycles this opcode requires to finish
-- Notes: instruction details
-- Size: which size modes are supported by the instruction (determines size of `reg` operands)
+- Notes: instruction details Size: which size modes are supported by the instruction (determines size of `reg` operands)
 
 ## `SHOVE` opcode bitmask
 
@@ -42,6 +41,35 @@ The instruction takes 2 + 3n cycles (where `n` is the number of registers affect
 | 8 | pp |
 | 9 | dp |
 | 10-14 | Reserved |
+
+## Math opcodes & interaction with `FLAGS`
+
+| Mnemonic | Flags altered |
+| :-: | :-: |
+| add | Computes Z C N V |
+| sub | Computes Z C N V |
+| mulu | Computes Z N, sets C and V if hi != 0 (cleared otherwise) |
+| muls | Computes Z N, sets C and V if hi is not sign-extension of reg (cleared otherwise) |
+| divu | Computes Z N, clears C V (division by 0 sets V or raises exception) |
+| divs | Computes Z N, clears C, sets V on signed overflow (min_int / -1) |
+| adc | Computes Z C N V |
+| sbc | Computes Z C N V |
+| cmp | Computes Z C N V |
+| inc | Computes Z N V, preserves C |
+| dec | Computes Z N V, preserves C |
+| neg | Computes Z C N V (sets C if reg != 0, sets V on min_int overflow) |
+| and | Computes Z N, clears C V |
+| or | Computes Z N, clears C V |
+| xor | Computes Z N, clears C V |
+| bt | Computes Z N, clears C V |
+| not | Computes Z N, preserves C V |
+| lsl | Computes Z N, sets C to last bit shifted out, sets V if sign changes |
+| lsr | Computes Z N, sets C to last bit shifted out, clears V |
+| asr | Computes Z N, sets C to last bit shifted out, clears V |
+| rol | Computes Z N, sets C to wrapped MSB |
+| ror | Computes Z N, sets C to wrapped LSB |
+| rcl | Computes Z N, sets C to shifted-out MSB |
+| rcr | Computes Z N, sets C to shifted-out LSB |
 
 ## Misc (category 0)
 
@@ -119,6 +147,10 @@ source operands implicitly dereference from `dp:ptr` with the exception of the s
 Keep in mind that `mul` and `div` clobber `hi`: `mul` sets it to the high word of the multiplication and `div` sets it to the remainder.
 8-bit multiplication and division store an 8-bit byte in `mul` and zero-extends it.
 
+For a reference on which flags are altered by which opcodes, check [[#Math opcodes & interaction with `FLAGS`]]
+
+### Arithmetic operations
+
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
 | 0x00 | add | reg, reg | 2 | Set reg1 = reg1 + reg2 | 8, 16 |
@@ -157,3 +189,68 @@ Keep in mind that `mul` and `div` clobber `hi`: `mul` sets it to the high word o
 | 0x21 | divs | reg, immptr | 11 | Signed. Set reg = reg / value stored in `dp:immptr` | 8, 16 |
 | 0x22 | divs | reg, regptr + simm16 | 11 | Signed. Set reg = reg / value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
 | 0x23 | divs | reg, regptr + reg16 | 11 | Signed. Set reg = reg / value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x24 | adc | reg, reg | 2 | Set reg1 = reg1 + reg2 + 1 if carry flag is on | 8, 16 |
+| 0x25 | adc | reg, imm | 3 | Set reg = reg + imm + 1 if carry flag is on | 8, 16 |
+| 0x26 | adc | reg, regptr | 2 | Set reg = reg + value stored in `dp:regptr` + 1 if carry flag is on | 8, 16 |
+| 0x27 | adc | reg, immptr | 3 | Set reg = reg + value stored in `dp:immptr` + 1 if carry flag is on | 8, 16 |
+| 0x28 | adc | reg, regptr + simm16 | 3 | Set reg = reg + value stored in `dp:regptr` + signed 16-bit offset + 1 if carry flag is on | 8, 16 |
+| 0x29 | adc | reg, regptr + reg16 | 3 | Set reg = reg + value stored in `dp:regptr` + signed 16-bit offset + 1 if carry flag is on | 8, 16 |
+| 0x2a | sbc | reg, reg | 2 | Set reg1 = reg1 - reg2 - 1 if carry flag is on | 8, 16 |
+| 0x2b | sbc | reg, imm | 3 | Set reg = reg - imm - 1 if carry flag is on | 8, 16 |
+| 0x2c | sbc | reg, regptr | 2 | Set reg = reg - value stored in `dp:regptr` - 1 if carry flag is on | 8, 16 |
+| 0x2d | sbc | reg, immptr | 3 | Set reg = reg - value stored in `dp:immptr` - 1 if carry flag is on | 8, 16 |
+| 0x2e | sbc | reg, regptr + simm16 | 3 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset - 1 if carry flag is on| 8, 16 |
+| 0x2f | sbc | reg, regptr + reg16 | 3 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset - 1 if carry flag is on| 8, 16 |
+| 0x30 | cmp | reg, reg | 2 | Compute and discard reg1 = reg1 - reg2. Updates flags. | 8, 16 |
+| 0x31 | cmp | reg, imm | 3 | Compute and discard reg = reg - imm. Updates flags. | 8, 16 |
+| 0x32 | cmp | reg, regptr | 2 | Compute and discard reg = reg - value stored in `dp:regptr`. Updates flags. | 8, 16 |
+| 0x33 | cmp | reg, immptr | 3 | Compute and discard reg = reg - value stored in `dp:immptr`. Updates flags. | 8, 16 |
+| 0x34 | cmp | reg, regptr + simm16 | 3 | Compute and discard reg = reg - value stored in `dp:regptr` + signed 16-bit offset. Updates flags. | 8, 16 |
+| 0x35 | cmp | reg, regptr + reg16 | 3 | Compute and discard reg = reg - value stored in `dp:regptr` + signed 16-bit offset. Updates flags. | 8, 16 |
+| 0x36 | inc | reg | 2 | Increment register value by 1. Does not alter carry flag. | 8, 16 |
+| 0x37 | dec | reg | 2 | Decrement register value by 1. Does not alter carry flag. | 8, 16 |
+| 0x38 | neg | reg | 2 | Set value of register to 0 - value (two's complement negation) | 8, 16 |
+
+### Bitwise
+
+| Opcode | Mnemonic | Operands | Cycles | Notes | Size |
+| :----: | :------: | -------- | :----: | ----- | ---- |
+| 0x39 | and | reg, reg | 2 | Set reg1 = reg1 AND reg2 | 8, 16 |
+| 0x3a | and | reg, imm | 3 | Set reg = reg AND imm | 8, 16 |
+| 0x3b | and | reg, regptr | 2 | Set reg = reg AND value stored in `dp:regptr` | 8, 16 |
+| 0x3c | and | reg, immptr | 3 | Set reg = reg AND value stored in `dp:immptr` | 8, 16 |
+| 0x3d | and | reg, regptr + simm16 | 3 | Set reg = reg AND value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x3e | and | reg, regptr + reg16 | 3 | Set reg = reg AND value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x3f | or | reg, reg | 2 | Set reg1 = reg1 OR reg2 | 8, 16 |
+| 0x40 | or | reg, imm | 3 | Set reg = reg OR imm | 8, 16 |
+| 0x41 | or | reg, regptr | 2 | Set reg = reg OR value stored in `dp:regptr` | 8, 16 |
+| 0x42 | or | reg, immptr | 3 | Set reg = reg OR value stored in `dp:immptr` | 8, 16 |
+| 0x43 | or | reg, regptr + simm16 | 3 | Set reg = reg OR value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x44 | or | reg, regptr + reg16 | 3 | Set reg = reg OR value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x45 | xor | reg, reg | 2 | Set reg1 = reg1 XOR reg2 | 8, 16 |
+| 0x46 | xor | reg, imm | 3 | Set reg = reg XOR imm | 8, 16 |
+| 0x47 | xor | reg, regptr | 2 | Set reg = reg XOR value stxored in `dp:regptr` | 8, 16 |
+| 0x48 | xor | reg, immptr | 3 | Set reg = reg XOR value stxored in `dp:immptr` | 8, 16 |
+| 0x49 | xor | reg, regptr + simm16 | 3 | Set reg = reg XOR value stxored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x4a | xor | reg, regptr + reg16 | 3 | Set reg = reg XOR value stxored in `dp:regptr` + signed 16-bit offset | 8, 16 |
+| 0x4b | bt | reg, reg | 2 | Compute and discard reg1 = reg1 AND reg2. Updates Z flag. | 8, 16 |
+| 0x4c | bt | reg, imm | 3 | Compute and discard reg = reg AND imm. Updates Z flag. | 8, 16 |
+| 0x4d | bt | reg, regptr | 2 | Compute and discard reg = reg AND value stored in `dp:regptr`. Updates Z flag. | 8, 16 |
+| 0x4e | bt | reg, immptr | 3 | Compute and discard reg = reg AND value stored in `dp:immptr`. Updates Z flag. | 8, 16 |
+| 0x4f | bt | reg, regptr + simm16 | 3 | Compute and discard reg = reg AND value stored in `dp:regptr` + signed 16-bit offset. Updates Z flag. | 8, 16 |
+| 0x50 | bt | reg, regptr + reg16 | 3 | Compute and discard reg = reg AND value stored in `dp:regptr` + signed 16-bit offset. Updates Z flag. | 8, 16 |
+| 0x51 | not | reg | 2 | Set reg = NOT reg (bitwise invert) | 8, 16 |
+| 0x52 | lsl | reg, reg | 2 | Logical shift reg1 left by value of reg2 | 8, 16 |
+| 0x53 | lsl | reg, imm8 | 2 | Logical shift reg1 left by value of imm8 | 8, 16 |
+| 0x54 | lsr | reg, reg | 2 | Logical shift reg1 right by value of reg2 | 8, 16 |
+| 0x55 | lsr | reg, imm8 | 2 | Logical shift reg1 right by value of imm8 | 8, 16 |
+| 0x56 | asr | reg, reg | 2 | Arithmetic shift reg1 right by value of reg2 | 8, 16 |
+| 0x57 | asr | reg, imm8 | 2 | Arithmetic shift reg1 right by value of imm8 | 8, 16 |
+| 0x58 | rol | reg, reg | 2 | Rotate reg1 left by value of reg2 (bit shifted out of MSB goes back to the LSB) | 8, 16 |
+| 0x59 | rol | reg, imm8 | 2 | Rotate reg1 left by value of imm8 | 8, 16 |
+| 0x5a | ror | reg, reg | 2 | Rotate reg1 right by value of reg2 (bit shifted out of LSB goes back to the MSB) | 8, 16 |
+| 0x5b | ror | reg, imm8 | 2 | Rotate reg1 right by value of imm8 | 8, 16 |
+| 0x5c | rcl | reg, reg | 2 | Rotate reg1 left by value of reg2 through carry (MSB -> Carry flag -> LSB) | 8, 16 |
+| 0x5d | rcl | reg, imm8 | 2 | Rotate reg1 left by value of imm8 through carry | 8, 16 |
+| 0x5e | rcr | reg, reg | 2 | Rotate reg1 right by value of reg2 through carry (LSB -> Carry flag -> MSB) | 8, 16 |
+| 0x5f | rcr | reg, imm8 | 2 | Rotate reg1 right by value of imm8 through carry | 8, 16 |
