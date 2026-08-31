@@ -47,18 +47,15 @@ Note the lack of `sp` and `pp` from the bitmask; stack operations with them rang
 
 | Mnemonic | Flags altered |
 | :-: | :-: |
-| add | Computes Z C N V |
-| sub | Computes Z C N V |
+| add(.l) | Computes Z C N V |
+| sub(.l) | Computes Z C N V |
 | mulu | Computes Z N, sets C and V if hi != 0 (cleared otherwise) |
 | muls | Computes Z N, sets C and V if hi is not sign-extension of reg (cleared otherwise) |
 | divu | Computes Z N, clears C V (division by 0 sets V or raises exception) |
 | divs | Computes Z N, clears C, sets V on signed overflow (min_int / -1) |
 | adc | Computes Z C N V |
 | sbc | Computes Z C N V |
-| cmp | Computes Z C N V |
-| add.l | Computes Z C N V |
-| sub.l | Computes Z C N V |
-| cmp.l | Computes Z C N V |
+| cmp(.l) | Computes Z C N V |
 | inc | Computes Z N V, preserves C |
 | dec | Computes Z N V, preserves C |
 | neg | Computes Z C N V (sets C if reg != 0, sets V on min_int overflow) |
