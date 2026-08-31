@@ -144,6 +144,7 @@ Block move instructions can be used to move data across the 24-bit address space
 They implicitly update both their register pair operands (as one 24-bit integer, so addition is carried) as well as their amount parameter,
 and the program counter is kept on that instruction until `amount = 0xFFFF`, meaning they are interruptible. No status flags are altered in the
 process. Consider this example:
+
 ```asm
 ld al, $00
 ld b, $FFFF
@@ -161,13 +162,11 @@ blkcp al:b, cl:d, e
 ; - Decrements e and stops if its new value is 0xFFFF
 ```
 
-
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :---------------: | :---------------: | --------------- | :---------------: | --------------- | - |
 | 0x1e | BLKCP | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves (last register value + 1) bytes from first 24-bit pointer to second 24-bit pointer. | - |
 | 0x1f | BLKMV | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves bytes like `BLKCP` but in reverse order. | - |
 | 0x20-0x7f | Reserved | < | < | < | < |
-
 
 ## Math (category 2)
 
@@ -298,4 +297,50 @@ For a reference on which flags are altered by which opcodes, check [[#Math opcod
 | 0x63 | sub.l | reg16:reg16, imm32 | 4 | Set reg1:reg2 = reg1:reg2 - imm32 | - |
 | 0x64 | cmp.l | reg16:reg16, reg16:reg16 | 3 | Compute and discard reg1:reg2 - reg3:reg4. Updates flags. | - |
 | 0x65 | cmp.l | reg16:reg16, imm32 | 4 | Compute and discard reg1:reg2 - imm32. Updates flags. | - |
-| 0x66-0x7f | Reserved | < | < | < | < | 
+| 0x66-0x7f | Reserved | < | < | < | < |
+
+## Control flow (category 3)
+
+| Opcode | Mnemonic | Operands | Cycles | Notes | Size |
+| :----: | :------: | -------- | :----: | ----- | ---- |
+| 0x00 | call | imm16 | 5 | Push `pc` to stack and jump to 16-bit immediate address | - |
+| 0x01 | call | reg16 | 4 | Push `pc` to stack and jump to value stored in register | - |
+| 0x02 | jmp | imm16 | 4 | Jump to 16-bit immediate address | - |
+| 0x03 | jmp | reg16 | 3 | Jump to value stored in register | - |
+| 0x04 | ret | - | 3 | Pop `pc` from stack | - |
+| 0x05 | iret | - | 5 | Pop `pc`, `pp` and `flags` from stack | - |
+
+### Conditional jumps
+
+All of these instructions take signed immediate operands,
+which represent an offset (in bytes) from the position of the program counter *after* the conditional jump opcode.
+If an offset causes `pc` to overflow in either direction, `pp` is also bumped by 1 in the same direction.
+Branches incur a 1-cycle penalty when taken.
+
+| Opcode | Mnemonic | Operands | Cycles | Notes | Size |
+| :----: | :------: | -------- | :----: | ----- | ---- |
+| 0x06 | jz | simm | 4 (5 if taken) | Jump if zero flag set | - |
+| 0x07 | jnz | simm | 4 (5 if taken) | Jump if zero flag not set | - |
+| 0x08 | jc | simm | 4 (5 if taken) | Jump if carry flag set | - |
+| 0x09 | jnc | simm | 4 (5 if taken) | Jump if carry flag not set | - |
+| 0x0a | jmi | simm | 4 (5 if taken) | Jump if negative flag set | - |
+| 0x0b | jpl | simm | 4 (5 if taken) | Jump if negative flag not set | - |
+| 0x0c | jv | simm | 4 (5 if taken) | Jump if overflow flag set | - |
+| 0x0d | jnv | simm | 4 (5 if taken) | Jump if overflow flag not set | - |
+| 0x0e | jge | simm | 4 (5 if taken) | Jump if greater or equal (V = N) | - |
+| 0x0f | jgt | simm | 4 (5 if taken) | Jump if greater (Z not set, V = N) | - |
+| 0x10 | jle | simm | 4 (5 if taken) | Jump if less or equal (V != N) | - |
+| 0x11 | jlt | simm | 4 (5 if taken) | Jump if less (Z not set, V != N) | - |
+| 0x12 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
+
+### Long jumps
+
+These instructions use the same 24-bit addressing as loads and stores (though only with direct immediate and register addressing modes).
+
+| Opcode | Mnemonic | Operands | Cycles | Notes | Size |
+| :----: | :------: | -------- | :----: | ----- | ---- |
+| 0x13 | call.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x14 | call.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
+| 0x15 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x16 | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
+| 0x17 | ret.l | - | 4 | Pop `pc` and `pp` from stack | - |
