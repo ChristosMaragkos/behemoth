@@ -77,6 +77,7 @@ We use a 24-bit address bus, allowing us to use up to 16 megabytes of total memo
 To bypass the limitation of having 16-bit registers, we use internal page registers like the SNES' 65816:
 
 - `pp`: Program page. Supplies the top 8 bits of the 24-bit address that the program counter reads from (instructions fetch from `[pp:pc]`).
+If at any point the program counter exceeds `0xFFFF`, it wraps to zero and `pp` is incremented. Conversely, if `pc` underflows from zero, `pp` is decremented.
 - `dp`: Data page. Supplies the top 8 bits of the 24-bit address that load and store instructions operate on (by forming `[dp:reg16]`). The
 exception to this is the stack pointer which is hardwired to bank 4 (so dereferencing it loads from `[$04:sp]`).
 
