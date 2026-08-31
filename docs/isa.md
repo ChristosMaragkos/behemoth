@@ -92,7 +92,8 @@ Note the lack of `sp` and `pp` from the bitmask; stack operations with them rang
 | 0x0a |mtpp | reg8| 2 | Set value of `pp` to value of 8-bit register | 8 |
 | 0x0b |mfdp | reg8| 2 | Set value of 8-bit register to value of `dp` | 8 |
 | 0x0c |mtdp | reg8| 2 | Set value of `dp` to value of 8-bit register | 8 |
-| 0x0d-0x7f| Reserved |<|<|<|<|
+| 0x0d | swi | imm8 | 2 | Push `flags`, `pp`, `pc` to stack and jump to (IVT + 2 * imm8) | - |
+| 0x0e-0x7f| Reserved |<|<|<|<|
 
 ## Memory (category 1)
 
