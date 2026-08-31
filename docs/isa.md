@@ -27,6 +27,7 @@ For reference on instruction encoding, see [Specification - Encoding](./spec.md#
 The MSB of the 16-bit immediate operand of `shove` dictates whether the opcode pushes or pops registers.
 The rest dictate whether their respective register is affected.
 The instruction takes 3 + n cycles (where `n` is the number of registers affected) and is uninterruptible.
+Note the lack of `sp` and `pp` from the bitmask; stack operations with them range from useless to outright dangerous.
 
 | Bit   | Usage    |
 |:-------------: | --------------- |
@@ -39,9 +40,8 @@ The instruction takes 3 + n cycles (where `n` is the number of registers affecte
 | 5 | f |
 | 6 | flags |
 | 7 | hi |
-| 8 | pp |
-| 9 | dp |
-| 10-14 | Reserved |
+| 8 | dp |
+| 9-14 | Reserved |
 
 ## Math opcodes & interaction with `FLAGS`
 
