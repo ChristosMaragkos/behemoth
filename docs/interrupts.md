@@ -17,3 +17,19 @@ to avoid stack I/O.
 | `05:0009` | STOF | `sp` wraps from `$04:0000` back to `$04:FFFF` | No (fault) |
 | `05:000C` | STUF | `sp` wraps from `$04:FFFF` to `$04:0000` | No (fault) |
 | `05:0180` - `05:02FD` | Software Interrupts | Not used by the hardware, can be defined for use with `swi` | No (triggered deliberately) |
+
+When an interrupt fires:
+
+- `flags` is pushed to the stack (1 cycle)
+- `pp` is pushed to the stack (1 cycle)
+- `pc` is pushed to the stack (1 cycle)
+- The hardware fetches the address of the
+appropriate vector from the IVT (2 cycles because the address is 24-bit)
+- `pp` is set to its highest byte (1 cycle)
+- `pc` is set to its low 16 bits (1 cycle)
+
+Execution then resumes from the first instruction of the interrupt vector.
+The total setup overhead amounts to 7 CPU cycles and counts towards limited-duration hardware states
+(such as vertical blanking).
+
+To return from a handler, use the `iret` (`fret` for faults) instruction.
