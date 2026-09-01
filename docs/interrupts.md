@@ -1,3 +1,6 @@
+> [!todo]
+> Think about what other kinds of interrupts we need (such as timers, audio buffer underruns and what not)
+
 # Interrupts
 
 Starting at address `05:0000`, there exists a 256-entry interrupt vector table.
