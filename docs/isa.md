@@ -111,7 +111,7 @@ Note the lack of `sp` and `pp` from the bitmask; stack operations with them rang
 | 0x0a | st | reg, immptr | 4 | Store value of register into `dp:immptr` | 8, 16 |
 | 0x0b | st | reg, regptr + simm16 | 4 | Store value of register into address (`dp:regptr` + simm16) | 8, 16 |
 | 0x0c | st | reg, regptr + reg16 | 4 | Store value of register into address (`dp:regptr` + reg16) | 8, 16 |
-| 0x0d | st | reg, (regptr+) | 3 | Store value of register and increment pointer | 8, 16 |
+| 0x0d | st | reg, (regptr+) | 3 | Store value of register and increment pointer (by 1 in 8-bit mode, 2 in 16-bit mode) | 8, 16 |
 | 0x0e | st | reg, (+regptr) | 3 | Increment pointer and store register value | 8, 16 |
 | 0x0f | st | reg, (regptr-) | 3 | Store value of register and decrement pointer | 8, 16 |
 | 0x10 | st | reg, (-regptr) | 3 | Decrement pointer and store register value | 8, 16 |
