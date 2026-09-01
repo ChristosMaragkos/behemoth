@@ -57,7 +57,7 @@ Note the lack of `sp` and `pp` from the bitmask; stack operations with them rang
 | sbc | Computes Z C N V |
 | cmp(.l) | Computes Z C N V |
 | inc | Computes Z N V, preserves C |
-| dec | Computes Z N V, preserves C |
+| dec/djnz | Computes Z N V, preserves C |
 | neg | Computes Z C N V (sets C if reg != 0, sets V on min_int overflow) |
 | and | Computes Z N, clears C V |
 | or | Computes Z N, clears C V |
