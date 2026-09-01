@@ -308,6 +308,7 @@ For a reference on which flags are altered by which opcodes, check [[#Math opcod
 | 0x03 | jmp | reg16 | 3 | Jump to value stored in register | - |
 | 0x04 | ret | - | 3 | Pop `pc` from stack | - |
 | 0x05 | iret | - | 5 | Pop `pc`, `pp` and `flags` from stack | - |
+| 0x06 | fret | - | 5 | Return from fault. Load `pc`, `pp` and `flags` from `$05:0300`-`$05:0304` | - |
 
 ### Conditional jumps
 
@@ -318,19 +319,19 @@ Branches incur a 1-cycle penalty when taken.
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
-| 0x06 | jz | simm | 4 (5 if taken) | Jump if zero flag set | - |
-| 0x07 | jnz | simm | 4 (5 if taken) | Jump if zero flag not set | - |
-| 0x08 | jc | simm | 4 (5 if taken) | Jump if carry flag set | - |
-| 0x09 | jnc | simm | 4 (5 if taken) | Jump if carry flag not set | - |
-| 0x0a | jmi | simm | 4 (5 if taken) | Jump if negative flag set | - |
-| 0x0b | jpl | simm | 4 (5 if taken) | Jump if negative flag not set | - |
-| 0x0c | jv | simm | 4 (5 if taken) | Jump if overflow flag set | - |
-| 0x0d | jnv | simm | 4 (5 if taken) | Jump if overflow flag not set | - |
-| 0x0e | jge | simm | 4 (5 if taken) | Jump if greater or equal (V = N) | - |
-| 0x0f | jgt | simm | 4 (5 if taken) | Jump if greater (Z not set, V = N) | - |
-| 0x10 | jle | simm | 4 (5 if taken) | Jump if less or equal (V != N) | - |
-| 0x11 | jlt | simm | 4 (5 if taken) | Jump if less (Z not set, V != N) | - |
-| 0x12 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
+| 0x07 | jz | simm | 4 (5 if taken) | Jump if zero flag set | - |
+| 0x08 | jnz | simm | 4 (5 if taken) | Jump if zero flag not set | - |
+| 0x09 | jc | simm | 4 (5 if taken) | Jump if carry flag set | - |
+| 0x0a | jnc | simm | 4 (5 if taken) | Jump if carry flag not set | - |
+| 0x0b | jmi | simm | 4 (5 if taken) | Jump if negative flag set | - |
+| 0x0c | jpl | simm | 4 (5 if taken) | Jump if negative flag not set | - |
+| 0x0d | jv | simm | 4 (5 if taken) | Jump if overflow flag set | - |
+| 0x0e | jnv | simm | 4 (5 if taken) | Jump if overflow flag not set | - |
+| 0x0f | jge | simm | 4 (5 if taken) | Jump if greater or equal (V = N) | - |
+| 0x10 | jgt | simm | 4 (5 if taken) | Jump if greater (Z not set, V = N) | - |
+| 0x11 | jle | simm | 4 (5 if taken) | Jump if less or equal (V != N) | - |
+| 0x12 | jlt | simm | 4 (5 if taken) | Jump if less (Z not set, V != N) | - |
+| 0x13 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
 
 ### Long jumps
 
@@ -338,8 +339,9 @@ These instructions use the same 24-bit addressing as loads and stores (though on
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
-| 0x13 | call.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
-| 0x14 | call.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
-| 0x15 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
-| 0x16 | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
-| 0x17 | ret.l | - | 4 | Pop `pc` and `pp` from stack | - |
+| 0x14 | call.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x15 | call.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
+| 0x16 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x17 | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
+| 0x18 | ret.l | - | 4 | Pop `pc` and `pp` from stack | - |
+| 0x19-0x7f | Reserved | < | < | < | < |
