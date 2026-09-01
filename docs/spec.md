@@ -101,3 +101,9 @@ The 16mb address space is split into 256 banks of 64kb each, for the following r
 - Banks 6-197: Game ROM. The reset vector is located at `$06:0000`, so on boot, `pp` is set to `0x06` and `pc` to `0x0000`. Not writable.
 - Banks 198-201: Cartridge SRAM (the save file, if found at boot, is mapped here, and writes are flushed periodically).
 - Banks 202-255: Reserved for future expansion.
+
+# Cycle Budget
+
+- 122880 cycles per frame during active display. Horizontal blanking triggers 255 times per frame if not masked,
+and lasts 200 cycles. Vertical blanking lasts 12800 CPU cycles. In total 186680 cycles per frame. Targeting 60FPS, this
+amounts to a frequency of about 11.2MHz.
