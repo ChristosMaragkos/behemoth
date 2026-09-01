@@ -1,0 +1,19 @@
+# Interrupts
+
+Starting at address `05:0000`, there exists a 256-entry interrupt vector table.
+Each entry is a 3-byte (24-bit) absolute address pointing to an interrupt handler.
+These handlers are initialized to zero and must be set by the
+programmer at runtime (most likely during the reset vector, which is not part of this table and must physically exist at `$06:0000`).
+
+Maskable interrupts can be ignored by setting the `I` bit of the `flags` register to 1, or configuring other respective MMIO registers.
+Fault-type interrupts trigger before any side-effects occur, and they save and restore the pre-instruction state in `$05:0300`-`$05:0304`
+to avoid stack I/O.
+
+| Address | Name | Fired When | Maskable? |
+| :-------------: | --------------- | --------------- | --------------- |
+| `05:0000` | VBLNK | PPU finishes drawing frame | No |
+| `05:0003` | HBLNK | PPU finishes drawing scanline | Yes |
+| `05:0006` | DIV0 | `divu`/`divs` executed with zero for divisor | No (fault) |
+| `05:0009` | STOF | `sp` wraps from `$04:0000` back to `$04:FFFF` | No (fault) |
+| `05:000C` | STUF | `sp` wraps from `$04:FFFF` to `$04:0000` | No (fault) |
+| `05:0180` - `05:02FD` | Software Interrupts | Not used by the hardware, can be defined for use with `swi` | No (triggered deliberately) |
