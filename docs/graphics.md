@@ -119,7 +119,8 @@ is triggered, once again allowing free memory access for 25 scan lines' worth of
 
 # MMIO & Graphics
 
-The MMIO region for graphics begins at `$05:0500` and houses various control registers and mechanisms to access video memory:
+The MMIO region for graphics begins at `$05:0500` and houses various control registers and the video memory port.
+DMA controllers are documented in [dma.md](./dma.md).
 
 ## General PPU state handling
 
@@ -202,40 +203,3 @@ to have arrived to or from its destination by the time the CPU is executing its 
   - Bit 1: Direction. 0 -> read from video memory into `VMDATAL`/`VMDATAH`; 1 -> write `VMDATAL`/`VMDATAH` into video memory.
   - Bits 2-3: Destination select: 0 -> VRAM, 1 -> CRAM, 2 -> OAM, 3 -> reserved.
   - Bits 4-7: Reserved.
-
-## DMA
-
-The video memory DMA controller performs bulk transfers between the main 24-bit address space and one of the video memory
-spaces. Like the port, a single controller covers VRAM, CRAM and OAM by selecting the destination per transfer.
-
-Transfers always involve the main bus on one side (the source on uploads, the destination on readbacks) and exactly
-one video space on the other. Direct video-to-video transfers (e.g. VRAM -> OAM) are not supported.
-
-| Address | Name | Description | Read/Write? | Size (bytes) |
-| :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:0538` | DMACTRL | DMA control bitmask (see below) | RW | 1 |
-| `$05:0539` | DMASRC | 24-bit main bus source (upload) or destination (readback) address | RW | 3 |
-| `$05:053c` | DMADST | Destination address in the selected video space. 17-bit to cover VRAM; upper bits ignored for CRAM and OAM. | RW | 3 |
-| `$05:053f` | DMALEN | Transfer length in elements, where an element is one byte or one word depending on bit 3 of `DMACTRL` | RW | 2 |
-| `$05:0541` | DMASTAT | DMA status bitmask (see below) | R | 1 |
-| `$05:0542` | DMASTART | Write any value to start a transfer | W | 1 |
-
-- DMACTRL:
-  - Bits 0-1: Destination select: 0 -> VRAM, 1 -> CRAM, 2 -> OAM, 3 -> reserved.
-  - Bit 2: Direction. 0 -> main bus to video memory (upload). 1 -> video memory to main bus (readback).
-  - Bit 3: Width. 0 -> elements are bytes. 1 -> elements are words (2 bytes).
-  - Bits 4-7: Reserved.
-
-- DMASTAT:
-  - Bit 0: `BUSY`. Set to 1 while a transfer is in progress.
-  - Bit 1: `DONE`. Set when a transfer completes; cleared on read of `DMASTAT`.
-  - Bit 2: `ERROR`. Set when a transfer is started with an invalid configuration (e.g. an out-of-range source/destination) and the transfer does not start; cleared on read of `DMASTAT`.
-  - Bits 3-7: Reserved.
-
-When any value is written to `DMASTART`:
-
-- The CPU completely stops executing instructions
-- The DMA controller initializes and hijacks control of the memory bus with a 10 CPU cycle overhead
-- Data is blasted across at a rate of 1 CPU cycle per byte
-
-Afterwards, the DMA controller relinquishes the memory bus and execution resumes normally.
