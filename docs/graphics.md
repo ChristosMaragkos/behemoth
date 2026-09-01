@@ -27,8 +27,8 @@ Regardless of the value of color 0 in each palette, it is always treated as tran
 ## Tile data
 
 Tile maps cannot be streamed from CPU memory and must be uploaded to VRAM via DMA transfer (or individual byte writes if
-you are criminally insane). A single tile map can contain up to 1024 8x8 tiles and must be configured to use one color depth for
-all of them. Possible color depths include:
+you are criminally insane). A single tile map can contain up to 1024 8x8 tiles, and layers/OAM must be configured
+to use one color depth for all of their entries. Possible color depths include:
 
 - 1bpp: 1 -> color 1 in the selected palette, 0 -> color 0 (ergo transparent). 8 bytes per tile.
 - 4bpp: Can use all the colors in the selected palette. 32 bytes per tile.
@@ -116,3 +116,126 @@ to them produce bus contention, stalling the CPU for about 2 cycles while the I/
 At the end of each line, the horizontal blank (`HBLNK`) interrupt fires (if not masked), signaling that the PPU is done drawing
 and allowing free access to VRAM, OAM and CRAM for 200 CPU cycles. After all 240 lines have been drawn, the vertical blank (`VBLNK`) non-maskable interrupt
 is triggered, once again allowing free memory access for 25 scan lines' worth of PPU time (which translates to 12800 CPU cycles).
+
+# MMIO & Graphics
+
+The MMIO region for graphics begins at `$05:0500` and houses various control registers and mechanisms to access video memory:
+
+## General PPU state handling
+
+| Address | Name | Description | Read/Write? | Size (bytes) |
+| :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
+| `$05:0500` | PPUSTATUS | PPU status flags bitmask (see below) | R | 1 |
+| `$05:0501` | PPUCTRL | PPU control bitmask (see below) | RW | 1 |
+
+- PPUSTATUS:
+  - Bit 0: `VBLANK`. Set to 1 while the PPU is in vertical blank. Cleared when rendering resumes.
+  - Bit 1: `HBLANK`. Set to 1 while the PPU is in a horizontal blank. Cleared when active scan resumes on that line.
+  - Bit 2: `VBLANKPEND`. Set when v-blank fires and cleared on read of `PPUSTATUS`. Lets the game poll for a new frame without an interrupt.
+  - Bits 3-7: Reserved
+
+- PPUCTRL:
+  - Bit 0: Force blanking. Set to 1 to disable PPU rendering entirely and get free access to VRAM/OAM/CRAM on the main bus.
+  - Bit 1: Disables interrupt on v-blank if set to 1
+  - Bit 2: Disables interrupt on h-blank if set to 1
+  - Bits 3-7: Reserved
+
+## Background layers
+
+| Address | Name | Description | Read/Write? | Size (bytes) |
+| :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
+| `$05:0502` | BG1HOFS | 16-bit signed horizontal offset for background layer 1 | RW | 2 |
+| `$05:0504` | BG1VOFS | 16-bit signed vertical offset for background layer 1 | RW | 2 |
+| `$05:0506` | BG2HOFS | 16-bit signed horizontal offset for background layer 2 | RW | 2 |
+| `$05:0508` | BG2VOFS | 16-bit signed vertical offset for background layer 2 | RW | 2 |
+| `$05:050a` | BG3HOFS | 16-bit signed horizontal offset for background layer 3 | RW | 2 |
+| `$05:050c` | BG3VOFS | 16-bit signed vertical offset for background layer 3 | RW | 2 |
+| `$05:050e` | BG4HOFS | 16-bit signed horizontal offset for background layer 4 | RW | 2 |
+| `$05:0510` | BG4VOFS | 16-bit signed vertical offset for background layer 4 | RW | 2 |
+| `$05:0512` | BG1SRC  | 17-bit source address for background 1 entry data | RW | 3 |
+| `$05:0515` | BG2SRC  | 17-bit source address for background 2 entry data | RW | 3 |
+| `$05:0518` | BG3SRC  | 17-bit source address for background 3 entry data | RW | 3 |
+| `$05:051b` | BG4SRC  | 17-bit source address for background 4 entry data | RW | 3 |
+| `$05:051d` | BG1GFXSRC  | 17-bit source address for background 1 graphics data | RW | 3 |
+| `$05:0520` | BG2GFXSRC  | 17-bit source address for background 2 graphics data | RW | 3 |
+| `$05:0523` | BG3GFXSRC  | 17-bit source address for background 3 graphics data | RW | 3 |
+| `$05:0526` | BG4GFXSRC  | 17-bit source address for background 4 graphics data | RW | 3 |
+| `$05:0529` | BG1CTRL  | Background 1 control bitfield (see below) | RW | 1 |
+| `$05:052a` | BG2CTRL  | Background 2 control bitfield (see below) | RW | 1 |
+| `$05:052b` | BG3CTRL  | Background 3 control bitfield (see below) | RW | 1 |
+| `$05:052c` | BG4CTRL  | Background 4 control bitfield (see below) | RW | 1 |
+
+- BG*CTRL (`BG1CTRL`..`BG4CTRL`), identical layout for each layer:
+  - Bit 0: Enable. Set to 1 to draw this layer; if 0 the layer is skipped entirely.
+  - Bits 1-2: Color depth (see [[#Tile data]]): 0 -> 1bpp, 1 -> 4bpp, 2 -> 8bpp, 3 -> reserved.
+  - Bits 3-4: Layer size (see [[#Background layers]]): 0 -> 32x32, 1 -> 32x64, 2 -> 64x32, 3 -> 64x64.
+  - Bits 5-6: Priority (0-3), resolved against other layers/OAM as described in [[#Priority]].
+  - Bit 7: Reserved.
+
+## OAM
+
+| Address | Name | Description | Read/Write? | Size (bytes) |
+| :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
+| `$05:052d` | OAMGFXSRC  | 17-bit source address for OAM graphics data | RW | 3 |
+| `$05:0530` | OAMCTRL  | OAM control bitfield (see below) | RW | 1 |
+
+- OAMCTRL:
+  - Bits 0-1: Color depth for all sprites (see [[#Tile data]]): 0 -> 1bpp, 1 -> 4bpp, 2 -> 8bpp, 3 -> reserved.
+  - Bits 2-7: Reserved.
+
+## Off-bus data access
+
+These registers allow you to read and write data from and to VRAM, CRAM or OAM without a DMA transfer.
+Note that using the video memory port outside of a blanking period (v-blank or h-blank) will result in bus contention. The data is guaranteed
+to have arrived to or from its destination by the time the CPU is executing its next instruction.
+
+| Address | Name | Description | Read/Write? | Size (bytes) |
+| :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
+| `$05:0531` | VMPCTRL | Video memory port control bitmask (see below) | RW | 1 |
+| `$05:0532` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. 17-bit due to 128kb VRAM. | RW | 3 |
+| `$05:0535` | VMDATAL | Low byte of word to write to (or read from) video memory | RW | 1 |
+| `$05:0536` | VMDATAH | High byte of word to write to (or read from) video memory | RW | 1 |
+| `$05:0537` | VMPSTART | Write here to execute read/write operation | RW | 1 |
+
+- VMPCTRL:
+  - Bit 0: Width. 0 -> byte operations, incrementing `VMADDR` by 1 and only using `VMDATAL`; 1 -> word operations, incrementing `VMADDR` by 2 and using both `VMDATAL` and `VMDATAH`.
+  - Bit 1: Direction. 0 -> read from video memory into `VMDATAL`/`VMDATAH`; 1 -> write `VMDATAL`/`VMDATAH` into video memory.
+  - Bits 2-3: Destination select: 0 -> VRAM, 1 -> CRAM, 2 -> OAM, 3 -> reserved.
+  - Bits 4-7: Reserved.
+
+## DMA
+
+The video memory DMA controller performs bulk transfers between the main 24-bit address space and one of the video memory
+spaces. Like the port, a single controller covers VRAM, CRAM and OAM by selecting the destination per transfer.
+
+Transfers always involve the main bus on one side (the source on uploads, the destination on readbacks) and exactly
+one video space on the other. Direct video-to-video transfers (e.g. VRAM -> OAM) are not supported.
+
+| Address | Name | Description | Read/Write? | Size (bytes) |
+| :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
+| `$05:0538` | DMACTRL | DMA control bitmask (see below) | RW | 1 |
+| `$05:0539` | DMASRC | 24-bit main bus source (upload) or destination (readback) address | RW | 3 |
+| `$05:053c` | DMADST | Destination address in the selected video space. 17-bit to cover VRAM; upper bits ignored for CRAM and OAM. | RW | 3 |
+| `$05:053f` | DMALEN | Transfer length in elements, where an element is one byte or one word depending on bit 3 of `DMACTRL` | RW | 2 |
+| `$05:0541` | DMASTAT | DMA status bitmask (see below) | R | 1 |
+| `$05:0542` | DMASTART | Write any value to start a transfer | W | 1 |
+
+- DMACTRL:
+  - Bits 0-1: Destination select: 0 -> VRAM, 1 -> CRAM, 2 -> OAM, 3 -> reserved.
+  - Bit 2: Direction. 0 -> main bus to video memory (upload). 1 -> video memory to main bus (readback).
+  - Bit 3: Width. 0 -> elements are bytes. 1 -> elements are words (2 bytes).
+  - Bits 4-7: Reserved.
+
+- DMASTAT:
+  - Bit 0: `BUSY`. Set to 1 while a transfer is in progress.
+  - Bit 1: `DONE`. Set when a transfer completes; cleared on read of `DMASTAT`.
+  - Bit 2: `ERROR`. Set when a transfer is started with an invalid configuration (e.g. an out-of-range source/destination) and the transfer does not start; cleared on read of `DMASTAT`.
+  - Bits 3-7: Reserved.
+
+When any value is written to `DMASTART`:
+
+- The CPU completely stops executing instructions
+- The DMA controller initializes and hijacks control of the memory bus with a 10 CPU cycle overhead
+- Data is blasted across at a rate of 1 CPU cycle per byte
+
+Afterwards, the DMA controller relinquishes the memory bus and execution resumes normally.
