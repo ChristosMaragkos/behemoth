@@ -151,19 +151,19 @@ ld b, $FFFF
 ld cl, $01
 ld d, $0000
 
-ld e, #299 ; N - 1 bytes
+ld e, #300 ; N
 
 blkcp al:b, cl:d, e
 ; Every loop iteration:
 ; - Copies one byte
 ; - Increments b and d
 ; - If b or d overflows, al or cl respectively is incremented
-; - Decrements e and stops if its new value is 0xFFFF
+; - Decrements e and stops if its new value is 0
 ```
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :---------------: | :---------------: | --------------- | :---------------: | --------------- | - |
-| 0x1e | BLKCP | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves (last register value + 1) bytes from first 24-bit pointer to second 24-bit pointer. | - |
+| 0x1e | BLKCP | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves (last register value) bytes from first 24-bit pointer to second 24-bit pointer. | - |
 | 0x1f | BLKMV | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves bytes like `BLKCP` but in reverse order. | - |
 | 0x20-0x7f | Reserved | < | < | < | < |
 
