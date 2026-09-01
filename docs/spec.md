@@ -90,16 +90,14 @@ which take either a 24-bit absolute address or a register pair, such as:
 - `ret.l` -> pop `pc` and `pp` from stack.
 - `ld.l a, [b:c]` -> load from 24-bit address formed by the low 8 bits of `b` as the highest byte, and the entirety of `c`.
 
-## Memory budgets
+## Memory map
 
-Directly addressable by the CPU:
+The 16mb address space is split into 256 banks of 64kb each, for the following regions:
 
-- 256kb work RAM
-- 2-4kb (undecided) dedicated to MMIO and 2 expansion ports
-- 1mb (yes, megabyte) mapped to cartridge SRAM (for save files)
-- The rest of the 16mb address space will be split between mapped ROM and reserved space.
-
-Not directly addressable, but reachable via DMA/MMIO:
-
-- 64kb video RAM
-- 16kb audio RAM (only 32 bytes used right now, for wavetable, the rest is reserved for future expansion)
+- Banks 0-3: WRAM (256kb)
+- Bank 4: Stack (64kb)
+- Bank 5: Interrupt vector table (256 24-bit little endian addresses), memory-mapped registers, DMA controllers, 2 expansion ports
+  - The reset vector is not part of the IVT, and is instead located at `0x0000` within the ROM-mapped region. More below.
+- Banks 6-197: Game ROM. The reset vector is located at `$06:0000`, so on boot, `pp` is set to `0x06` and `pc` to `0x0000`. Not writable.
+- Banks 198-201: Cartridge SRAM (the save file, if found at boot, is mapped here, and writes are flushed periodically).
+- Banks 202-255: Reserved for future expansion.
