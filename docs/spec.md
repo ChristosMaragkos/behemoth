@@ -97,7 +97,8 @@ The 16mb address space is split into 256 banks of 64kb each, for the following r
 
 - Banks 0-3: WRAM (256kb)
 - Bank 4: Stack (64kb)
-- Bank 5: Interrupt vector table (256 24-bit little endian addresses), memory-mapped registers, DMA controllers, 2 expansion ports
+- Bank 5: Interrupt vector table (256 24-bit little endian addresses), memory-mapped registers (PPU, APU), 3 DMA
+  controllers, 2 expansion ports
   - The reset vector is not part of the IVT, and is instead located at `0x0000` within the ROM-mapped region. More below.
 - Banks 6-197: Game ROM. The reset vector is located at `$06:0000`, so on boot, `pp` is set to `0x06` and `pc` to `0x0000`. Not writable.
 - Banks 198-201: Cartridge SRAM (the save file, if found at boot, is mapped here, and writes are flushed periodically).
