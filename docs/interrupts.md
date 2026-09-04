@@ -1,6 +1,3 @@
-> [!todo]
-> Think about what other kinds of interrupts we need (such as timers, audio buffer underruns and what not)
-
 # Interrupts
 
 Starting at address `05:0000`, there exists a 256-entry interrupt vector table.
@@ -34,5 +31,13 @@ appropriate vector from the IVT (2 cycles because the address is 24-bit)
 Execution then resumes from the first instruction of the interrupt vector.
 The total setup overhead amounts to 7 CPU cycles and counts towards limited-duration hardware states
 (such as vertical blanking).
+
+When a fault is triggered:
+
+- `flags` is stored to `$05:0300`-`$05:0301`
+- `pp` is stored to `$05:0302`
+- `pc` is stored to `$05:0303`-`$05:0304`
+
+The registers are then loaded from the same addresses once handling is finished.
 
 To return from a handler, use the `iret` (`fret` for faults) instruction.
