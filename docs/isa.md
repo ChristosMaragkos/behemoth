@@ -319,18 +319,18 @@ Branches incur a 1-cycle penalty when taken.
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
-| 0x07 | jz | simm | 4 (5 if taken) | Jump if zero flag set | - |
-| 0x08 | jnz | simm | 4 (5 if taken) | Jump if zero flag not set | - |
-| 0x09 | jc | simm | 4 (5 if taken) | Jump if carry flag set | - |
-| 0x0a | jnc | simm | 4 (5 if taken) | Jump if carry flag not set | - |
-| 0x0b | jmi | simm | 4 (5 if taken) | Jump if negative flag set | - |
-| 0x0c | jpl | simm | 4 (5 if taken) | Jump if negative flag not set | - |
-| 0x0d | jv | simm | 4 (5 if taken) | Jump if overflow flag set | - |
-| 0x0e | jnv | simm | 4 (5 if taken) | Jump if overflow flag not set | - |
-| 0x0f | jge | simm | 4 (5 if taken) | Jump if greater or equal (V = N) | - |
-| 0x10 | jgt | simm | 4 (5 if taken) | Jump if greater (Z not set, V = N) | - |
-| 0x11 | jle | simm | 4 (5 if taken) | Jump if less or equal (V != N) | - |
-| 0x12 | jlt | simm | 4 (5 if taken) | Jump if less (Z not set, V != N) | - |
+| 0x07 | jz | simm | 4 (5 if taken) | Jump if zero flag set | 8, 16 |
+| 0x08 | jnz | simm | 4 (5 if taken) | Jump if zero flag not set | 8, 16 |
+| 0x09 | jc | simm | 4 (5 if taken) | Jump if carry flag set | 8, 16 |
+| 0x0a | jnc | simm | 4 (5 if taken) | Jump if carry flag not set | 8, 16 |
+| 0x0b | jmi | simm | 4 (5 if taken) | Jump if negative flag set | 8, 16 |
+| 0x0c | jpl | simm | 4 (5 if taken) | Jump if negative flag not set | 8, 16 |
+| 0x0d | jv | simm | 4 (5 if taken) | Jump if overflow flag set | 8, 16 |
+| 0x0e | jnv | simm | 4 (5 if taken) | Jump if overflow flag not set | 8, 16 |
+| 0x0f | jge | simm | 4 (5 if taken) | Jump if greater or equal (V = N) | 8, 16 |
+| 0x10 | jgt | simm | 4 (5 if taken) | Jump if greater (Z not set, V = N) | 8, 16 |
+| 0x11 | jle | simm | 4 (5 if taken) | Jump if less or equal (V != N) | 8, 16 |
+| 0x12 | jlt | simm | 4 (5 if taken) | Jump if less (Z not set, V != N) | 8, 16 |
 | 0x13 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
 
 ### Long jumps
