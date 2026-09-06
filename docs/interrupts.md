@@ -16,6 +16,7 @@ to avoid stack I/O.
 | `05:0006` | DIV0 | `divu`/`divs` executed with zero for divisor | No (fault) |
 | `05:0009` | STOF | `sp` wraps from `$04:0000` back to `$04:FFFF` | No (fault) |
 | `05:000C` | STUF | `sp` wraps from `$04:FFFF` to `$04:0000` | No (fault) |
+| `05:000F` | INVOP | CPU tries to execute invalid/reserved opcode | No (fault) |
 | `05:0180` - `05:02FD` | Software Interrupts | Not used by the hardware, can be defined for use with `swi` | No (triggered deliberately) |
 
 When an interrupt fires:
