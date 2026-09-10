@@ -1,35 +1,33 @@
-package behemoth
+package memory
 
 PAGE_SIZE :: 64 * 1024 // 64kb per page
 RAM_SIZE_TOTAL :: 256 * PAGE_SIZE // 256 pages total -> 16mb address space
 
+CART_ROM_START :: 6 * PAGE_SIZE
+CART_ROM_END :: 197 * PAGE_SIZE - 1 // The final address, not the start of the next region
+
 ADDRESS_BITMASK :: 0b111111111111111111111111 // 24-bit address space
 
-MainRam :: distinct [RAM_SIZE_TOTAL]byte
+IVT_PAGE :: 0x05
+IVT_START_OFFS :: 0x0000
 
-calculate_address :: #force_inline proc(page: u8, offset: u16) -> u32 {
-	return u32(page << 16) | u32(offset)
-}
+MainRam :: [RAM_SIZE_TOTAL]byte
 
-ram_read_byte :: proc(memory: []byte, page: u8, offset: u16) -> byte {
-	address := calculate_address(page, offset)
+ram_read_byte :: proc(memory: []byte, address: u32) -> byte {
 	return memory[address]
 }
 
-ram_read_word :: proc(memory: []byte, page: u8, offset: u16) -> u16 {
-	address := calculate_address(page, offset)
+ram_read_word :: proc(memory: []byte, address: u32) -> u16 {
 	low := memory[address]
 	high := memory[address + 1]
 	return (u16(high) << 8) | u16(low)
 }
 
-ram_write_byte :: proc(memory: []byte, page: u8, offset: u16, value: byte) {
-	address := calculate_address(page, offset)
+ram_write_byte :: proc(memory: []byte, address: u32, value: byte) {
 	memory[address] = value
 }
 
-ram_write_word :: proc(memory: []byte, page: u8, offset: u16, value: u16) {
-	address := calculate_address(page, offset)
+ram_write_word :: proc(memory: []byte, address: u32, value: u16) {
 	memory[address] = u8(value)
 	memory[address + 1] = u8(value >> 8)
 }
