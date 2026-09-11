@@ -133,6 +133,18 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_ld_reg_regptr(instr.size, instr.reg1, instr.reg2, cpu)
 				case .Ld_Reg_ImmPtr:
 					exec_ld_reg_immptr(instr.size, instr.reg1, cpu)
+				case .Ld_Reg_ImmOffs:
+					exec_ld_reg_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_Reg_RegOffs:
+					exec_ld_reg_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_Reg_RegPtr_PostInc:
+					exec_ld_reg_regptr_postinc(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_Reg_RegPtr_PreInc:
+					exec_ld_reg_regptr_preinc(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_Reg_RegPtr_PostDec:
+					exec_ld_reg_regptr_postdec(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_Reg_RegPtr_PreDec:
+					exec_ld_reg_regptr_predec(instr.size, instr.reg1, instr.reg2, cpu)
 			}
 		case .Math:
 		case .ControlFlow:
