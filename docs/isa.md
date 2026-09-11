@@ -28,7 +28,7 @@ The MSB of the 16-bit immediate operand of `shove` dictates whether the opcode p
 The rest dictate whether their respective register is affected.
 The instruction takes 3 + n cycles (where `n` is the number of registers affected) and is uninterruptible.
 Note the lack of `sp` and `pp` from the bitmask; stack operations with them range from useless to outright dangerous.
-Also, 8-bit registers are always zero-extended to a word when pushed to keep the stack word-aligned. Pops of them discard the high byte.
+Pushing occurs in ascending order (a->dp) while popping is done in descending order (dp->a).
 
 | Bit   | Usage    |
 |:-------------: | --------------- |
