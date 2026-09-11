@@ -10,6 +10,14 @@ MemoryOpcodes :: enum u8 {
 	Ld_Reg_RegPtr_PreInc,
 	Ld_Reg_RegPtr_PostDec,
 	Ld_Reg_RegPtr_PreDec,
+	St_Reg_RegPtr,
+	St_Reg_ImmPtr,
+	St_Reg_ImmOffs,
+	St_Reg_RegOffs,
+	St_Reg_RegPtr_PostInc,
+	St_Reg_RegPtr_PreInc,
+	St_Reg_RegPtr_PostDec,
+	St_Reg_RegPtr_PreDec,
 }
 
 exec_ld_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
@@ -72,8 +80,7 @@ exec_ld_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 exec_ld_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
-	reg_offs := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
-	offs := reg_offs.full
+	offs := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111).full
 	addr := u16(i16(r2.full) + i16(offs))
 
 	switch size {
@@ -147,5 +154,113 @@ exec_ld_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 			r2.full -= size_of(u8)
 			val := cpu_dp_fetch_byte(cpu, r2.full)
 			r1.low = val
+	}
+}
+
+exec_st_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+
+	switch size {
+		case .Word:
+			cpu_dp_store_word(cpu, r2.full, r1.full)
+		case .Byte:
+			cpu_dp_store_byte(cpu, r2.full, r1.low)
+	}
+}
+
+exec_st_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	immptr := cpu_pc_fetch_word(cpu)
+
+	switch size {
+		case .Word:
+			cpu_dp_store_word(cpu, immptr, r1.full)
+		case .Byte:
+			cpu_dp_store_byte(cpu, immptr, r1.low)
+	}
+}
+
+exec_st_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	offs := cpu_pc_fetch_word(cpu)
+	addr := u16(i16(r2.full) + i16(offs))
+
+	switch size {
+		case .Word:
+			cpu_dp_store_word(cpu, addr, r1.full)
+		case .Byte:
+			cpu_dp_store_byte(cpu, addr, r1.low)
+	}
+}
+
+exec_st_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	offs := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111).full
+	addr := u16(i16(r2.full) + i16(offs))
+
+	switch size {
+		case .Word:
+			cpu_dp_store_word(cpu, addr, r1.full)
+		case .Byte:
+			cpu_dp_store_byte(cpu, addr, r1.low)
+	}
+}
+
+exec_st_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+
+	switch size {
+		case .Word:
+			cpu_dp_store_word(cpu, r2.full, r1.full)
+			r2.full += size_of(u16)
+		case .Byte:
+			cpu_dp_store_byte(cpu, r2.full, r1.low)
+			r2.full += size_of(u8)
+	}
+}
+
+exec_st_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+
+	switch size {
+		case .Word:
+			r2.full += size_of(u16)
+			cpu_dp_store_word(cpu, r2.full, r1.full)
+		case .Byte:
+			r2.full += size_of(u8)
+			cpu_dp_store_byte(cpu, r2.full, r1.low)
+	}
+}
+
+exec_st_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+
+	switch size {
+		case .Word:
+			cpu_dp_store_word(cpu, r2.full, r1.full)
+			r2.full -= size_of(u16)
+		case .Byte:
+			cpu_dp_store_byte(cpu, r2.full, r1.low)
+			r2.full -= size_of(u8)
+	}
+}
+
+exec_st_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+
+	switch size {
+		case .Word:
+			r2.full -= size_of(u16)
+			cpu_dp_store_word(cpu, r2.full, r1.full)
+		case .Byte:
+			r2.full -= size_of(u8)
+			cpu_dp_store_byte(cpu, r2.full, r1.low)
 	}
 }
