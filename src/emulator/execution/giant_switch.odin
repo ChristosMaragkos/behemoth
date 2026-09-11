@@ -108,6 +108,12 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_st_l_regpair_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
 				case .St_L_RegPair_RegOffs:
 					exec_st_l_regpair_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Blkcp:
+					exec_blkcp(instr.reg1, instr.reg2, cpu)
+				case .Blkmv:
+					exec_blkmv(instr.reg1, instr.reg2, cpu)
+				case:
+					cpu_trigger_interrupt(cpu, INVALID_OPCODE_VEC_IDX, true)
 			}
 		case .Math:
 		case .ControlFlow:

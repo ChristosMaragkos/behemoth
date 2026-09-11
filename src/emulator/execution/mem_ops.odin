@@ -33,6 +33,8 @@ MemoryOpcodes :: enum u8 {
 	St_L_RegPair,
 	St_L_RegPair_ImmOffs,
 	St_L_RegPair_RegOffs,
+	Blkcp,
+	Blkmv,
 }
 
 exec_ld_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
@@ -481,4 +483,70 @@ exec_st_l_regpair_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 		case .Byte:
 			cpu_write_byte(cpu, addr, r1.low)
 	}
+}
+
+exec_blkcp :: proc(reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+
+	next_byte := cpu_pc_fetch_byte(cpu)
+
+	r3 := cpu_get_reg(cpu, next_byte & 0b111)
+	r4 := cpu_get_reg(cpu, (next_byte >> 3) & 0b111)
+
+	next_byte = cpu_pc_fetch_byte(cpu)
+	r5 := cpu_get_reg(cpu, next_byte & 0b111)
+
+	amnt := r5.full
+	if amnt == 0 do return
+
+	src_addr := memory.calculate_address(r1.low, r2.full)
+	dest_addr := memory.calculate_address(r3.low, r4.full)
+
+	src_byte := cpu_read_byte(cpu, src_addr)
+	cpu_write_byte(cpu, dest_addr, src_byte)
+	src_addr += 1
+	dest_addr += 1
+
+	r1.low = u8(src_addr >> 16)
+	r2.full = u16(src_addr)
+
+	r3.low = u8(dest_addr >> 16)
+	r4.full = u16(dest_addr)
+
+	r5.full -= 1
+	cpu_advance_pc(cpu, -1 * cpu.pc_delta) // maybe replace this with a constant since we know the opcode size
+}
+
+exec_blkmv :: proc(reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+
+	next_byte := cpu_pc_fetch_byte(cpu)
+
+	r3 := cpu_get_reg(cpu, next_byte & 0b111)
+	r4 := cpu_get_reg(cpu, (next_byte >> 3) & 0b111)
+
+	next_byte = cpu_pc_fetch_byte(cpu)
+	r5 := cpu_get_reg(cpu, next_byte & 0b111)
+
+	amnt := r5.full
+	if amnt == 0 do return
+
+	src_addr := memory.calculate_address(r1.low, r2.full)
+	dest_addr := memory.calculate_address(r3.low, r4.full)
+
+	src_byte := cpu_read_byte(cpu, src_addr + u32(amnt - 1))
+	cpu_write_byte(cpu, dest_addr + u32(amnt - 1), src_byte)
+	src_addr += 1
+	dest_addr += 1
+
+	r1.low = u8(src_addr >> 16)
+	r2.full = u16(src_addr)
+
+	r3.low = u8(dest_addr >> 16)
+	r4.full = u16(dest_addr)
+
+	r5.full -= 1
+	cpu_advance_pc(cpu, -1 * cpu.pc_delta)
 }
