@@ -164,8 +164,8 @@ blkcp al:b, cl:d, e
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :---------------: | :---------------: | --------------- | :---------------: | --------------- | - |
-| 0x1e | BLKCP | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves (last register value) bytes from first 24-bit pointer to second 24-bit pointer. | - |
-| 0x1f | BLKMV | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves bytes like `BLKCP` but in reverse order. | - |
+| 0x1e | blkcp | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves (last register value) bytes from first 24-bit pointer to second 24-bit pointer. | - |
+| 0x1f | blkmv | reg8:reg16, reg8:reg16, reg16 | 6/byte | Moves bytes like `BLKCP` but in reverse order. | - |
 | 0x20-0x7f | Reserved | < | < | < | < |
 
 ## Math (category 2)
