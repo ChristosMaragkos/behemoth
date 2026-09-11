@@ -1,12 +1,8 @@
 package execution
 
-import "../memory"
-
 cpu_fetch_instruction :: proc(cpu: ^Cpu) -> Instruction {
-	addr := memory.calculate_address(cpu.pp, cpu.pc)
 	cpu.pc_delta = 0
-	cpu_advance_pc(cpu, size_of(u16))
-	return Instruction(cpu_read_word(cpu, addr))
+	return Instruction(cpu_pc_fetch_word(cpu))
 }
 
 cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
@@ -92,6 +88,26 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_pop(instr.reg1, cpu)
 				case .Shove:
 					exec_shove(cpu)
+				case .Ld_L_Ptr24:
+					exec_ld_l_ptr24(instr.size, instr.reg1, cpu)
+				case .Ld_L_Ptr24_RegOffs:
+					exec_ld_l_ptr24_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_L_RegPair:
+					exec_ld_l_regpair(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_L_RegPair_ImmOffs:
+					exec_ld_l_regpair_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ld_L_RegPair_RegOffs:
+					exec_ld_l_regpair_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .St_L_Ptr24:
+					exec_st_l_ptr24(instr.size, instr.reg1, cpu)
+				case .St_L_Ptr24_RegOffs:
+					exec_st_l_ptr24_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .St_L_RegPair:
+					exec_st_l_regpair(instr.size, instr.reg1, instr.reg2, cpu)
+				case .St_L_RegPair_ImmOffs:
+					exec_st_l_regpair_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .St_L_RegPair_RegOffs:
+					exec_st_l_regpair_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
 			}
 		case .Math:
 		case .ControlFlow:

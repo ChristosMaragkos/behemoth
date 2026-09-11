@@ -1,5 +1,7 @@
 package execution
 
+import "../memory"
+
 MemoryOpcodes :: enum u8 {
 	Ld_Reg_Imm,
 	Ld_Reg_RegPtr,
@@ -21,6 +23,16 @@ MemoryOpcodes :: enum u8 {
 	Push,
 	Pop,
 	Shove,
+	Ld_L_Ptr24,
+	Ld_L_Ptr24_RegOffs,
+	Ld_L_RegPair,
+	Ld_L_RegPair_ImmOffs,
+	Ld_L_RegPair_RegOffs,
+	St_L_Ptr24,
+	St_L_Ptr24_RegOffs,
+	St_L_RegPair,
+	St_L_RegPair_ImmOffs,
+	St_L_RegPair_RegOffs,
 }
 
 exec_ld_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
@@ -308,5 +320,165 @@ exec_shove :: proc(cpu: ^Cpu) {
 		for idx: i16 = i16(ShoveValues.F); idx >= i16(ShoveValues.A); idx -= 1 { 	// just what the hell is this monstrosity
 			if ShoveValues(idx) in bitmask do cpu_pop(cpu, RegName(idx))
 		}
+	}
+}
+
+exec_ld_l_ptr24 :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	offs := cpu_pc_fetch_word(cpu)
+	page := cpu_pc_fetch_byte(cpu)
+	addr := memory.calculate_address(page, offs)
+
+	switch size {
+		case .Word:
+			val := cpu_read_word(cpu, addr)
+			r1.full = val
+		case .Byte:
+			val := cpu_read_byte(cpu, addr)
+			r1.low = val
+	}
+}
+
+exec_ld_l_ptr24_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	offs := cpu_pc_fetch_word(cpu)
+	page := cpu_pc_fetch_byte(cpu)
+	addr := u32(i32(memory.calculate_address(page, offs)) + i32(i16(r2.full)))
+
+	switch size {
+		case .Word:
+			val := cpu_read_word(cpu, addr)
+			r1.full = val
+		case .Byte:
+			val := cpu_read_byte(cpu, addr)
+			r1.low = val
+	}
+}
+
+exec_ld_l_regpair :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
+	addr := memory.calculate_address(r2.low, r3.full)
+
+	switch size {
+		case .Word:
+			val := cpu_read_word(cpu, addr)
+			r1.full = val
+		case .Byte:
+			val := cpu_read_byte(cpu, addr)
+			r1.low = val
+	}
+}
+
+exec_ld_l_regpair_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
+	offs := cpu_pc_fetch_word(cpu)
+	addr := u32(i32(memory.calculate_address(r2.low, r3.full)) + i32(i16(offs)))
+
+	switch size {
+		case .Word:
+			val := cpu_read_word(cpu, addr)
+			r1.full = val
+		case .Byte:
+			val := cpu_read_byte(cpu, addr)
+			r1.low = val
+	}
+}
+
+exec_ld_l_regpair_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	next_byte := cpu_pc_fetch_byte(cpu)
+	r3 := cpu_get_reg(cpu, next_byte & 0b111)
+	r4 := cpu_get_reg(cpu, (next_byte >> 3) & 0b111)
+
+	addr := u32(i32(memory.calculate_address(r2.low, r3.full)) + i32(i16(r4.full))) // this is getting ridiculous
+
+	switch size {
+		case .Word:
+			val := cpu_read_word(cpu, addr)
+			r1.full = val
+		case .Byte:
+			val := cpu_read_byte(cpu, addr)
+			r1.low = val
+	}
+}
+
+exec_st_l_ptr24 :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	offs := cpu_pc_fetch_word(cpu)
+	page := cpu_pc_fetch_byte(cpu)
+	addr := memory.calculate_address(page, offs)
+
+	switch size {
+		case .Word:
+			cpu_write_word(cpu, addr, r1.full)
+		case .Byte:
+			cpu_write_byte(cpu, addr, r1.low)
+	}
+}
+
+exec_st_l_ptr24_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	offs := cpu_pc_fetch_word(cpu)
+	page := cpu_pc_fetch_byte(cpu)
+	addr := u32(i32(memory.calculate_address(page, offs)) + i32(i16(r2.full)))
+
+	switch size {
+		case .Word:
+			cpu_write_word(cpu, addr, r1.full)
+		case .Byte:
+			cpu_write_byte(cpu, addr, r1.low)
+	}
+}
+
+exec_st_l_regpair :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
+	addr := memory.calculate_address(r2.low, r3.full)
+
+	switch size {
+		case .Word:
+			cpu_write_word(cpu, addr, r1.full)
+		case .Byte:
+			cpu_write_byte(cpu, addr, r1.low)
+	}
+}
+
+exec_st_l_regpair_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
+	offs := cpu_pc_fetch_word(cpu)
+	addr := u32(i32(memory.calculate_address(r2.low, r3.full)) + i32(i16(offs)))
+
+	switch size {
+		case .Word:
+			cpu_write_word(cpu, addr, r1.full)
+		case .Byte:
+			cpu_write_byte(cpu, addr, r1.low)
+	}
+}
+
+exec_st_l_regpair_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	next_byte := cpu_pc_fetch_byte(cpu)
+	r3 := cpu_get_reg(cpu, next_byte & 0b111)
+	r4 := cpu_get_reg(cpu, (next_byte >> 3) & 0b111)
+
+	addr := u32(i32(memory.calculate_address(r2.low, r3.full)) + i32(i16(r4.full)))
+
+	switch size {
+		case .Word:
+			cpu_write_word(cpu, addr, r1.full)
+		case .Byte:
+			cpu_write_byte(cpu, addr, r1.low)
 	}
 }
