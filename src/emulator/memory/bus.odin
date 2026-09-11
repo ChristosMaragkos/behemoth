@@ -10,7 +10,8 @@ is_valid_write :: proc(addr: u32) -> bool {
 }
 
 is_valid_read :: proc(addr: u32) -> bool {
-	return true // no-op until I implement MMIO and maybe BIOS
+	// FIXME: This is a no-op until MMIO is implemented
+	return true
 }
 
 calculate_address :: proc(page: u8, offset: u16) -> u32 {
