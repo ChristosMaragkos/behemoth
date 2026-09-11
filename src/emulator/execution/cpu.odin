@@ -27,7 +27,7 @@ CpuFlags :: enum u16 {
 	IgnoreInterrupts,
 }
 
-RegisterNames :: enum u8 {
+RegName :: enum u8 {
 	A,
 	B,
 	C,
@@ -77,7 +77,7 @@ cpu_get_reg :: #force_inline proc(cpu: ^Cpu, reg_idx: u8) -> ^Register {
 	}
 }
 
-cpu_fetch :: proc(cpu: ^Cpu) -> Instruction {
+cpu_fetch_instruction :: proc(cpu: ^Cpu) -> Instruction {
 	addr := memory.calculate_address(cpu.pp, cpu.pc)
 	cpu.pc_delta = 0
 	cpu_advance_pc(cpu, size_of(u16))
@@ -193,7 +193,7 @@ cpu_write_byte :: #force_inline proc(cpu: ^Cpu, addr: u32, val: u8) {
 	memory.bus_write_byte(cpu.bus, addr, val)
 }
 
-cpu_push :: proc(cpu: ^Cpu, reg: RegisterNames) {
+cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
 	sp := cpu_get_reg(cpu, SP_REG_IDX)
 	addr := memory.calculate_address(SP_PAGE, sp.full)
 	val: u16
@@ -220,7 +220,7 @@ cpu_push :: proc(cpu: ^Cpu, reg: RegisterNames) {
 	sp.full -= size_of(u16)
 }
 
-cpu_pop :: proc(cpu: ^Cpu, reg: RegisterNames) {
+cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 	sp := cpu_get_reg(cpu, SP_REG_IDX)
 
 	if sp.full + 2 < sp.full {
