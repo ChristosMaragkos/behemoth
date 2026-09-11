@@ -86,6 +86,12 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_st_reg_regptr_postdec(instr.size, instr.reg1, instr.reg2, cpu)
 				case .St_Reg_RegPtr_PreDec:
 					exec_st_reg_regptr_predec(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Push:
+					exec_push(instr.reg1, cpu)
+				case .Pop:
+					exec_pop(instr.reg1, cpu)
+				case .Shove:
+					exec_shove(cpu)
 			}
 		case .Math:
 		case .ControlFlow:

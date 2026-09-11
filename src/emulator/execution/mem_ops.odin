@@ -18,6 +18,9 @@ MemoryOpcodes :: enum u8 {
 	St_Reg_RegPtr_PreInc,
 	St_Reg_RegPtr_PostDec,
 	St_Reg_RegPtr_PreDec,
+	Push,
+	Pop,
+	Shove,
 }
 
 exec_ld_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
@@ -262,5 +265,48 @@ exec_st_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 		case .Byte:
 			r2.full -= size_of(u8)
 			cpu_dp_store_byte(cpu, r2.full, r1.low)
+	}
+}
+
+exec_push :: proc(reg1: u8, cpu: ^Cpu) {
+	cpu_push(cpu, RegName(reg1))
+}
+
+exec_pop :: proc(reg1: u8, cpu: ^Cpu) {
+	cpu_pop(cpu, RegName(reg1))
+}
+
+ShoveValues :: enum u8 {
+	A,
+	B,
+	C,
+	D,
+	E,
+	F,
+	Flags,
+	Hi,
+	DP,
+	Mode = 15,
+}
+
+ShoveBitmask :: bit_set[ShoveValues;u16]
+
+exec_shove :: proc(cpu: ^Cpu) {
+	bitmask := transmute(ShoveBitmask)(cpu_pc_fetch_word(cpu))
+
+	if .Mode in bitmask {
+		for idx in ShoveValues.A ..< ShoveValues.Flags {
+			if idx in bitmask do cpu_push(cpu, RegName(idx))
+		}
+		if .Flags in bitmask do cpu_push(cpu, .Flags)
+		if .Hi in bitmask do cpu_push(cpu, .Hi)
+		if .DP in bitmask do cpu_push(cpu, .DP)
+	} else {
+		if .DP in bitmask do cpu_pop(cpu, .DP)
+		if .Hi in bitmask do cpu_pop(cpu, .Hi)
+		if .Flags in bitmask do cpu_pop(cpu, .Flags)
+		for idx: i16 = i16(ShoveValues.F); idx >= i16(ShoveValues.A); idx -= 1 { 	// just what the hell is this monstrosity
+			if ShoveValues(idx) in bitmask do cpu_pop(cpu, RegName(idx))
+		}
 	}
 }
