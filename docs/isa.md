@@ -142,7 +142,7 @@ These hard-code the full 24-bit address. All offsets are sign-extended into 24 b
 
 Block move instructions can be used to move data across the 24-bit address space without tedious `ld.l` -> `st.l` loops.
 They implicitly update both their register pair operands (as one 24-bit integer, so addition is carried) as well as their amount parameter,
-and the program counter is kept on that instruction until `amount = 0xFFFF`, meaning they are interruptible. No status flags are altered in the
+and the program counter is kept on that instruction until `amount = 0`, meaning they are interruptible. No status flags are altered in the
 process. Consider this example:
 
 ```asm
