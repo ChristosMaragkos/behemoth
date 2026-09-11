@@ -173,6 +173,16 @@ cpu_dp_fetch_byte :: proc(cpu: ^Cpu, offs: u16) -> byte {
 	return cpu_read_byte(cpu, addr)
 }
 
+cpu_dp_store_word :: proc(cpu: ^Cpu, offs, val: u16) {
+	addr := memory.calculate_address(cpu.dp, offs)
+	cpu_write_word(cpu, addr, val)
+}
+
+cpu_dp_store_byte :: proc(cpu: ^Cpu, offs: u16, val: u8) {
+	addr := memory.calculate_address(cpu.dp, offs)
+	cpu_write_byte(cpu, addr, val)
+}
+
 cpu_advance_pc :: proc(cpu: ^Cpu, amnt: i16) {
 	pc_new := i16(cpu.pc) + amnt
 	if amnt < 0 {
