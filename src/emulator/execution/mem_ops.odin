@@ -2,6 +2,8 @@ package execution
 
 import "../memory"
 
+BLKCP_BLKMV_SIZE :: 4
+
 MemoryOpcodes :: enum u8 {
 	Ld_Reg_Imm,
 	Ld_Reg_RegPtr,
@@ -515,7 +517,7 @@ exec_blkcp :: proc(reg1, reg2: u8, cpu: ^Cpu) {
 	r4.full = u16(dest_addr)
 
 	r5.full -= 1
-	cpu_advance_pc(cpu, -1 * cpu.pc_delta) // maybe replace this with a constant since we know the opcode size
+	cpu_advance_pc(cpu, -1 * BLKCP_BLKMV_SIZE)
 }
 
 exec_blkmv :: proc(reg1, reg2: u8, cpu: ^Cpu) {
@@ -548,5 +550,5 @@ exec_blkmv :: proc(reg1, reg2: u8, cpu: ^Cpu) {
 	r4.full = u16(dest_addr)
 
 	r5.full -= 1
-	cpu_advance_pc(cpu, -1 * cpu.pc_delta)
+	cpu_advance_pc(cpu, -1 * BLKCP_BLKMV_SIZE)
 }
