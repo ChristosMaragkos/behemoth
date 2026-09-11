@@ -127,7 +127,8 @@ DMA controllers are documented in [dma.md](./dma.md).
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
 | `$05:0500` | PPUSTATUS | PPU status flags bitmask (see below) | R | 1 |
-| `$05:0501` | PPUCTRL | PPU control bitmask (see below) | RW | 1 |
+| `$05:0501` | CRNTLN | Current scanline being drawn by the PPU. Is updated after horizontal blanking. | R | 1 |
+| `$05:0502` | PPUCTRL | PPU control bitmask (see below) | RW | 1 |
 
 - PPUSTATUS:
   - Bit 0: `VBLANK`. Set to 1 while the PPU is in vertical blank. Cleared when rendering resumes.
@@ -145,28 +146,28 @@ DMA controllers are documented in [dma.md](./dma.md).
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:0502` | BG1HOFS | 16-bit signed horizontal offset for background layer 1 | RW | 2 |
-| `$05:0504` | BG1VOFS | 16-bit signed vertical offset for background layer 1 | RW | 2 |
-| `$05:0506` | BG2HOFS | 16-bit signed horizontal offset for background layer 2 | RW | 2 |
-| `$05:0508` | BG2VOFS | 16-bit signed vertical offset for background layer 2 | RW | 2 |
-| `$05:050a` | BG3HOFS | 16-bit signed horizontal offset for background layer 3 | RW | 2 |
-| `$05:050c` | BG3VOFS | 16-bit signed vertical offset for background layer 3 | RW | 2 |
-| `$05:050e` | BG4HOFS | 16-bit signed horizontal offset for background layer 4 | RW | 2 |
-| `$05:0510` | BG4VOFS | 16-bit signed vertical offset for background layer 4 | RW | 2 |
-| `$05:0512` | BG1SRC  | 17-bit source address for background 1 entry data | RW | 3 |
-| `$05:0515` | BG2SRC  | 17-bit source address for background 2 entry data | RW | 3 |
-| `$05:0518` | BG3SRC  | 17-bit source address for background 3 entry data | RW | 3 |
-| `$05:051b` | BG4SRC  | 17-bit source address for background 4 entry data | RW | 3 |
-| `$05:051d` | BG1GFXSRC  | 17-bit source address for background 1 graphics data | RW | 3 |
-| `$05:0520` | BG2GFXSRC  | 17-bit source address for background 2 graphics data | RW | 3 |
-| `$05:0523` | BG3GFXSRC  | 17-bit source address for background 3 graphics data | RW | 3 |
-| `$05:0526` | BG4GFXSRC  | 17-bit source address for background 4 graphics data | RW | 3 |
-| `$05:0529` | BG1CTRL  | Background 1 control bitfield (see below) | RW | 1 |
-| `$05:052a` | BG2CTRL  | Background 2 control bitfield (see below) | RW | 1 |
-| `$05:052b` | BG3CTRL  | Background 3 control bitfield (see below) | RW | 1 |
-| `$05:052c` | BG4CTRL  | Background 4 control bitfield (see below) | RW | 1 |
+| `$05:0503` | BG1HOFS | 16-bit signed horizontal offset for background layer 1 | RW | 2 |
+| `$05:0505` | BG1VOFS | 16-bit signed vertical offset for background layer 1 | RW | 2 |
+| `$05:0507` | BG2HOFS | 16-bit signed horizontal offset for background layer 2 | RW | 2 |
+| `$05:0509` | BG2VOFS | 16-bit signed vertical offset for background layer 2 | RW | 2 |
+| `$05:050b` | BG3HOFS | 16-bit signed horizontal offset for background layer 3 | RW | 2 |
+| `$05:050d` | BG3VOFS | 16-bit signed vertical offset for background layer 3 | RW | 2 |
+| `$05:050f` | BG4HOFS | 16-bit signed horizontal offset for background layer 4 | RW | 2 |
+| `$05:0511` | BG4VOFS | 16-bit signed vertical offset for background layer 4 | RW | 2 |
+| `$05:0513` | BG1SRC  | 17-bit source address for background 1 entry data | RW | 3 |
+| `$05:0516` | BG2SRC  | 17-bit source address for background 2 entry data | RW | 3 |
+| `$05:0519` | BG3SRC  | 17-bit source address for background 3 entry data | RW | 3 |
+| `$05:051c` | BG4SRC  | 17-bit source address for background 4 entry data | RW | 3 |
+| `$05:051e` | BG1GFXSRC  | 17-bit source address for background 1 graphics data | RW | 3 |
+| `$05:0521` | BG2GFXSRC  | 17-bit source address for background 2 graphics data | RW | 3 |
+| `$05:0524` | BG3GFXSRC  | 17-bit source address for background 3 graphics data | RW | 3 |
+| `$05:0527` | BG4GFXSRC  | 17-bit source address for background 4 graphics data | RW | 3 |
+| `$05:0530` | BG1CTRL  | Background 1 control bitfield (see below) | RW | 1 |
+| `$05:052b` | BG2CTRL  | Background 2 control bitfield (see below) | RW | 1 |
+| `$05:052c` | BG3CTRL  | Background 3 control bitfield (see below) | RW | 1 |
+| `$05:052d` | BG4CTRL  | Background 4 control bitfield (see below) | RW | 1 |
 
-- BG*CTRL (`BG1CTRL`..`BG4CTRL`), identical layout for each layer:
+- `BG`*`CTRL` (`BG1CTRL`..`BG4CTRL`), identical layout for each layer:
   - Bit 0: Enable. Set to 1 to draw this layer; if 0 the layer is skipped entirely.
   - Bits 1-2: Color depth (see [[#Tile data]]): 0 -> 1bpp, 1 -> 4bpp, 2 -> 8bpp, 3 -> reserved.
   - Bits 3-4: Layer size (see [[#Background layers]]): 0 -> 32x32, 1 -> 32x64, 2 -> 64x32, 3 -> 64x64.
@@ -177,10 +178,10 @@ DMA controllers are documented in [dma.md](./dma.md).
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:052d` | OAMGFXSRC  | 17-bit source address for OAM graphics data | RW | 3 |
-| `$05:0530` | OAMCTRL  | OAM control bitfield (see below) | RW | 1 |
+| `$05:052e` | OAMGFXSRC  | 17-bit source address for OAM graphics data | RW | 3 |
+| `$05:0531` | OAMCTRL  | OAM control bitfield (see below) | RW | 1 |
 
-- OAMCTRL:
+- `OAMCTRL`:
   - Bits 0-1: Color depth for all sprites (see [[#Tile data]]): 0 -> 1bpp, 1 -> 4bpp, 2 -> 8bpp, 3 -> reserved.
   - Bits 2-7: Reserved.
 
@@ -192,13 +193,13 @@ to have arrived to or from its destination by the time the CPU is executing its 
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:0531` | VMPCTRL | Video memory port control bitmask (see below) | RW | 1 |
-| `$05:0532` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. 17-bit due to 128kb VRAM. | RW | 3 |
-| `$05:0535` | VMDATAL | Low byte of word to write to (or read from) video memory | RW | 1 |
-| `$05:0536` | VMDATAH | High byte of word to write to (or read from) video memory | RW | 1 |
-| `$05:0537` | VMPSTART | Write here to execute read/write operation | RW | 1 |
+| `$05:0532` | VMPCTRL | Video memory port control bitmask (see below) | RW | 1 |
+| `$05:0533` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. 17-bit due to 128kb VRAM. | RW | 3 |
+| `$05:0536` | VMDATAL | Low byte of word to write to (or read from) video memory | RW | 1 |
+| `$05:0537` | VMDATAH | High byte of word to write to (or read from) video memory | RW | 1 |
+| `$05:0538` | VMPSTART | Write here to execute read/write operation | RW | 1 |
 
-- VMPCTRL:
+- `VMPCTRL`:
   - Bit 0: Width. 0 -> byte operations, incrementing `VMADDR` by 1 and only using `VMDATAL`; 1 -> word operations, incrementing `VMADDR` by 2 and using both `VMDATAL` and `VMDATAH`.
   - Bit 1: Direction. 0 -> read from video memory into `VMDATAL`/`VMDATAH`; 1 -> write `VMDATAL`/`VMDATAH` into video memory.
   - Bits 2-3: Destination select: 0 -> VRAM, 1 -> CRAM, 2 -> OAM, 3 -> reserved.
