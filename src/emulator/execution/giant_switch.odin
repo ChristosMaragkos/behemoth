@@ -191,6 +191,18 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_muls_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
 				case .Muls_Reg_RegPtr_RegOffs:
 					exec_muls_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Divs_Reg_Reg:
+					exec_divs_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Divs_Reg_Imm:
+					exec_divs_reg_imm(instr.size, instr.reg1, cpu)
+				case .Divs_Reg_RegPtr:
+					exec_divs_reg_regptr(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Divs_Reg_ImmPtr:
+					exec_divs_reg_immptr(instr.size, instr.reg1, cpu)
+				case .Divs_Reg_RegPtr_ImmOffs:
+					exec_divs_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Divs_Reg_RegPtr_RegOffs:
+					exec_divs_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
 			}
 		case .ControlFlow:
 	}

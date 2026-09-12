@@ -36,6 +36,13 @@ MathOpcodes :: enum u8 {
 	Muls_Reg_ImmPtr,
 	Muls_Reg_RegPtr_ImmOffs,
 	Muls_Reg_RegPtr_RegOffs,
+	// divs
+	Divs_Reg_Reg,
+	Divs_Reg_Imm,
+	Divs_Reg_RegPtr,
+	Divs_Reg_ImmPtr,
+	Divs_Reg_RegPtr_ImmOffs,
+	Divs_Reg_RegPtr_RegOffs,
 }
 
 compute_flags_add :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
@@ -1058,4 +1065,263 @@ exec_muls_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.low = res
 	}
 	cpu.cycle_delta += 6
+}
+
+exec_divs_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			if r2.full == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i16(r1.full))
+			b := i32(i16(r2.full))
+			overflow := a == -32768 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.full = u16(remainder)
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.full = u16(quotient)
+
+		case .Byte:
+			if r2.low == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i8(r1.low))
+			b := i32(i8(r2.low))
+			overflow := a == -128 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.low = u8(remainder)
+			cpu.hi.high = 0
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.low = u8(quotient)
+	}
+	cpu.cycle_delta += 8
+}
+
+exec_divs_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			op2 := cpu_pc_fetch_word(cpu)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i16(r1.full))
+			b := i32(i16(op2))
+			overflow := a == -32768 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.full = u16(remainder)
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.full = u16(quotient)
+
+		case .Byte:
+			op2 := cpu_pc_fetch_byte(cpu)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i8(r1.low))
+			b := i32(i8(op2))
+			overflow := a == -128 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.low = u8(remainder)
+			cpu.hi.high = 0
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.low = u8(quotient)
+	}
+	cpu.cycle_delta += 8
+}
+
+exec_divs_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i16(r1.full))
+			b := i32(i16(op2))
+			overflow := a == -32768 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.full = u16(remainder)
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.full = u16(quotient)
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i8(r1.low))
+			b := i32(i8(op2))
+			overflow := a == -128 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.low = u8(remainder)
+			cpu.hi.high = 0
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.low = u8(quotient)
+	}
+	cpu.cycle_delta += 8
+}
+
+exec_divs_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	immptr := cpu_pc_fetch_word(cpu)
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, immptr)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i16(r1.full))
+			b := i32(i16(op2))
+			overflow := a == -32768 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.full = u16(remainder)
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.full = u16(quotient)
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, immptr)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i8(r1.low))
+			b := i32(i8(op2))
+			overflow := a == -128 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.low = u8(remainder)
+			cpu.hi.high = 0
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.low = u8(quotient)
+	}
+	cpu.cycle_delta += 8
+}
+
+exec_divs_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	offs := cpu_pc_fetch_word(cpu)
+	addr := u16(i16(r2.full) + i16(offs))
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, addr)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i16(r1.full))
+			b := i32(i16(op2))
+			overflow := a == -32768 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.full = u16(remainder)
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.full = u16(quotient)
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, addr)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i8(r1.low))
+			b := i32(i8(op2))
+			overflow := a == -128 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.low = u8(remainder)
+			cpu.hi.high = 0
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.low = u8(quotient)
+	}
+	cpu.cycle_delta += 8
+}
+
+exec_divs_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
+	addr := u16(i16(r2.full) + i16(r3.full))
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, addr)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i16(r1.full))
+			b := i32(i16(op2))
+			overflow := a == -32768 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.full = u16(remainder)
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.full = u16(quotient)
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, addr)
+			if op2 == 0 {
+				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
+				return
+			}
+			a := i32(i8(r1.low))
+			b := i32(i8(op2))
+			overflow := a == -128 && b == -1
+			quotient := a / b
+			remainder := a % b
+
+			cpu.hi.low = u8(remainder)
+			cpu.hi.high = 0
+			flags_old^ = flags_new + compute_flags_div(size, u16(quotient), overflow)
+			r1.low = u8(quotient)
+	}
+	cpu.cycle_delta += 8
 }
