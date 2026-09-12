@@ -2,22 +2,24 @@
 
 ## GPRs
 
-6 general-purpose registers: a, b, c, d, e, f. 16-bit. Addressable also as their low bytes with an `l` prefix: al, bl, cl, dl, el, fl.
+7 general-purpose registers: a, b, c, d, e, f, g. 16-bit. Addressable also as their low bytes with an `l` prefix: al, bl, cl, dl, el, fl, gl.
 All are capable of being used as pointers for full orthogonality. There is no hardwired accumulator or loop counter.
 
 ## Special registers
 
-- sp: 16-bit stack pointer
-- flags: 16-bit processor status bitfield (bitwise ops on `flags` do not alter it afterwards):
+- sp: 16-bit stack pointer. Usable in exactly the same way as registers a-g, but its low byte is not addressable.
+
+## Internal (non-addressable) registers
+
+These registers can not be addressed directly but can instead by manipulated implicitly or explicitly by using certain instructions.
+
+- flags: 16-bit processor status bitfield:
   - Bit 0: Carry flag C
   - Bit 1: Zero flag Z
   - Bit 2: Negative flag N
   - Bit 3: Overflow flag V
   - Bit 4: IRQ disable flag I. Set to 1 to ignore all (maskable) interrupts.
   - Bits 5-15: reserved
-
-## Internal (non-addressable) registers
-
 - pc: 16-bit program counter
 - hi: 16-bit, receives high word (or byte) of multiplication and remainder of division. Accessed through "move from/to `hi`" instructions à la MIPS.
 - dp: 8-bit data page (read [[#Memory]])
@@ -61,7 +63,7 @@ Thus, in bit notation, an opcode word looks like this: `rrr_rrr_s_ooooooooo`
 Effectively, the size bit serves only semantic purposes. This encoding format has its drawbacks:
 It's wasted space for instructions with fewer than two operands or only immediate operands,
 as those do not fit within the 6 operand bits.
-3 bits for each register operand maps, from 0-7, to: `a` through `f`, `sp`, `flags`.
+3 bits for each register operand maps, from 0-7, to: `a` through `g` and then `sp`.
 Addressing `sp` and `flags` as 8-bit is not explicitly disallowed at runtime, but try to avoid doing it (such as by manually editing opcode bytes).
 Lastly, loading and storing multi-byte values at page boundaries is undefined behavior and should be avoided.
 
