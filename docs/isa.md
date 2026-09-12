@@ -334,6 +334,9 @@ Branches incur a 1-cycle penalty when taken.
 | 0x12 | jlt | simm | 4 (5 if taken) | Jump if less (Z not set, V != N) | 8, 16 |
 | 0x13 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
 
+> [!NOTE]
+> To avoid confusion, the value of the size bit in `djnz` dictates the width of both the register and the immediate operand.
+
 ### Long jumps
 
 These instructions use the same 24-bit addressing as loads and stores (though only with direct immediate and register addressing modes).
