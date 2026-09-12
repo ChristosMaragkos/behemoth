@@ -116,6 +116,46 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					cpu_trigger_interrupt(cpu, INVALID_OPCODE_VEC_IDX, true)
 			}
 		case .Math:
+			switch MathOpcodes(instr.opcode) {
+				case .Add_Reg_Reg:
+					exec_add_reg_reg(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .Add_Reg_Imm:
+					exec_add_reg_imm(instr.size, instr.reg1, false, cpu)
+				case .Add_Reg_RegPtr:
+					exec_add_reg_regptr(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .Add_Reg_ImmPtr:
+					exec_add_reg_immptr(instr.size, instr.reg1, false, cpu)
+				case .Add_Reg_RegPtr_ImmOffs:
+					exec_add_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .Add_Reg_RegPtr_RegOffs:
+					exec_add_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .Sub_Reg_Reg:
+					exec_sub_reg_reg(instr.size, instr.reg1, instr.reg2, false, false, cpu)
+				case .Sub_Reg_Imm:
+					exec_sub_reg_imm(instr.size, instr.reg1, false, false, cpu)
+				case .Sub_Reg_RegPtr:
+					exec_sub_reg_regptr(instr.size, instr.reg1, instr.reg2, false, false, cpu)
+				case .Sub_Reg_ImmPtr:
+					exec_sub_reg_immptr(instr.size, instr.reg1, false, false, cpu)
+				case .Sub_Reg_RegPtr_ImmOffs:
+					exec_sub_reg_regptr_immoffs(
+						instr.size,
+						instr.reg1,
+						instr.reg2,
+						false,
+						false,
+						cpu,
+					)
+				case .Sub_Reg_RegPtr_RegOffs:
+					exec_sub_reg_regptr_regoffs(
+						instr.size,
+						instr.reg1,
+						instr.reg2,
+						false,
+						false,
+						cpu,
+					)
+			}
 		case .ControlFlow:
 	}
 }

@@ -1,0 +1,406 @@
+package execution
+
+MathOpcodes :: enum u8 {
+	// add
+	Add_Reg_Reg,
+	Add_Reg_Imm,
+	Add_Reg_RegPtr,
+	Add_Reg_ImmPtr,
+	Add_Reg_RegPtr_ImmOffs,
+	Add_Reg_RegPtr_RegOffs,
+	// sub
+	Sub_Reg_Reg,
+	Sub_Reg_Imm,
+	Sub_Reg_RegPtr,
+	Sub_Reg_ImmPtr,
+	Sub_Reg_RegPtr_ImmOffs,
+	Sub_Reg_RegPtr_RegOffs,
+}
+
+compute_flags_add :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
+	out: FlagRegister
+	if size == .Word {
+		truncated := u16(accum)
+		if truncated == 0 do out += {.Zero}
+		if truncated & 0x8000 != 0 do out += {.Negative}
+		if accum > 0xFFFF do out += {.Carry}
+		v_test := (op1 ~ truncated) & (op2 ~ truncated)
+		if v_test & 0x8000 != 0 do out += {.Overflow}
+	} else {
+		op1 := u8(op1)
+		op2 := u8(op2)
+		truncated := u8(accum)
+		if truncated == 0 do out += {.Zero}
+		if truncated & 0x80 != 0 do out += {.Negative}
+		if accum > 0xFF do out += {.Carry}
+		v_test := (op1 ~ truncated) & (op2 ~ truncated)
+		if v_test & 0x80 != 0 do out += {.Overflow}
+	}
+	return out
+}
+
+exec_add_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_carry ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			res_full = u32(r1.full) + u32(r2.full) + carry
+			res := u16(res_full)
+			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, r2.full)
+			r1.full = res
+
+		case .Byte:
+			res_full = u32(r1.low) + u32(r2.low) + carry
+			res := u8(res_full)
+			flags_old^ = flags_new + compute_flags_add(size, res_full, u16(r1.low), u16(r2.low))
+			r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_add_reg_imm :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_carry ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_pc_fetch_word(cpu)
+			res_full = u32(r1.full) + u32(op2) + carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
+			r1.full = res
+
+		case .Byte:
+			op2 := cpu_pc_fetch_byte(cpu)
+			res_full = u32(r1.low) + u32(op2) + carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, u16(r1.low), u16(op2))
+			r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_add_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_carry ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			res_full = u32(r1.full) + u32(op2) + carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
+			r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			res_full = u32(r1.low) + u32(op2) + carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, u16(r1.low), u16(op2))
+			r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_add_reg_immptr :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	immptr := cpu_pc_fetch_word(cpu)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_carry ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, immptr)
+			res_full = u32(r1.full) + u32(op2) + carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
+			r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, immptr)
+			res_full = u32(r1.low) + u32(op2) + carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, u16(r1.low), u16(op2))
+			r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_add_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	offs := cpu_pc_fetch_word(cpu)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_carry ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.full) + u32(op2) + carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
+			r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.low) + u32(op2) + carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, u16(r1.low), u16(op2))
+			r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_add_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
+	offs := r3.full
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_carry ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.full) + u32(op2) + carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
+			r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.low) + u32(op2) + carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_add(size, res_full, u16(r1.low), u16(op2))
+			r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+compute_flags_sub :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
+	out: FlagRegister
+	if size == .Word {
+		truncated := u16(accum)
+
+		if truncated == 0 do out += {.Zero}
+		if truncated & 0x8000 != 0 do out += {.Negative}
+		if accum > 0xFFFF do out += {.Carry}
+		v_test := (op1 ~ op2) & (op1 ~ truncated)
+		if v_test & 0x8000 != 0 do out += {.Overflow}
+	} else {
+		op1 := u8(op1)
+		op2 := u8(op2)
+		truncated := u8(accum)
+
+		if truncated == 0 do out += {.Zero}
+		if truncated & 0x80 != 0 do out += {.Negative}
+		if accum > 0xFF do out += {.Carry}
+		v_test := (op1 ~ op2) & (op1 ~ truncated)
+		if v_test & 0x80 != 0 do out += {.Overflow}
+	}
+	return out
+}
+
+exec_sub_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_borrow ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			res_full = u32(r1.full) - u32(r2.full) - carry
+			res := u16(res_full)
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, r2.full)
+			if !discard do r1.full = res
+
+		case .Byte:
+			res_full = u32(r1.low) - u32(r2.low) - carry
+			res := u8(res_full)
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, u16(r1.low), u16(r2.low))
+			if !discard do r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_sub_reg_imm :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_borrow ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_pc_fetch_word(cpu)
+			res_full = u32(r1.full) - u32(op2) - carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
+			if !discard do r1.full = res
+
+		case .Byte:
+			op2 := cpu_pc_fetch_byte(cpu)
+			res_full = u32(r1.low) - u32(op2) - carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, u16(r1.low), u16(op2))
+			if !discard do r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_sub_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_borrow ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			res_full = u32(r1.full) - u32(op2) - carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
+			if !discard do r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			res_full = u32(r1.low) - u32(op2) - carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, u16(r1.low), u16(op2))
+			if !discard do r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_sub_reg_immptr :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	immptr := cpu_pc_fetch_word(cpu)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_borrow ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, immptr)
+			res_full = u32(r1.full) - u32(op2) - carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
+			if !discard do r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, immptr)
+			res_full = u32(r1.low) - u32(op2) - carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, u16(r1.low), u16(op2))
+			if !discard do r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_sub_reg_regptr_immoffs :: proc(
+	size: SizeMode,
+	reg1, reg2: u8,
+	use_borrow, discard: bool,
+	cpu: ^Cpu,
+) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	offs := cpu_pc_fetch_word(cpu)
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_borrow ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.full) - u32(op2) - carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
+			if !discard do r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.low) - u32(op2) - carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, u16(r1.low), u16(op2))
+			if !discard do r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
+
+exec_sub_reg_regptr_regoffs :: proc(
+	size: SizeMode,
+	reg1, reg2: u8,
+	use_borrow, discard: bool,
+	cpu: ^Cpu,
+) {
+	r1 := cpu_get_reg(cpu, reg1)
+	r2 := cpu_get_reg(cpu, reg2)
+	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
+	offs := r3.full
+	flags_old := cpu_get_flags(cpu)
+	carry: u32 = !use_borrow ? 0 : (.Carry in (flags_old^) ? 1 : 0)
+	flags_new := (flags_old^) & {.IgnoreInterrupts}
+	res_full: u32
+
+	switch size {
+		case .Word:
+			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.full) - u32(op2) - carry
+			res := u16(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
+			if !discard do r1.full = res
+
+		case .Byte:
+			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			res_full = u32(r1.low) - u32(op2) - carry
+			res := u8(res_full)
+
+			flags_old^ = flags_new + compute_flags_sub(size, res_full, u16(r1.low), u16(op2))
+			if !discard do r1.low = res
+	}
+	cpu.cycle_delta += 1
+}
