@@ -204,8 +204,8 @@ cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool) {
 	} else {
 		store_addr := memory.calculate_address(memory.IVT_PAGE, 0x0300)
 		cpu_write_word(cpu, store_addr, cpu_get_reg(cpu, FLAGS_REG_IDX).full)
-		cpu_write_word(cpu, store_addr + 2, u16(i16(cpu.pc) - cpu.pc_delta)) // save the pre-instruction PC
-		cpu_write_byte(cpu, store_addr + 4, cpu.pp)
+		cpu_write_byte(cpu, store_addr + 2, cpu.pp)
+		cpu_write_word(cpu, store_addr + 3, u16(i16(cpu.pc) - cpu.pc_delta)) // save the pre-instruction PC
 	}
 
 	addr := memory.calculate_address(memory.IVT_PAGE, u16(3 * interrupt_index))
