@@ -30,9 +30,9 @@ The instruction takes 3 + n cycles (where `n` is the number of registers affecte
 Note the lack of `sp` and `pp` from the bitmask; stack operations with them range from useless to outright dangerous.
 Pushing occurs in ascending order (a->dp) while popping is done in descending order (dp->a).
 
-| Bit   | Usage    |
-|:-------------: | --------------- |
-| 15   | Mode bit. 0 to push, 1 to pop   |
+| Bit | Usage |
+| :-------------: | --------------- |
+| 15 | Mode bit. 0 to push, 1 to pop |
 | 0 | a |
 | 1 | b |
 | 2 | c |
@@ -80,20 +80,20 @@ Pushing occurs in ascending order (a->dp) while popping is done in descending or
 | :---------------: | :---------------: | --------------- | :---------------: | --------------- | - |
 | 0x00 | nop | - | 2 | No operation | - |
 | 0x01 | wfi | - | - | Yield CPU until next non-masked interrupt | - |
-| 0x02 | mov | reg, reg | 2 | Set value of reg1 to value of reg2 |8, 16|
+| 0x02 | mov | reg, reg | 2 | Set value of reg1 to value of reg2 | 8, 16 |
 | 0x03 | cbw | reg8 | 2 | Sign extend low-byte register into full register (e.g. `al` into `a`) | 8 |
 | 0x04 | zxt | reg8 | 2 | Zero extend low-byte register into full register | 8 |
-| 0x05 |xchg | reg, reg | 2 | Exchange register values | 8, 16 |
-| 0x06 | swp | reg16| 2 | Swap low and high byte of 16-bit register (endianness swap) | 16 |
-| 0x07 |mfhi | reg | 2 | Set register value to value of `hi` (or low byte of `hi` in 8-bit) | 8, 16 |
-| 0x08 |mthi | reg | 2 | Set value of `hi` to value of register | 8, 16 |
-| 0x09 |mfpp | reg8| 2 | Set value of 8-bit register to value of `pp` | 8 |
-| 0x0a |mtpp | reg8| 2 | Set value of `pp` to value of 8-bit register | 8 |
-| 0x0b |mfdp | reg8| 2 | Set value of 8-bit register to value of `dp` | 8 |
-| 0x0c |mtdp | reg8| 2 | Set value of `dp` to value of 8-bit register | 8 |
+| 0x05 | xchg | reg, reg | 2 | Exchange register values | 8, 16 |
+| 0x06 | swp | reg16 | 2 | Swap low and high byte of 16-bit register (endianness swap) | 16 |
+| 0x07 | mfhi | reg | 2 | Set register value to value of `hi` (or low byte of `hi` in 8-bit) | 8, 16 |
+| 0x08 | mthi | reg | 2 | Set value of `hi` to value of register | 8, 16 |
+| 0x09 | mfpp | reg8 | 2 | Set value of 8-bit register to value of `pp` | 8 |
+| 0x0a | mtpp | reg8 | 2 | Set value of `pp` to value of 8-bit register | 8 |
+| 0x0b | mfdp | reg8 | 2 | Set value of 8-bit register to value of `dp` | 8 |
+| 0x0c | mtdp | reg8 | 2 | Set value of `dp` to value of 8-bit register | 8 |
 | 0x0d | swi | imm8 (masked to 7 bits) | 8 (+ IRQ overhead) | Push `flags`, `pp`, `pc` to stack and jump to (IVT + 3 * imm8) | - |
 | 0x0e | swi | reg8 (masked to 7 bits) | 7 (+ IRQ overhead) | Push `flags`, `pp`, `pc` to stack and jump to (IVT + 3 * reg8) | - |
-| 0x0f-0x7f| Reserved |<|<|<|<|
+| 0x0f-0x7f | Reserved | < | < | < | < |
 
 ## Memory (category 1)
 
@@ -202,7 +202,7 @@ For a reference on which flags are altered by which opcodes, check [[#Math opcod
 | 0x0f | mulu | reg, immptr | 10 | Unsigned. Set reg = reg * value stored in `dp:immptr` | 8, 16 |
 | 0x10 | mulu | reg, regptr + simm16 | 10 | Unsigned. Set reg = reg * value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
 | 0x11 | mulu | reg, regptr + reg16 | 10 | Unsigned. Set reg = reg * value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
-| 0x12 | divu | reg, reg | 10 | Unsigned. Set reg1 = reg1 / reg2| 8, 16 |
+| 0x12 | divu | reg, reg | 10 | Unsigned. Set reg1 = reg1 / reg2 | 8, 16 |
 | 0x13 | divu | reg, imm | 11 | Unsigned. Set reg = reg / imm | 8, 16 |
 | 0x14 | divu | reg, regptr | 11 | Unsigned. Set reg = reg / value stored in `dp:regptr` | 8, 16 |
 | 0x15 | divu | reg, immptr | 12 | Unsigned. Set reg = reg / value stored in `dp:immptr` | 8, 16 |
@@ -214,7 +214,7 @@ For a reference on which flags are altered by which opcodes, check [[#Math opcod
 | 0x1b | muls | reg, immptr | 10 | Signed. Set reg = reg * value stored in `dp:immptr` | 8, 16 |
 | 0x1c | muls | reg, regptr + simm16 | 10 | Signed. Set reg = reg * value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
 | 0x1d | muls | reg, regptr + reg16 | 10 | Signed. Set reg = reg * value stored in `dp:regptr` + signed 16-bit offset | 8, 16 |
-| 0x1e | divs | reg, reg | 10 | Signed. Set reg1 = reg1 / reg2| 8, 16 |
+| 0x1e | divs | reg, reg | 10 | Signed. Set reg1 = reg1 / reg2 | 8, 16 |
 | 0x1f | divs | reg, imm | 11 | Signed. Set reg = reg / imm | 8, 16 |
 | 0x20 | divs | reg, regptr | 11 | Signed. Set reg = reg / value stored in `dp:regptr` | 8, 16 |
 | 0x21 | divs | reg, immptr | 12 | Signed. Set reg = reg / value stored in `dp:immptr` | 8, 16 |
@@ -230,8 +230,8 @@ For a reference on which flags are altered by which opcodes, check [[#Math opcod
 | 0x2b | sbc | reg, imm | 4 | Set reg = reg - imm - 1 if carry flag is on | 8, 16 |
 | 0x2c | sbc | reg, regptr | 4 | Set reg = reg - value stored in `dp:regptr` - 1 if carry flag is on | 8, 16 |
 | 0x2d | sbc | reg, immptr | 5 | Set reg = reg - value stored in `dp:immptr` - 1 if carry flag is on | 8, 16 |
-| 0x2e | sbc | reg, regptr + simm16 | 5 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset - 1 if carry flag is on| 8, 16 |
-| 0x2f | sbc | reg, regptr + reg16 | 5 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset - 1 if carry flag is on| 8, 16 |
+| 0x2e | sbc | reg, regptr + simm16 | 5 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset - 1 if carry flag is on | 8, 16 |
+| 0x2f | sbc | reg, regptr + reg16 | 5 | Set reg = reg - value stored in `dp:regptr` + signed 16-bit offset - 1 if carry flag is on | 8, 16 |
 | 0x30 | cmp | reg, reg | 3 | Compute and discard reg1 = reg1 - reg2. Updates flags. | 8, 16 |
 | 0x31 | cmp | reg, imm | 4 | Compute and discard reg = reg - imm. Updates flags. | 8, 16 |
 | 0x32 | cmp | reg, regptr | 4 | Compute and discard reg = reg - value stored in `dp:regptr`. Updates flags. | 8, 16 |
@@ -323,17 +323,19 @@ Branches incur a 1-cycle penalty when taken.
 | :----: | :------: | -------- | :----: | ----- | ---- |
 | 0x07 | jz | simm | 4 (5 if taken) | Jump if zero flag set | 8, 16 |
 | 0x08 | jnz | simm | 4 (5 if taken) | Jump if zero flag not set | 8, 16 |
-| 0x09 | jc | simm | 4 (5 if taken) | Jump if carry flag set | 8, 16 |
-| 0x0a | jnc | simm | 4 (5 if taken) | Jump if carry flag not set | 8, 16 |
+| 0x09 | jc | simm | 4 (5 if taken) | Jump if carry flag set. Can be aliased to `jltu` (jump if less, unsigned) | 8, 16 |
+| 0x0a | jnc | simm | 4 (5 if taken) | Jump if carry flag not set. Can be aliased to `jgeu` (jump if greater or equal, unsigned) | 8, 16 |
 | 0x0b | jmi | simm | 4 (5 if taken) | Jump if negative flag set | 8, 16 |
 | 0x0c | jpl | simm | 4 (5 if taken) | Jump if negative flag not set | 8, 16 |
 | 0x0d | jv | simm | 4 (5 if taken) | Jump if overflow flag set | 8, 16 |
 | 0x0e | jnv | simm | 4 (5 if taken) | Jump if overflow flag not set | 8, 16 |
-| 0x0f | jge | simm | 4 (5 if taken) | Jump if greater or equal (V = N) | 8, 16 |
-| 0x10 | jgt | simm | 4 (5 if taken) | Jump if greater (Z not set, V = N) | 8, 16 |
-| 0x11 | jle | simm | 4 (5 if taken) | Jump if less or equal (V != N) | 8, 16 |
-| 0x12 | jlt | simm | 4 (5 if taken) | Jump if less (Z not set, V != N) | 8, 16 |
-| 0x13 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
+| 0x0f | jges | simm | 4 (5 if taken) | Jump if greater or equal, signed (V = N) | 8, 16 |
+| 0x10 | jgts | simm | 4 (5 if taken) | Jump if greater, signed (Z not set, V = N) | 8, 16 |
+| 0x11 | jles | simm | 4 (5 if taken) | Jump if less or equal, signed (Z set OR V != N) | 8, 16 |
+| 0x12 | jlts | simm | 4 (5 if taken) | Jump if less, signed (V != N) | 8, 16 |
+| 0x13 | jgtu | simm | 4 (5 if taken) | Jump if greater, unsigned (C not set, Z not set) | 8, 16 |
+| 0x14 | jleu | simm | 4 (5 if taken) | Jump if less or equal, unsigned (C set OR Z set) | 8, 16 |
+| 0x15 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
 
 > [!NOTE]
 > To avoid confusion, the value of the size bit in `djnz` dictates the width of both the register and the immediate operand.
@@ -344,10 +346,9 @@ These instructions use the same 24-bit addressing as loads and stores (though on
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
-| 0x14 | jsr.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
-| 0x15 | jsr.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
-| 0x16 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
-| 0x17 | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
-| 0x18 | ret.l | - | 4 | Pop `pc` and `pp` from stack | - |
-| 0x19-0x7f | Reserved | < | < | < | < |
+| 0x16 | jsr.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x17 | jsr.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
+| 0x18 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x19 | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
 | 0x1a | rts.l | - | 4 | Pop `pc` and `pp` from stack | - |
+| 0x1b-0x7f | Reserved | < | < | < | < |
