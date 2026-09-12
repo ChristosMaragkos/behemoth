@@ -64,6 +64,10 @@ MathOpcodes :: enum u8 {
 	Cmp_Reg_ImmPtr,
 	Cmp_Reg_RegPtr_ImmOffs,
 	Cmp_Reg_RegPtr_RegOffs,
+	// inc
+	Inc,
+	// dec
+	Dec,
 }
 
 compute_flags_add :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
@@ -1345,4 +1349,64 @@ exec_divs_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.low = u8(quotient)
 	}
 	cpu.cycle_delta += 8
+}
+
+exec_inc :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.Carry, .IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			result := r1.full + 1
+
+			if result == 0 do flags_new += {.Zero}
+			if result & 0x8000 != 0 do flags_new += {.Negative}
+			v_test := (r1.full ~ result) & (1 ~ result)
+			if v_test & 0x8000 != 0 do flags_new += {.Overflow}
+
+			r1.full = result
+		case .Byte:
+			result := r1.low + 1
+
+			if result == 0 do flags_new += {.Zero}
+			if result & 0x80 != 0 do flags_new += {.Negative}
+			v_test := (r1.low ~ result) & (1 ~ result)
+			if v_test & 0x80 != 0 do flags_new += {.Overflow}
+
+			r1.low = result
+	}
+
+	flags_old^ = flags_new
+	cpu.cycle_delta += 1
+}
+
+exec_dec :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+	flags_old := cpu_get_flags(cpu)
+	flags_new := (flags_old^) & {.Carry, .IgnoreInterrupts}
+
+	switch size {
+		case .Word:
+			result := r1.full - 1
+
+			if result == 0 do flags_new += {.Zero}
+			if result & 0x8000 != 0 do flags_new += {.Negative}
+			v_test := (r1.full ~ 1) & (r1.full ~ result)
+			if v_test & 0x8000 != 0 do flags_new += {.Overflow}
+
+			r1.full = result
+		case .Byte:
+			result := r1.low - 1
+
+			if result == 0 do flags_new += {.Zero}
+			if result & 0x80 != 0 do flags_new += {.Negative}
+			v_test := (r1.low ~ 1) & (r1.low ~ result)
+			if v_test & 0x80 != 0 do flags_new += {.Overflow}
+
+			r1.low = result
+	}
+
+	flags_old^ = flags_new
+	cpu.cycle_delta += 1
 }

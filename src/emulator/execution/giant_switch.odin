@@ -267,6 +267,10 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 						true,
 						cpu,
 					)
+				case .Inc:
+					exec_inc(instr.size, instr.reg1, cpu)
+				case .Dec:
+					exec_dec(instr.size, instr.reg1, cpu)
 			}
 		case .ControlFlow:
 	}
