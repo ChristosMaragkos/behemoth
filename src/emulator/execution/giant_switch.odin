@@ -271,6 +271,98 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_inc(instr.size, instr.reg1, cpu)
 				case .Dec:
 					exec_dec(instr.size, instr.reg1, cpu)
+				case .Neg:
+					exec_neg(instr.size, instr.reg1, cpu)
+				case .And_Reg_Reg:
+					exec_and_reg_reg(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .And_Reg_Imm:
+					exec_and_reg_imm(instr.size, instr.reg1, false, cpu)
+				case .And_Reg_RegPtr:
+					exec_and_reg_regptr(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .And_Reg_ImmPtr:
+					exec_and_reg_immptr(instr.size, instr.reg1, false, cpu)
+				case .And_Reg_RegPtr_ImmOffs:
+					exec_and_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .And_Reg_RegPtr_RegOffs:
+					exec_and_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, false, cpu)
+				case .Or_Reg_Reg:
+					exec_or_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Or_Reg_Imm:
+					exec_or_reg_imm(instr.size, instr.reg1, cpu)
+				case .Or_Reg_RegPtr:
+					exec_or_reg_regptr(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Or_Reg_ImmPtr:
+					exec_or_reg_immptr(instr.size, instr.reg1, cpu)
+				case .Or_Reg_RegPtr_ImmOffs:
+					exec_or_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Or_Reg_RegPtr_RegOffs:
+					exec_or_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Xor_Reg_Reg:
+					exec_xor_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Xor_Reg_Imm:
+					exec_xor_reg_imm(instr.size, instr.reg1, cpu)
+				case .Xor_Reg_RegPtr:
+					exec_xor_reg_regptr(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Xor_Reg_ImmPtr:
+					exec_xor_reg_immptr(instr.size, instr.reg1, cpu)
+				case .Xor_Reg_RegPtr_ImmOffs:
+					exec_xor_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Xor_Reg_RegPtr_RegOffs:
+					exec_xor_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Bt_Reg_Reg:
+					exec_and_reg_reg(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Bt_Reg_Imm:
+					exec_and_reg_imm(instr.size, instr.reg1, true, cpu)
+				case .Bt_Reg_RegPtr:
+					exec_and_reg_regptr(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Bt_Reg_ImmPtr:
+					exec_and_reg_immptr(instr.size, instr.reg1, true, cpu)
+				case .Bt_Reg_RegPtr_ImmOffs:
+					exec_and_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Bt_Reg_RegPtr_RegOffs:
+					exec_and_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Not:
+					exec_not(instr.size, instr.reg1, cpu)
+				case .Lsl_Reg_Reg:
+					exec_lsl_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Lsl_Reg_Imm:
+					exec_lsl_reg_imm(instr.size, instr.reg1, cpu)
+				case .Lsr_Reg_Reg:
+					exec_lsr_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Lsr_Reg_Imm:
+					exec_lsr_reg_imm(instr.size, instr.reg1, cpu)
+				case .Asr_Reg_Reg:
+					exec_asr_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Asr_Reg_Imm:
+					exec_asr_reg_imm(instr.size, instr.reg1, cpu)
+				case .Rol_Reg_Reg:
+					exec_rol_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Rol_Reg_Imm:
+					exec_rol_reg_imm(instr.size, instr.reg1, cpu)
+				case .Ror_Reg_Reg:
+					exec_ror_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Ror_Reg_Imm:
+					exec_ror_reg_imm(instr.size, instr.reg1, cpu)
+				case .Rcl_Reg_Reg:
+					exec_rcl_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Rcl_Reg_Imm:
+					exec_rcl_reg_imm(instr.size, instr.reg1, cpu)
+				case .Rcr_Reg_Reg:
+					exec_rcr_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Rcr_Reg_Imm:
+					exec_rcr_reg_imm(instr.size, instr.reg1, cpu)
+				case .Add_L_RegPair:
+					exec_add_l_regpair(instr.reg1, instr.reg2, cpu)
+				case .Add_L_Imm32:
+					exec_add_l_imm32(instr.reg1, instr.reg2, cpu)
+				case .Sub_L_RegPair:
+					exec_sub_l_regpair(instr.reg1, instr.reg2, false, cpu)
+				case .Sub_L_Imm32:
+					exec_sub_l_imm32(instr.reg1, instr.reg2, false, cpu)
+				case .Cmp_L_RegPair:
+					exec_sub_l_regpair(instr.reg1, instr.reg2, true, cpu)
+				case .Cmp_L_Imm32:
+					exec_sub_l_imm32(instr.reg1, instr.reg2, true, cpu)
 			}
 		case .ControlFlow:
 	}
