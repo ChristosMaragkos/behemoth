@@ -322,7 +322,7 @@ exec_shove :: proc(cpu: ^Cpu) {
 		if .DP in bitmask do cpu_pop(cpu, .DP)
 		if .Hi in bitmask do cpu_pop(cpu, .Hi)
 		if .Flags in bitmask do cpu_pop(cpu, .Flags)
-		for idx: i16 = i16(ShoveValues.F); idx >= i16(ShoveValues.A); idx -= 1 { 	// just what the hell is this monstrosity
+		for idx: i16 = i16(ShoveValues.G); idx >= i16(ShoveValues.A); idx -= 1 { 	// just what the hell is this monstrosity
 			if ShoveValues(idx) in bitmask do cpu_pop(cpu, RegName(idx))
 		}
 	}

@@ -2,8 +2,7 @@ package execution
 
 import "../memory"
 
-SP_REG_IDX :: 6
-FLAGS_REG_IDX :: 7
+SP_REG_IDX :: 7
 
 SP_INIT_VAL :: 0xFFFE
 SP_PAGE :: 0x04
@@ -35,6 +34,7 @@ RegName :: enum u8 {
 	D,
 	E,
 	F,
+	G,
 	SP,
 	Flags,
 	Hi,
@@ -46,8 +46,9 @@ RegName :: enum u8 {
 FlagRegister :: bit_set[CpuFlags;u16]
 
 Cpu :: struct {
-	pc:          u16,
 	regs:        [8]Register,
+	flags:       FlagRegister,
+	pc:          u16,
 	hi:          Register,
 	pp:          u8,
 	dp:          u8,
@@ -69,7 +70,7 @@ cpu_init :: proc(cpu: ^Cpu, bus: ^memory.MemoryBus) {
 }
 
 cpu_get_flags :: #force_inline proc(cpu: ^Cpu) -> ^FlagRegister {
-	return transmute(^FlagRegister)&cpu.regs[FLAGS_REG_IDX].full
+	return &cpu.flags
 }
 
 cpu_get_reg :: #force_inline proc(cpu: ^Cpu, reg_idx: u8) -> ^Register {
@@ -153,7 +154,7 @@ cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
 	}
 
 	switch reg {
-		case .A ..< .Hi:
+		case .A ..< .Flags:
 			val = cpu_get_reg(cpu, u8(reg)).full
 		case .Hi:
 			val = cpu.hi.full
@@ -163,6 +164,8 @@ cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
 			val = u16(cpu.dp)
 		case .PC:
 			val = cpu.pc
+		case .Flags:
+			val = transmute(u16)cpu.flags
 	}
 
 	cpu_write_word(cpu, addr, val)
@@ -181,7 +184,7 @@ cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 	val := cpu_read_word(cpu, addr)
 
 	switch reg {
-		case .A ..< .Hi:
+		case .A ..< .Flags:
 			cpu_get_reg(cpu, u8(reg)).full = val
 		case .Hi:
 			cpu.hi.full = val
@@ -191,6 +194,8 @@ cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 			cpu.dp = u8(val)
 		case .PC:
 			cpu.pc = val
+		case .Flags:
+			cpu.flags = transmute(FlagRegister)val
 	}
 
 	sp.full += size_of(u16)
@@ -203,7 +208,7 @@ cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool) {
 		cpu_push(cpu, .PC)
 	} else {
 		store_addr := memory.calculate_address(memory.IVT_PAGE, 0x0300)
-		cpu_write_word(cpu, store_addr, cpu_get_reg(cpu, FLAGS_REG_IDX).full)
+		cpu_write_word(cpu, store_addr, transmute(u16)cpu.flags)
 		cpu_write_byte(cpu, store_addr + 2, cpu.pp)
 		cpu_write_word(cpu, store_addr + 3, u16(i16(cpu.pc) - cpu.pc_delta)) // save the pre-instruction PC
 	}
