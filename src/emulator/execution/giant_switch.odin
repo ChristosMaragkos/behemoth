@@ -203,6 +203,44 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_divs_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
 				case .Divs_Reg_RegPtr_RegOffs:
 					exec_divs_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Adc_Reg_Reg:
+					exec_add_reg_reg(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Adc_Reg_Imm:
+					exec_add_reg_imm(instr.size, instr.reg1, true, cpu)
+				case .Adc_Reg_RegPtr:
+					exec_add_reg_regptr(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Adc_Reg_ImmPtr:
+					exec_add_reg_immptr(instr.size, instr.reg1, true, cpu)
+				case .Adc_Reg_RegPtr_ImmOffs:
+					exec_add_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Adc_Reg_RegPtr_RegOffs:
+					exec_add_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, true, cpu)
+				case .Sbc_Reg_Reg:
+					exec_sub_reg_reg(instr.size, instr.reg1, instr.reg2, true, false, cpu)
+				case .Sbc_Reg_Imm:
+					exec_sub_reg_imm(instr.size, instr.reg1, true, false, cpu)
+				case .Sbc_Reg_RegPtr:
+					exec_sub_reg_regptr(instr.size, instr.reg1, instr.reg2, true, false, cpu)
+				case .Sbc_Reg_ImmPtr:
+					exec_sub_reg_immptr(instr.size, instr.reg1, true, false, cpu)
+				case .Sbc_Reg_RegPtr_ImmOffs:
+					exec_sub_reg_regptr_immoffs(
+						instr.size,
+						instr.reg1,
+						instr.reg2,
+						true,
+						false,
+						cpu,
+					)
+				case .Sbc_Reg_RegPtr_RegOffs:
+					exec_sub_reg_regptr_regoffs(
+						instr.size,
+						instr.reg1,
+						instr.reg2,
+						true,
+						false,
+						cpu,
+					)
 			}
 		case .ControlFlow:
 	}
