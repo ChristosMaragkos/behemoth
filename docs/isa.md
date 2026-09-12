@@ -304,13 +304,13 @@ For a reference on which flags are altered by which opcodes, check [[#Math opcod
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
-| 0x00 | call | imm16 | 5 | Push `pc` to stack and jump to 16-bit immediate address | - |
-| 0x01 | call | reg16 | 4 | Push `pc` to stack and jump to value stored in register | - |
+| 0x00 | jsr | imm16 | 5 | Push `pc` to stack and jump to 16-bit immediate address | - |
+| 0x01 | jsr | reg16 | 4 | Push `pc` to stack and jump to value stored in register | - |
 | 0x02 | jmp | imm16 | 4 | Jump to 16-bit immediate address | - |
 | 0x03 | jmp | reg16 | 3 | Jump to value stored in register | - |
-| 0x04 | ret | - | 3 | Pop `pc` from stack | - |
-| 0x05 | iret | - | 5 | Pop `pc`, `pp` and `flags` from stack | - |
-| 0x06 | fret | - | 5 | Return from fault. Load `pc`, `pp` and `flags` from `$05:0300`-`$05:0304` | - |
+| 0x04 | rts | - | 3 | Pop `pc` from stack | - |
+| 0x05 | rti | - | 5 | Pop `pc`, `pp` and `flags` from stack | - |
+| 0x06 | rtf | - | 5 | Return from fault. Load `pc`, `pp` and `flags` from `$05:0300`-`$05:0304` | - |
 
 ### Conditional jumps
 
@@ -344,9 +344,10 @@ These instructions use the same 24-bit addressing as loads and stores (though on
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
-| 0x14 | call.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
-| 0x15 | call.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
+| 0x14 | jsr.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x15 | jsr.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
 | 0x16 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
 | 0x17 | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
 | 0x18 | ret.l | - | 4 | Pop `pc` and `pp` from stack | - |
 | 0x19-0x7f | Reserved | < | < | < | < |
+| 0x1a | rts.l | - | 4 | Pop `pc` and `pp` from stack | - |

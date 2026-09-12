@@ -41,4 +41,4 @@ When a fault is triggered:
 
 The registers are then loaded from the same addresses once handling is finished.
 
-To return from a handler, use the `iret` (`fret` for faults) instruction.
+To return from a handler, use the `rti` (`rtf` for faults) instruction.
