@@ -11,6 +11,7 @@ SP_PAGE :: 0x04
 STACK_OVF_VEC_IDX :: 0x03
 STACK_UDF_VEC_IDX :: 0x04
 INVALID_OPCODE_VEC_IDX :: 0x05
+DIV0_VEC_IDX :: 0x02
 
 Register :: struct #raw_union {
 	full:    u16,

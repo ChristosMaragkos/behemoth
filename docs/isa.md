@@ -52,7 +52,7 @@ Pushing occurs in ascending order (a->dp) while popping is done in descending or
 | sub(.l) | Computes Z C N V |
 | mulu | Computes Z N, sets C and V if hi != 0 (cleared otherwise) |
 | muls | Computes Z N, sets C and V if hi is not sign-extension of reg (cleared otherwise) |
-| divu | Computes Z N, clears C V (division by 0 sets V or raises exception) |
+| divu | Computes Z N, clears C V (division by 0 raises exception) |
 | divs | Computes Z N, clears C, sets V on signed overflow (min_int / -1) |
 | adc | Computes Z C N V |
 | sbc | Computes Z C N V |
