@@ -39,10 +39,11 @@ Pushing occurs in ascending order (a->dp) while popping is done in descending or
 | 3 | d |
 | 4 | e |
 | 5 | f |
-| 6 | flags |
-| 7 | hi |
-| 8 | dp |
-| 9-14 | Reserved |
+| 6 | g |
+| 7 | flags |
+| 8 | hi |
+| 9 | dp |
+| 10-14 | Reserved |
 
 ## Math opcodes & interaction with `FLAGS`
 
