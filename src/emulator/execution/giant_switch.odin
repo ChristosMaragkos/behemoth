@@ -241,6 +241,32 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 						false,
 						cpu,
 					)
+				case .Cmp_Reg_Reg:
+					exec_sub_reg_reg(instr.size, instr.reg1, instr.reg2, false, true, cpu)
+				case .Cmp_Reg_Imm:
+					exec_sub_reg_imm(instr.size, instr.reg1, false, true, cpu)
+				case .Cmp_Reg_RegPtr:
+					exec_sub_reg_regptr(instr.size, instr.reg1, instr.reg2, false, true, cpu)
+				case .Cmp_Reg_ImmPtr:
+					exec_sub_reg_immptr(instr.size, instr.reg1, false, true, cpu)
+				case .Cmp_Reg_RegPtr_ImmOffs:
+					exec_sub_reg_regptr_immoffs(
+						instr.size,
+						instr.reg1,
+						instr.reg2,
+						false,
+						true,
+						cpu,
+					)
+				case .Cmp_Reg_RegPtr_RegOffs:
+					exec_sub_reg_regptr_regoffs(
+						instr.size,
+						instr.reg1,
+						instr.reg2,
+						false,
+						true,
+						cpu,
+					)
 			}
 		case .ControlFlow:
 	}

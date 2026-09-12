@@ -57,6 +57,13 @@ MathOpcodes :: enum u8 {
 	Sbc_Reg_ImmPtr,
 	Sbc_Reg_RegPtr_ImmOffs,
 	Sbc_Reg_RegPtr_RegOffs,
+	// cmp
+	Cmp_Reg_Reg,
+	Cmp_Reg_Imm,
+	Cmp_Reg_RegPtr,
+	Cmp_Reg_ImmPtr,
+	Cmp_Reg_RegPtr_ImmOffs,
+	Cmp_Reg_RegPtr_RegOffs,
 }
 
 compute_flags_add :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
