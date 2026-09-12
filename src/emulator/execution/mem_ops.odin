@@ -299,6 +299,7 @@ ShoveValues :: enum u8 {
 	D,
 	E,
 	F,
+	G,
 	Flags,
 	Hi,
 	DP,
@@ -310,7 +311,7 @@ ShoveBitmask :: bit_set[ShoveValues;u16]
 exec_shove :: proc(cpu: ^Cpu) {
 	bitmask := transmute(ShoveBitmask)(cpu_pc_fetch_word(cpu))
 
-	if .Mode in bitmask {
+	if .Mode not_in bitmask {
 		for idx in ShoveValues.A ..< ShoveValues.Flags {
 			if idx in bitmask do cpu_push(cpu, RegName(idx))
 		}
