@@ -155,6 +155,18 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 						false,
 						cpu,
 					)
+				case .Mulu_Reg_Reg:
+					exec_mulu_reg_reg(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Mulu_Reg_Imm:
+					exec_mulu_reg_imm(instr.size, instr.reg1, cpu)
+				case .Mulu_Reg_RegPtr:
+					exec_mulu_reg_regptr(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Mulu_Reg_ImmPtr:
+					exec_mulu_reg_immptr(instr.size, instr.reg1, cpu)
+				case .Mulu_Reg_RegPtr_ImmOffs:
+					exec_mulu_reg_regptr_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
+				case .Mulu_Reg_RegPtr_RegOffs:
+					exec_mulu_reg_regptr_regoffs(instr.size, instr.reg1, instr.reg2, cpu)
 			}
 		case .ControlFlow:
 	}
