@@ -12,11 +12,22 @@ STACK_UDF_VEC_IDX :: 0x04
 INVALID_OPCODE_VEC_IDX :: 0x05
 DIV0_VEC_IDX :: 0x02
 
-Register :: struct #raw_union {
-	full:    u16,
-	using _: struct #packed {
-		low, high: u8,
-	},
+// This will NEVER be run in a big-endian computer,
+// but best to play it safe.
+when ODIN_ENDIAN == .Little {
+	Register :: struct #raw_union {
+		full:    u16,
+		using _: struct #packed {
+			low, high: u8,
+		},
+	}
+} else {
+	Register :: struct #raw_union {
+		full:    u16,
+		using _: struct #packed {
+			high, low: u8,
+		},
+	}
 }
 
 CpuFlags :: enum u16 {
