@@ -16,6 +16,16 @@ MiscOpcodes :: enum u8 {
 	Mtdp,
 	Swi_Imm,
 	Swi_Reg,
+	Sec,
+	Clc,
+	Sez,
+	Clz,
+	Sen,
+	Cln,
+	Sev,
+	Clv,
+	Mffr,
+	Mtfr,
 }
 
 exec_nop :: proc(cpu: ^Cpu) {
@@ -127,4 +137,56 @@ exec_swi_reg :: proc(reg1: u8, cpu: ^Cpu) {
 
 	idx := (r1.low & 0b1111111) + 128
 	cpu_trigger_interrupt(cpu, idx, false)
+}
+
+exec_sec :: proc(cpu: ^Cpu) {
+	cpu.flags += {.Carry}
+}
+
+exec_clc :: proc(cpu: ^Cpu) {
+	cpu.flags -= {.Carry}
+}
+
+exec_sez :: proc(cpu: ^Cpu) {
+	cpu.flags += {.Zero}
+}
+
+exec_clz :: proc(cpu: ^Cpu) {
+	cpu.flags -= {.Zero}
+}
+
+exec_sen :: proc(cpu: ^Cpu) {
+	cpu.flags += {.Negative}
+}
+
+exec_cln :: proc(cpu: ^Cpu) {
+	cpu.flags -= {.Negative}
+}
+
+exec_sev :: proc(cpu: ^Cpu) {
+	cpu.flags += {.Overflow}
+}
+
+exec_clv :: proc(cpu: ^Cpu) {
+	cpu.flags -= {.Overflow}
+}
+
+exec_mffr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+
+	if size == .Word do r1.full = transmute(u16)cpu.flags
+	else do r1.low = u8(transmute(u16)cpu.flags)
+}
+
+exec_mtfr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+	r1 := cpu_get_reg(cpu, reg1)
+
+	if size == .Word {
+		cpu.flags = transmute(FlagRegister)r1.full
+	} else {
+		flags_new := transmute(u16)cpu.flags
+		flags_new &= 0xFF00
+		flags_new |= u16(r1.low)
+		cpu.flags = transmute(FlagRegister)flags_new
+	}
 }

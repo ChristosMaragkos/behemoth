@@ -45,6 +45,26 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_swi_reg(instr.reg1, cpu)
 				case:
 					cpu_trigger_interrupt(cpu, INVALID_OPCODE_VEC_IDX, true)
+				case .Sec:
+					exec_sec(cpu)
+				case .Clc:
+					exec_clc(cpu)
+				case .Sez:
+					exec_sez(cpu)
+				case .Clz:
+					exec_clz(cpu)
+				case .Sen:
+					exec_sen(cpu)
+				case .Cln:
+					exec_cln(cpu)
+				case .Sev:
+					exec_sev(cpu)
+				case .Clv:
+					exec_clv(cpu)
+				case .Mffr:
+					exec_mffr(instr.size, instr.reg1, cpu)
+				case .Mtfr:
+					exec_mtfr(instr.size, instr.reg1, cpu)
 			}
 		case .Memory:
 			switch MemoryOpcodes(instr.opcode) {

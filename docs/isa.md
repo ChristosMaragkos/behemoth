@@ -93,7 +93,19 @@ Pushing occurs in ascending order (a->dp) while popping is done in descending or
 | 0x0c | mtdp | reg8 | 2 | Set value of `dp` to value of 8-bit register | 8 |
 | 0x0d | swi | imm8 (masked to 7 bits) | 8 (+ IRQ overhead) | Push `flags`, `pp`, `pc` to stack and jump to (IVT + 3 * imm8) | - |
 | 0x0e | swi | reg8 (masked to 7 bits) | 7 (+ IRQ overhead) | Push `flags`, `pp`, `pc` to stack and jump to (IVT + 3 * reg8) | - |
-| 0x0f-0x7f | Reserved | < | < | < | < |
+| 0x0f | sec | - | 2 | Set carry bit of `flags` register to 1. | - |
+| 0x10 | clc | - | 2 | Clear carry bit of `flags` register. | - |
+| 0x11 | sez | - | 2 | Set zero bit of `flags` register to 1. | - |
+| 0x12 | clz | - | 2 | Clear zero bit of `flags` register. | - |
+| 0x13 | sen | - | 2 | Set negative bit of `flags` register to 1. | - |
+| 0x14 | cln | - | 2 | Clear negative bit of `flags` register. | - |
+| 0x15 | sev | - | 2 | Set overflow bit of `flags` register to 1. | - |
+| 0x16 | clv | - | 2 | Clear overflow bit of `flags` register. | - |
+| 0x17 | sei | - | 2 | Set IRQ disable bit of `flags` register to 1. | - |
+| 0x18 | cli | - | 2 | Clear IRQ disable bit of `flags` register. | - |
+| 0x19 | mffr | reg | 2 | Set register value to value of `flags` (or low byte of `flags` in 8-bit) | 8, 16 |
+| 0x1a | mtfr | reg | 2 | Set value of `flags` to value of register | 8, 16 |
+| 0x1b-0x7f | Reserved | < | < | < | < |
 
 ## Memory (category 1)
 
