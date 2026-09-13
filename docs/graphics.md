@@ -154,18 +154,18 @@ DMA controllers are documented in [dma.md](./dma.md).
 | `$05:050d` | BG3VOFS | 16-bit signed vertical offset for background layer 3 | RW | 2 |
 | `$05:050f` | BG4HOFS | 16-bit signed horizontal offset for background layer 4 | RW | 2 |
 | `$05:0511` | BG4VOFS | 16-bit signed vertical offset for background layer 4 | RW | 2 |
-| `$05:0513` | BG1SRC  | 17-bit source address for background 1 entry data | RW | 3 |
-| `$05:0516` | BG2SRC  | 17-bit source address for background 2 entry data | RW | 3 |
-| `$05:0519` | BG3SRC  | 17-bit source address for background 3 entry data | RW | 3 |
-| `$05:051c` | BG4SRC  | 17-bit source address for background 4 entry data | RW | 3 |
-| `$05:051e` | BG1GFXSRC  | 17-bit source address for background 1 graphics data | RW | 3 |
-| `$05:0521` | BG2GFXSRC  | 17-bit source address for background 2 graphics data | RW | 3 |
-| `$05:0524` | BG3GFXSRC  | 17-bit source address for background 3 graphics data | RW | 3 |
-| `$05:0527` | BG4GFXSRC  | 17-bit source address for background 4 graphics data | RW | 3 |
-| `$05:0530` | BG1CTRL  | Background 1 control bitfield (see below) | RW | 1 |
-| `$05:052b` | BG2CTRL  | Background 2 control bitfield (see below) | RW | 1 |
-| `$05:052c` | BG3CTRL  | Background 3 control bitfield (see below) | RW | 1 |
-| `$05:052d` | BG4CTRL  | Background 4 control bitfield (see below) | RW | 1 |
+| `$05:0513` | BG1SRC | 17-bit source address for background 1 entry data | RW | 3 |
+| `$05:0516` | BG2SRC | 17-bit source address for background 2 entry data | RW | 3 |
+| `$05:0519` | BG3SRC | 17-bit source address for background 3 entry data | RW | 3 |
+| `$05:051c` | BG4SRC | 17-bit source address for background 4 entry data | RW | 3 |
+| `$05:051f` | BG1GFXSRC | 17-bit source address for background 1 graphics data | RW | 3 |
+| `$05:0522` | BG2GFXSRC | 17-bit source address for background 2 graphics data | RW | 3 |
+| `$05:0525` | BG3GFXSRC | 17-bit source address for background 3 graphics data | RW | 3 |
+| `$05:0528` | BG4GFXSRC | 17-bit source address for background 4 graphics data | RW | 3 |
+| `$05:052f` | BG1CTRL | Background 1 control bitfield (see below) | RW | 1 |
+| `$05:0530` | BG2CTRL | Background 2 control bitfield (see below) | RW | 1 |
+| `$05:0531` | BG3CTRL | Background 3 control bitfield (see below) | RW | 1 |
+| `$05:0532` | BG4CTRL | Background 4 control bitfield (see below) | RW | 1 |
 
 - `BG`*`CTRL` (`BG1CTRL`..`BG4CTRL`), identical layout for each layer:
   - Bit 0: Enable. Set to 1 to draw this layer; if 0 the layer is skipped entirely.
@@ -178,8 +178,8 @@ DMA controllers are documented in [dma.md](./dma.md).
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:052e` | OAMGFXSRC  | 17-bit source address for OAM graphics data | RW | 3 |
-| `$05:0531` | OAMCTRL  | OAM control bitfield (see below) | RW | 1 |
+| `$05:052b` | OAMGFXSRC | 17-bit source address for OAM graphics data | RW | 3 |
+| `$05:052e` | OAMCTRL | OAM control bitfield (see below) | RW | 1 |
 
 - `OAMCTRL`:
   - Bits 0-1: Color depth for all sprites (see [[#Tile data]]): 0 -> 1bpp, 1 -> 4bpp, 2 -> 8bpp, 3 -> reserved.
@@ -193,11 +193,11 @@ to have arrived to or from its destination by the time the CPU is executing its 
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:0532` | VMPCTRL | Video memory port control bitmask (see below) | RW | 1 |
-| `$05:0533` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. 17-bit due to 128kb VRAM. | RW | 3 |
-| `$05:0536` | VMDATAL | Low byte of word to write to (or read from) video memory | RW | 1 |
-| `$05:0537` | VMDATAH | High byte of word to write to (or read from) video memory | RW | 1 |
-| `$05:0538` | VMPSTART | Write here to execute read/write operation | RW | 1 |
+| `$05:0533` | VMPCTRL | Video memory port control bitmask (see below) | RW | 1 |
+| `$05:0534` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. 17-bit due to 128kb VRAM. | RW | 3 |
+| `$05:0537` | VMDATAL | Low byte of word to write to (or read from) video memory | RW | 1 |
+| `$05:0538` | VMDATAH | High byte of word to write to (or read from) video memory | RW | 1 |
+| `$05:0539` | VMPSTART | Write here to execute read/write operation | RW | 1 |
 
 - `VMPCTRL`:
   - Bit 0: Width. 0 -> byte operations, incrementing `VMADDR` by 1 and only using `VMDATAL`; 1 -> word operations, incrementing `VMADDR` by 2 and using both `VMDATAL` and `VMDATAH`.

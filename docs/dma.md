@@ -61,12 +61,12 @@ one video space on the other. Direct video-to-video transfers (e.g. VRAM -> OAM)
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:0538` | VDMACTRL | DMA control bitmask (see below) | RW | 1 |
-| `$05:0539` | VDMASRC | 24-bit main bus source (upload) or destination (readback) address | RW | 3 |
-| `$05:053c` | VDMADST | Destination address in the selected video space. 17-bit to cover VRAM; upper bits ignored for CRAM and OAM. | RW | 3 |
-| `$05:053f` | VDMALEN | Transfer length in elements, where an element is one byte or one word depending on bit 3 of `DMACTRL` | RW | 2 |
-| `$05:0541` | VDMASTAT | DMA status bitmask (see below) | R | 1 |
-| `$05:0542` | VDMASTART | Write any value to start a transfer | W | 1 |
+| `$05:053a` | VDMACTRL | DMA control bitmask (see below) | RW | 1 |
+| `$05:053b` | VDMASRC | 24-bit main bus source (upload) or destination (readback) address | RW | 3 |
+| `$05:053e` | VDMADST | Destination address in the selected video space. 17-bit to cover VRAM; upper bits ignored for CRAM and OAM. | RW | 3 |
+| `$05:0541` | VDMALEN | Transfer length in elements, where an element is one byte or one word depending on bit 3 of `VDMACTRL` | RW | 2 |
+| `$05:0543` | VDMASTAT | DMA status bitmask (see below) | R | 1 |
+| `$05:0544` | VDMASTART | Write any value to start a transfer | W | 1 |
 
 - `VDMACTRL`:
   - Bits 0-1: Destination select: 0 -> VRAM, 1 -> CRAM, 2 -> OAM, 3 -> reserved.
