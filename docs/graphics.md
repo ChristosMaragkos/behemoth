@@ -78,9 +78,9 @@ This is the layout of an OAM entry:
 - Byte 6:
   - Bit 0: Horizontal flip
   - Bit 1: Vertical flip
-  - Bits 2-4: Horizontal size in total sprites (0-7). Draws the next `n` tiles towards the right (or left if horizontal flip is on).
+  - Bits 2-4: Horizontal size in total sprites (1-8). Draws the next `n` tiles towards the right (or left if horizontal flip is on).
   Minimum size is 1, so leave to zero for default (1x1) sprites.
-  - Bits 5-7: Vertical size in total sprites (0-7). Draws `n` further rows of the same width as the horizontal selector, growing downward
+  - Bits 5-7: Vertical size in total sprites (1-8). Draws `n` further rows of the same width as the horizontal selector, growing downward
   (or upward if vertical flip is on). Minimum size is 1, so leave to zero for default.
 - Byte 7: Reserved
 
