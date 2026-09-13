@@ -38,10 +38,6 @@ exec_wfi :: proc(cpu: ^Cpu) {
 		cpu.halted = true
 		return
 	}
-
-	// FIXME: This will cause save file loss if we *ever* somehow get here, so fix ASAP.
-	// The emulator will need to handle exceptions like these gracefully.
-	panic("Instruction 'wfi' was executed while the CPU was halted. How did we get here?")
 }
 
 exec_mov :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
