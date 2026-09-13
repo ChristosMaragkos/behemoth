@@ -40,5 +40,6 @@ When a fault is triggered:
 - `pc` is stored to `$05:0303`-`$05:0304`
 
 The registers are then loaded from the same addresses once handling is finished.
+In both cases, the `I` bit of the flags register is set to 1 after jumping to the interrupt handler to prevent nested interrupts.
 
 To return from a handler, use the `rti` (`rtf` for faults) instruction.
