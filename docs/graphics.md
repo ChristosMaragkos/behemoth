@@ -115,7 +115,7 @@ VRAM, Color RAM and OAM are constantly being read by the video chip to output pi
 to them produce bus contention, stalling the CPU for about 2 cycles while the I/O operation is queued.
 At the end of each line, the horizontal blank (`HBLNK`) interrupt fires (if not masked), signaling that the PPU is done drawing
 and allowing free access to VRAM, OAM and CRAM for 200 CPU cycles. After all 240 lines have been drawn, the vertical blank (`VBLNK`) non-maskable interrupt
-is triggered, once again allowing free memory access for 25 scan lines' worth of PPU time (which translates to 12800 CPU cycles).
+is triggered, once again allowing free memory access for 25 scan lines' worth of PPU time (which translates to 17800 CPU cycles).
 
 # MMIO & Graphics
 

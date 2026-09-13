@@ -5,7 +5,7 @@ import exec "/execution"
 import "core:mem"
 import "core:os"
 
-CYCLES_PER_FRAME :: 122880
+CYCLES_PER_FRAME :: 170880
 
 System :: struct {
 	cpu:           ^exec.Cpu,
