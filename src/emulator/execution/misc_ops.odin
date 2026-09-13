@@ -24,6 +24,8 @@ MiscOpcodes :: enum u8 {
 	Cln,
 	Sev,
 	Clv,
+	Sei,
+	Cli,
 	Mffr,
 	Mtfr,
 }
@@ -166,6 +168,14 @@ exec_sev :: proc(cpu: ^Cpu) {
 
 exec_clv :: proc(cpu: ^Cpu) {
 	cpu.flags -= {.Overflow}
+}
+
+exec_sei :: proc(cpu: ^Cpu) {
+	cpu.flags += {.IgnoreInterrupts}
+}
+
+exec_cli :: proc(cpu: ^Cpu) {
+	cpu.flags -= {.IgnoreInterrupts}
 }
 
 exec_mffr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {

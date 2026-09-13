@@ -65,6 +65,10 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_mffr(instr.size, instr.reg1, cpu)
 				case .Mtfr:
 					exec_mtfr(instr.size, instr.reg1, cpu)
+				case .Sei:
+					exec_sei(cpu)
+				case .Cli:
+					exec_cli(cpu)
 			}
 		case .Memory:
 			switch MemoryOpcodes(instr.opcode) {
