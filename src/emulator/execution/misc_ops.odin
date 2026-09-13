@@ -29,7 +29,8 @@ MiscOpcodes :: enum u8 {
 }
 
 exec_nop :: proc(cpu: ^Cpu) {
-	cpu.cycle_delta += 1
+	// According to all known laws of aviation,
+	// there is no way a bee should be able to fly.
 }
 
 exec_wfi :: proc(cpu: ^Cpu) {
