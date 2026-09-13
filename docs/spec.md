@@ -109,7 +109,7 @@ The 16mb address space is split into 256 banks of 64kb each, for the following r
 
 # Cycle Budget
 
-- 122880 cycles per frame during active display. Horizontal blanking triggers 255 times per frame if not masked,
+- 122880 cycles per frame during active display. Horizontal blanking triggers 240 times per frame if not masked,
 and lasts 200 cycles. Vertical blanking lasts 12800 CPU cycles. In total 186680 cycles per frame. Targeting 60FPS, this
 amounts to a frequency of about 11.2MHz.
 
