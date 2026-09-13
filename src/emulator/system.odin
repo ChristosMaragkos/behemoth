@@ -2,6 +2,8 @@ package behemoth
 
 import "./memory"
 import exec "/execution"
+import "core:mem"
+import "core:os"
 
 CYCLES_PER_FRAME :: 122880
 
@@ -49,4 +51,23 @@ system_cleanup :: proc(sys: ^System) {
 	if sys_err != .None {
 		panic("Could not finalize freeing the emulator. Perhaps a bad pointer was passed.")
 	}
+}
+
+system_load_cart_from_file :: proc(sys: ^System, path: string) -> os.Error {
+	file := os.open(path) or_return
+	flsz := os.file_size(file) or_return
+
+	length := min(flsz, memory.TOTAL_ROM_SPACE)
+	low: i64 = memory.CART_ROM_START
+	high := low + length
+
+	os.read(file, sys.bus.ram[low:high]) or_return
+	return os.General_Error.None
+}
+
+system_load_cart_from_bytes :: proc(sys: ^System, bytes: []byte) {
+	length := min(len(bytes), memory.TOTAL_ROM_SPACE)
+	low := memory.CART_ROM_START
+
+	mem.copy(&sys.bus.ram[low], &bytes[0], length)
 }
