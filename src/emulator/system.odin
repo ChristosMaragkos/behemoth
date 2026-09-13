@@ -12,17 +12,41 @@ System :: struct {
 }
 
 system_init :: proc() -> ^System {
-	sys, err := new(System)
-	if err != .None {
+	sys, sys_err := new(System)
+	if sys_err != .None {
 		panic("Could not allocate memory for the emulator.")
 	}
+
+	cpu, cpu_err := new(exec.Cpu)
+	if cpu_err != .None {
+		panic("Could not allocate memory for the CPU.")
+	}
+
+	bus, bus_err := new(memory.MemoryBus)
+	if bus_err != .None {
+		panic("Could not allocate memory for the memory bus, require 16mb.")
+	}
+
+	sys.cpu = cpu
+	sys.bus = bus
+
 	exec.cpu_init(sys.cpu, sys.bus)
 	return sys
 }
 
 system_cleanup :: proc(sys: ^System) {
-	err := free(sys)
-	if err != .None {
+	bus_err := free(sys.bus)
+	if bus_err != .None {
 		panic("Could not free the emulator's backing memory. Perhaps a bad pointer was passed.")
+	}
+
+	cpu_err := free(sys.cpu)
+	if cpu_err != .None {
+		panic("Could not free the CPU's backing memory. Perhaps a bad pointer was passed.")
+	}
+
+	sys_err := free(sys)
+	if sys_err != .None {
+		panic("Could not finalize freeing the emulator. Perhaps a bad pointer was passed.")
 	}
 }
