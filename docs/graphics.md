@@ -133,8 +133,7 @@ DMA controllers are documented in [dma.md](./dma.md).
 - PPUSTATUS:
   - Bit 0: `VBLANK`. Set to 1 while the PPU is in vertical blank. Cleared when rendering resumes.
   - Bit 1: `HBLANK`. Set to 1 while the PPU is in a horizontal blank. Cleared when active scan resumes on that line.
-  - Bit 2: `VBLANKPEND`. Set when v-blank fires and cleared on read of `PPUSTATUS`. Lets the game poll for a new frame without an interrupt.
-  - Bits 3-7: Reserved
+  - Bits 2-7: Reserved
 
 - PPUCTRL:
   - Bit 0: Force blanking. Set to 1 to disable PPU rendering entirely and get free access to VRAM/OAM/CRAM on the main bus.
@@ -190,6 +189,7 @@ DMA controllers are documented in [dma.md](./dma.md).
 These registers allow you to read and write data from and to VRAM, CRAM or OAM without a DMA transfer.
 Note that using the video memory port outside of a blanking period (v-blank or h-blank) will result in bus contention. The data is guaranteed
 to have arrived to or from its destination by the time the CPU is executing its next instruction.
+Reads and writes from and to invalid addresses are simply dropped.
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
