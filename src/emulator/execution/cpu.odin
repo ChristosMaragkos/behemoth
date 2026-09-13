@@ -167,6 +167,8 @@ cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
 	switch reg {
 		case .A ..< .Flags:
 			val = cpu_get_reg(cpu, u8(reg)).full
+		case .Flags:
+			val = transmute(u16)cpu.flags
 		case .Hi:
 			val = cpu.hi.full
 		case .PP:
@@ -175,8 +177,6 @@ cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
 			val = u16(cpu.dp)
 		case .PC:
 			val = cpu.pc
-		case .Flags:
-			val = transmute(u16)cpu.flags
 	}
 
 	cpu_write_word(cpu, addr, val)
@@ -197,6 +197,8 @@ cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 	switch reg {
 		case .A ..< .Flags:
 			cpu_get_reg(cpu, u8(reg)).full = val
+		case .Flags:
+			cpu.flags = transmute(FlagRegister)val
 		case .Hi:
 			cpu.hi.full = val
 		case .PP:
@@ -205,8 +207,6 @@ cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 			cpu.dp = u8(val)
 		case .PC:
 			cpu.pc = val
-		case .Flags:
-			cpu.flags = transmute(FlagRegister)val
 	}
 
 	sp.full += size_of(u16)
