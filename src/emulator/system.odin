@@ -6,6 +6,7 @@ import "core:mem"
 import "core:os"
 
 CYCLES_PER_FRAME :: 170880
+CPU_PPU_CYCLE_RATIO :: 3
 
 System :: struct {
 	cpu:           ^exec.Cpu,
