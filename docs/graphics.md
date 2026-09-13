@@ -197,10 +197,14 @@ Reads and writes from and to invalid addresses are simply dropped.
 | `$05:0534` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. 17-bit due to 128kb VRAM. | RW | 3 |
 | `$05:0537` | VMDATAL | Low byte of word to write to (or read from) video memory | RW | 1 |
 | `$05:0538` | VMDATAH | High byte of word to write to (or read from) video memory | RW | 1 |
-| `$05:0539` | VMPSTART | Write here to execute read/write operation | RW | 1 |
 
 - `VMPCTRL`:
   - Bit 0: Width. 0 -> byte operations, incrementing `VMADDR` by 1 and only using `VMDATAL`; 1 -> word operations, incrementing `VMADDR` by 2 and using both `VMDATAL` and `VMDATAH`.
   - Bit 1: Direction. 0 -> read from video memory into `VMDATAL`/`VMDATAH`; 1 -> write `VMDATAL`/`VMDATAH` into video memory.
   - Bits 2-3: Destination select: 0 -> VRAM, 1 -> CRAM, 2 -> OAM, 3 -> reserved.
   - Bits 4-7: Reserved.
+
+To execute an I/O operation and increment `VMADDR` using the port:
+
+- Reads: read from `VMDATAL` if Width = 0 or `VMDATAH` if Width = 1
+- Writes: write to `VMDATAL` if Width = 0 or `VMDATAH` if Width = 1
