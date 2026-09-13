@@ -365,5 +365,61 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_sub_l_imm32(instr.reg1, instr.reg2, true, cpu)
 			}
 		case .ControlFlow:
+			switch FlowOps(instr.opcode) {
+				case .Jsr_Imm:
+					exec_jsr_imm(cpu)
+				case .Jsr_Reg:
+					exec_jsr_reg(instr.reg1, cpu)
+				case .Jmp_Imm:
+					exec_jmp_imm(cpu)
+				case .Jmp_Reg:
+					exec_jmp_reg(instr.reg1, cpu)
+				case .Rts:
+					exec_rts(cpu)
+				case .Rti:
+					exec_rti(cpu)
+				case .Rtf:
+					exec_rtf(cpu)
+				case .Jz:
+					exec_jz(instr.size, cpu)
+				case .Jnz:
+					exec_jnz(instr.size, cpu)
+				case .Jc:
+					exec_jc(instr.size, cpu)
+				case .Jnc:
+					exec_jnc(instr.size, cpu)
+				case .Jmi:
+					exec_jmi(instr.size, cpu)
+				case .Jpl:
+					exec_jpl(instr.size, cpu)
+				case .Jv:
+					exec_jv(instr.size, cpu)
+				case .Jnv:
+					exec_jnv(instr.size, cpu)
+				case .Jges:
+					exec_jges(instr.size, cpu)
+				case .Jgts:
+					exec_jgts(instr.size, cpu)
+				case .Jles:
+					exec_jles(instr.size, cpu)
+				case .Jlts:
+					exec_jlts(instr.size, cpu)
+				case .Jgtu:
+					exec_jgtu(instr.size, cpu)
+				case .Jleu:
+					exec_jleu(instr.size, cpu)
+				case .Djnz:
+					exec_djnz(instr.size, instr.reg1, cpu)
+				case .Jsr_L_Imm:
+					exec_jsr_l_imm(cpu)
+				case .Jsr_L_Regpair:
+					exec_jsr_l_regpair(instr.reg1, instr.reg2, cpu)
+				case .Jmp_L_Imm:
+					exec_jmp_l_imm(cpu)
+				case .Jmp_L_Regpair:
+					exec_jmp_l_regpair(instr.reg1, instr.reg2, cpu)
+				case .Rts_L:
+					exec_rts_l(cpu)
+			}
 	}
 }
