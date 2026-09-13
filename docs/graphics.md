@@ -168,7 +168,7 @@ DMA controllers are documented in [dma.md](./dma.md).
 | `$05:0532` | BG4CTRL | Background 4 control bitfield (see below) | RW | 1 |
 
 - `BG`*`CTRL` (`BG1CTRL`..`BG4CTRL`), identical layout for each layer:
-  - Bit 0: Enable. Set to 1 to draw this layer; if 0 the layer is skipped entirely.
+  - Bit 0: Disable. Set to 1 to skip drawing this layer; if 0 the layer is drawn.
   - Bits 1-2: Color depth (see [[#Tile data]]): 0 -> 1bpp, 1 -> 4bpp, 2 -> 8bpp, 3 -> reserved.
   - Bits 3-4: Layer size (see [[#Background layers]]): 0 -> 32x32, 1 -> 32x64, 2 -> 64x32, 3 -> 64x64.
   - Bits 5-6: Priority (0-3), resolved against other layers/OAM as described in [[#Priority]].
