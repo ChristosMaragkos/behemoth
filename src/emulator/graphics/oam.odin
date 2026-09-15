@@ -9,9 +9,9 @@ OamConfig :: struct {
 	},
 }
 
-OamEntry :: struct {
+OamEntry :: struct #packed {
 	x, y:     i16,
-	using _:  bit_field u32 {
+	using _:  bit_field u16 {
 		tile_idx: u16  | 10,
 		pal_idx:  u8   | 3,
 		prio:     u8   | 2,
@@ -25,3 +25,4 @@ OamEntry :: struct {
 	},
 	reserved: u8,
 }
+#assert(size_of(OamEntry) == 8)
