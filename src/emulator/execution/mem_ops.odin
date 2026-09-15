@@ -151,11 +151,11 @@ exec_ld_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	switch size {
 		case .Word:
 			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
-			r2.full += size_of(u16)
+			r2.full -= size_of(u16)
 			r1.full = val
 		case .Byte:
 			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
-			r2.full += size_of(u8)
+			r2.full -= size_of(u8)
 			r1.low = val
 	}
 }
