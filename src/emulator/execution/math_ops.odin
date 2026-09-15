@@ -180,6 +180,12 @@ exec_add_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^
 		case .Word:
 			res_full = u32(r1.full) + u32(r2.full) + carry
 			res := u16(res_full)
+
+			if reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, r2.full)
 			r1.full = res
 
@@ -204,6 +210,11 @@ exec_add_reg_imm :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
 			op2 := cpu_pc_fetch_word(cpu)
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
+
+			if reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
 
 			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
 			r1.full = res
@@ -233,6 +244,11 @@ exec_add_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
 
+			if reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
 			r1.full = res
 
@@ -260,6 +276,11 @@ exec_add_reg_immptr :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu
 			op2 := cpu_dp_fetch_word(cpu, immptr)
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
+
+			if reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
 
 			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
 			r1.full = res
@@ -290,6 +311,11 @@ exec_add_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
 
+			if reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
 			r1.full = res
 
@@ -319,6 +345,11 @@ exec_add_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
+
+			if reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
 
 			flags_old^ = flags_new + compute_flags_add(size, res_full, r1.full, op2)
 			r1.full = res
@@ -370,6 +401,12 @@ exec_sub_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard: bo
 		case .Word:
 			res_full = u32(r1.full) - u32(r2.full) - carry
 			res := u16(res_full)
+
+			if !discard && reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, r2.full)
 			if !discard do r1.full = res
 
@@ -394,6 +431,11 @@ exec_sub_reg_imm :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool, cp
 			op2 := cpu_pc_fetch_word(cpu)
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
+
+			if !discard && reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
 
 			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
 			if !discard do r1.full = res
@@ -423,6 +465,11 @@ exec_sub_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard:
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
 
+			if !discard && reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
 			if !discard do r1.full = res
 
@@ -450,6 +497,11 @@ exec_sub_reg_immptr :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool,
 			op2 := cpu_dp_fetch_word(cpu, immptr)
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
+
+			if !discard && reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
 
 			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
 			if !discard do r1.full = res
@@ -485,6 +537,11 @@ exec_sub_reg_regptr_immoffs :: proc(
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
 
+			if !discard && reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
 			if !discard do r1.full = res
 
@@ -519,6 +576,11 @@ exec_sub_reg_regptr_regoffs :: proc(
 			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
+
+			if !discard && reg1 == SP_REG_IDX && res_full > 0xFFFF {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
 
 			flags_old^ = flags_new + compute_flags_sub(size, res_full, r1.full, op2)
 			if !discard do r1.full = res
@@ -1491,6 +1553,11 @@ exec_inc :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 		case .Word:
 			result := r1.full + 1
 
+			if reg1 == SP_REG_IDX && result < r1.full {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			if result == 0 do flags_new += {.Zero}
 			if result & 0x8000 != 0 do flags_new += {.Negative}
 			v_test := (r1.full ~ result) & (1 ~ result)
@@ -1520,6 +1587,11 @@ exec_dec :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	switch size {
 		case .Word:
 			result := r1.full - 1
+
+			if reg1 == SP_REG_IDX && result > r1.full {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
 
 			if result == 0 do flags_new += {.Zero}
 			if result & 0x8000 != 0 do flags_new += {.Negative}

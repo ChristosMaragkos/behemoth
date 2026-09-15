@@ -118,10 +118,20 @@ exec_ld_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r2.full += size_of(u16)
 			r1.full = val
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r2.full += size_of(u8)
 			r1.low = val
@@ -134,10 +144,20 @@ exec_ld_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			r2.full += size_of(u16)
 			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r1.full = val
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			r2.full += size_of(u8)
 			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r1.low = val
@@ -150,10 +170,20 @@ exec_ld_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r2.full -= size_of(u16)
 			r1.full = val
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r2.full -= size_of(u8)
 			r1.low = val
@@ -166,10 +196,20 @@ exec_ld_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			r2.full -= size_of(u16)
 			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r1.full = val
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			r2.full -= size_of(u8)
 			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r1.low = val
@@ -234,9 +274,19 @@ exec_st_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 			r2.full += size_of(u16)
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 			r2.full += size_of(u8)
 	}
@@ -248,9 +298,19 @@ exec_st_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			r2.full += size_of(u16)
 			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), false) {
+				cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+				return
+			}
+
 			r2.full += size_of(u8)
 			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 	}
@@ -262,9 +322,19 @@ exec_st_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 			r2.full -= size_of(u16)
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 			r2.full -= size_of(u8)
 	}
@@ -276,9 +346,19 @@ exec_st_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u16), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			r2.full -= size_of(u16)
 			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 		case .Byte:
+			if reg2 == SP_REG_IDX && sp_math_wraps(r2.full, size_of(u8), true) {
+				cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+				return
+			}
+
 			r2.full -= size_of(u8)
 			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 	}

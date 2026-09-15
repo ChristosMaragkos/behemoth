@@ -148,6 +148,11 @@ cpu_reg_store_byte :: proc(cpu: ^Cpu, reg_idx: u8, offs: u16, val: u8) {
 	cpu_write_byte(cpu, addr, val)
 }
 
+sp_math_wraps :: #force_inline proc(sp: u16, delta: int, subtract: bool) -> bool {
+	if subtract do return int(sp) < delta
+	return int(sp) > 0xFFFF - delta
+}
+
 cpu_advance_pc :: proc(cpu: ^Cpu, amnt: i16) {
 	pc_new := i16(cpu.pc) + amnt
 	if amnt < 0 {
