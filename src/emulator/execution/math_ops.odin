@@ -229,7 +229,7 @@ exec_add_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
 
@@ -237,7 +237,7 @@ exec_add_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			res_full = u32(r1.low) + u32(op2) + carry
 			res := u8(res_full)
 
@@ -286,7 +286,7 @@ exec_add_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
 
@@ -294,7 +294,7 @@ exec_add_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.low) + u32(op2) + carry
 			res := u8(res_full)
 
@@ -316,7 +316,7 @@ exec_add_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.full) + u32(op2) + carry
 			res := u16(res_full)
 
@@ -324,7 +324,7 @@ exec_add_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.low) + u32(op2) + carry
 			res := u8(res_full)
 
@@ -419,7 +419,7 @@ exec_sub_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard:
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
 
@@ -427,7 +427,7 @@ exec_sub_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard:
 			if !discard do r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			res_full = u32(r1.low) - u32(op2) - carry
 			res := u8(res_full)
 
@@ -481,7 +481,7 @@ exec_sub_reg_regptr_immoffs :: proc(
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
 
@@ -489,7 +489,7 @@ exec_sub_reg_regptr_immoffs :: proc(
 			if !discard do r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.low) - u32(op2) - carry
 			res := u8(res_full)
 
@@ -516,7 +516,7 @@ exec_sub_reg_regptr_regoffs :: proc(
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.full) - u32(op2) - carry
 			res := u16(res_full)
 
@@ -524,7 +524,7 @@ exec_sub_reg_regptr_regoffs :: proc(
 			if !discard do r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			res_full = u32(r1.low) - u32(op2) - carry
 			res := u8(res_full)
 
@@ -621,7 +621,7 @@ exec_mulu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			product := u32(r1.full) * u32(op2)
 			res := u16(product)
 			hi := u16(product >> 16)
@@ -631,7 +631,7 @@ exec_mulu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			product := u32(r1.low) * u32(op2)
 			res := u8(product)
 			hi := u8(product >> 8)
@@ -685,7 +685,7 @@ exec_mulu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			product := u32(r1.full) * u32(op2)
 			res := u16(product)
 			hi := u16(product >> 16)
@@ -695,7 +695,7 @@ exec_mulu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			product := u32(r1.low) * u32(op2)
 			res := u8(product)
 			hi := u8(product >> 8)
@@ -718,7 +718,7 @@ exec_mulu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			product := u32(r1.full) * u32(op2)
 			res := u16(product)
 			hi := u16(product >> 16)
@@ -728,7 +728,7 @@ exec_mulu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			product := u32(r1.low) * u32(op2)
 			res := u8(product)
 			hi := u8(product >> 8)
@@ -892,7 +892,7 @@ exec_divu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -905,7 +905,7 @@ exec_divu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 			r1.full = u16(quotient)
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -968,7 +968,7 @@ exec_divu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -981,7 +981,7 @@ exec_divu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = u16(quotient)
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1007,7 +1007,7 @@ exec_divu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1020,7 +1020,7 @@ exec_divu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = u16(quotient)
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1103,7 +1103,7 @@ exec_muls_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			product := i32(i16(r1.full)) * i32(i16(op2))
 			res := u16(product)
 			hi := u16(u32(product >> 16))
@@ -1113,7 +1113,7 @@ exec_muls_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			product := i32(i8(r1.low)) * i32(i8(op2))
 			res := u8(product)
 			hi := u8(product >> 8)
@@ -1167,7 +1167,7 @@ exec_muls_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			product := i32(i16(r1.full)) * i32(i16(op2))
 			res := u16(product)
 			hi := u16(u32(product >> 16))
@@ -1177,7 +1177,7 @@ exec_muls_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			product := i32(i8(r1.low)) * i32(i8(op2))
 			res := u8(product)
 			hi := u8(product >> 8)
@@ -1200,7 +1200,7 @@ exec_muls_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			product := i32(i16(r1.full)) * i32(i16(op2))
 			res := u16(product)
 			hi := u16(u32(product >> 16))
@@ -1210,7 +1210,7 @@ exec_muls_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = res
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			product := i32(i8(r1.low)) * i32(i8(op2))
 			res := u8(product)
 			hi := u8(product >> 8)
@@ -1314,7 +1314,7 @@ exec_divs_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1330,7 +1330,7 @@ exec_divs_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 			r1.full = u16(quotient)
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1402,7 +1402,7 @@ exec_divs_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1418,7 +1418,7 @@ exec_divs_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = u16(quotient)
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1447,7 +1447,7 @@ exec_divs_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, addr)
+			op2 := cpu_reg_fetch_word(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1463,7 +1463,7 @@ exec_divs_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 			r1.full = u16(quotient)
 
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, addr)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, addr)
 			if op2 == 0 {
 				cpu_trigger_interrupt(cpu, DIV0_VEC_IDX, true)
 				return
@@ -1802,12 +1802,12 @@ exec_and_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, discard: bool, cpu: 
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			result := r1.full & op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			if !discard do r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			result := r1.low & op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			if !discard do r1.low = result
@@ -1845,12 +1845,12 @@ exec_and_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, discard: boo
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.full & op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			if !discard do r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.low & op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			if !discard do r1.low = result
@@ -1868,12 +1868,12 @@ exec_and_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, discard: boo
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.full & op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			if !discard do r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.low & op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			if !discard do r1.low = result
@@ -1928,12 +1928,12 @@ exec_or_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			result := r1.full | op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			result := r1.low | op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			r1.low = result
@@ -1971,12 +1971,12 @@ exec_or_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.full | op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.low | op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			r1.low = result
@@ -1994,12 +1994,12 @@ exec_or_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.full | op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.low | op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			r1.low = result
@@ -2054,12 +2054,12 @@ exec_xor_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, r2.full)
+			op2 := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			result := r1.full ~ op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, r2.full)
+			op2 := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			result := r1.low ~ op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			r1.low = result
@@ -2097,12 +2097,12 @@ exec_xor_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.full ~ op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.low ~ op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			r1.low = result
@@ -2120,12 +2120,12 @@ exec_xor_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			op2 := cpu_dp_fetch_word(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_word(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.full ~ op2
 			flags_old^ = flags_new + compute_flags_logic(size, result)
 			r1.full = result
 		case .Byte:
-			op2 := cpu_dp_fetch_byte(cpu, u16(i16(r2.full) + i16(offs)))
+			op2 := cpu_reg_fetch_byte(cpu, reg2, u16(i16(r2.full) + i16(offs)))
 			result := r1.low ~ op2
 			flags_old^ = flags_new + compute_flags_logic(size, u16(result))
 			r1.low = result

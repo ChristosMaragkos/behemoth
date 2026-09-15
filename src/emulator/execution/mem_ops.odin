@@ -58,10 +58,10 @@ exec_ld_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			val := cpu_dp_fetch_word(cpu, r2.full)
+			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r1.full = val
 		case .Byte:
-			val := cpu_dp_fetch_byte(cpu, r2.full)
+			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r1.low = val
 	}
 }
@@ -88,10 +88,10 @@ exec_ld_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			val := cpu_dp_fetch_word(cpu, addr)
+			val := cpu_reg_fetch_word(cpu, reg2, addr)
 			r1.full = val
 		case .Byte:
-			val := cpu_dp_fetch_byte(cpu, addr)
+			val := cpu_reg_fetch_byte(cpu, reg2, addr)
 			r1.low = val
 	}
 }
@@ -104,10 +104,10 @@ exec_ld_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			val := cpu_dp_fetch_word(cpu, addr)
+			val := cpu_reg_fetch_word(cpu, reg2, addr)
 			r1.full = val
 		case .Byte:
-			val := cpu_dp_fetch_byte(cpu, addr)
+			val := cpu_reg_fetch_byte(cpu, reg2, addr)
 			r1.low = val
 	}
 }
@@ -118,11 +118,11 @@ exec_ld_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			val := cpu_dp_fetch_word(cpu, r2.full)
+			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r2.full += size_of(u16)
 			r1.full = val
 		case .Byte:
-			val := cpu_dp_fetch_byte(cpu, r2.full)
+			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r2.full += size_of(u8)
 			r1.low = val
 	}
@@ -135,11 +135,11 @@ exec_ld_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	switch size {
 		case .Word:
 			r2.full += size_of(u16)
-			val := cpu_dp_fetch_word(cpu, r2.full)
+			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r1.full = val
 		case .Byte:
 			r2.full += size_of(u8)
-			val := cpu_dp_fetch_byte(cpu, r2.full)
+			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r1.low = val
 	}
 }
@@ -150,11 +150,11 @@ exec_ld_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			val := cpu_dp_fetch_word(cpu, r2.full)
+			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r2.full += size_of(u16)
 			r1.full = val
 		case .Byte:
-			val := cpu_dp_fetch_byte(cpu, r2.full)
+			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r2.full += size_of(u8)
 			r1.low = val
 	}
@@ -167,11 +167,11 @@ exec_ld_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	switch size {
 		case .Word:
 			r2.full -= size_of(u16)
-			val := cpu_dp_fetch_word(cpu, r2.full)
+			val := cpu_reg_fetch_word(cpu, reg2, r2.full)
 			r1.full = val
 		case .Byte:
 			r2.full -= size_of(u8)
-			val := cpu_dp_fetch_byte(cpu, r2.full)
+			val := cpu_reg_fetch_byte(cpu, reg2, r2.full)
 			r1.low = val
 	}
 }
@@ -182,9 +182,9 @@ exec_st_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			cpu_dp_store_word(cpu, r2.full, r1.full)
+			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 		case .Byte:
-			cpu_dp_store_byte(cpu, r2.full, r1.low)
+			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 	}
 }
 
@@ -208,9 +208,9 @@ exec_st_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			cpu_dp_store_word(cpu, addr, r1.full)
+			cpu_reg_store_word(cpu, reg2, addr, r1.full)
 		case .Byte:
-			cpu_dp_store_byte(cpu, addr, r1.low)
+			cpu_reg_store_byte(cpu, reg2, addr, r1.low)
 	}
 }
 
@@ -222,9 +222,9 @@ exec_st_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			cpu_dp_store_word(cpu, addr, r1.full)
+			cpu_reg_store_word(cpu, reg2, addr, r1.full)
 		case .Byte:
-			cpu_dp_store_byte(cpu, addr, r1.low)
+			cpu_reg_store_byte(cpu, reg2, addr, r1.low)
 	}
 }
 
@@ -234,10 +234,10 @@ exec_st_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			cpu_dp_store_word(cpu, r2.full, r1.full)
+			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 			r2.full += size_of(u16)
 		case .Byte:
-			cpu_dp_store_byte(cpu, r2.full, r1.low)
+			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 			r2.full += size_of(u8)
 	}
 }
@@ -249,10 +249,10 @@ exec_st_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	switch size {
 		case .Word:
 			r2.full += size_of(u16)
-			cpu_dp_store_word(cpu, r2.full, r1.full)
+			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 		case .Byte:
 			r2.full += size_of(u8)
-			cpu_dp_store_byte(cpu, r2.full, r1.low)
+			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 	}
 }
 
@@ -262,10 +262,10 @@ exec_st_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 
 	switch size {
 		case .Word:
-			cpu_dp_store_word(cpu, r2.full, r1.full)
+			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 			r2.full -= size_of(u16)
 		case .Byte:
-			cpu_dp_store_byte(cpu, r2.full, r1.low)
+			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 			r2.full -= size_of(u8)
 	}
 }
@@ -277,10 +277,10 @@ exec_st_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	switch size {
 		case .Word:
 			r2.full -= size_of(u16)
-			cpu_dp_store_word(cpu, r2.full, r1.full)
+			cpu_reg_store_word(cpu, reg2, r2.full, r1.full)
 		case .Byte:
 			r2.full -= size_of(u8)
-			cpu_dp_store_byte(cpu, r2.full, r1.low)
+			cpu_reg_store_byte(cpu, reg2, r2.full, r1.low)
 	}
 }
 
