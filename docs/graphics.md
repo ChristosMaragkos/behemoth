@@ -1,3 +1,4 @@
+
 # Graphics
 
 The graphics chip (PPU) comes with:
@@ -31,6 +32,7 @@ you are criminally insane). A single tile map can contain up to 1024 8x8 tiles, 
 to use one color depth for all of their entries. Possible color depths include:
 
 - 1bpp: 1 -> color 1 in the selected palette, 0 -> color 0 (ergo transparent). 8 bytes per tile.
+- 2bpp: Can use colors 0-3 of the selected palette. Packs 4 pixels per byte for 16 bytes per tile.
 - 4bpp: Can use all the colors in the selected palette. 32 bytes per tile.
 - 8bpp: Can use *every color in CRAM*. Indexing starts from the selected palette and wraps. 64 bytes per tile.
 
