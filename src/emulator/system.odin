@@ -1,15 +1,17 @@
 package behemoth
 
-import "./memory"
 import exec "/execution"
+import gfx "/graphics"
+import "/memory"
 import "core:mem"
 import "core:os"
 
 CYCLES_PER_FRAME :: 170880
-CPU_PPU_CYCLE_RATIO :: 3
+CPU_PPU_CYCLE_RATIO :: 2
 
 System :: struct {
 	cpu:           ^exec.Cpu,
+	ppu:           ^gfx.Ppu,
 	bus:           ^memory.MemoryBus,
 	cycle_counter: u64,
 }
@@ -25,6 +27,11 @@ system_init :: proc() -> ^System {
 		panic("Could not allocate memory for the CPU.")
 	}
 
+	ppu, ppu_err := new(gfx.Ppu)
+	if ppu_err != .None {
+		panic("Could not allocate memory for the PPU.")
+	}
+
 	bus, bus_err := new(memory.MemoryBus)
 	if bus_err != .None {
 		panic("Could not allocate memory for the memory bus, require 16mb.")
@@ -32,6 +39,7 @@ system_init :: proc() -> ^System {
 
 	sys.cpu = cpu
 	sys.bus = bus
+	sys.ppu = ppu
 
 	exec.cpu_init(sys.cpu, sys.bus)
 	return sys
@@ -46,6 +54,11 @@ system_cleanup :: proc(sys: ^System) {
 	cpu_err := free(sys.cpu)
 	if cpu_err != .None {
 		panic("Could not free the CPU's backing memory. Perhaps a bad pointer was passed.")
+	}
+
+	ppu_err := free(sys.ppu)
+	if ppu_err != .None {
+		panic("Could not free the PPU's backing memory. Perhaps a bad pointer was passed.")
 	}
 
 	sys_err := free(sys)
