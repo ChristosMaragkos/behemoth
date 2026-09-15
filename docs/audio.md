@@ -220,7 +220,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
 | `$05:071d` | NOICTRL | Noise channel control bitmask (see below) | RW | 1 |
-| `$05:071e` | NOIPITCH | Noise channel pitch | RW | 2 |
+| `$05:071e` | NOIRATE | Noise channel LFSR step rate | RW | 2 |
 | `$05:0720` | NOIVOL | Noise channel volume (Q0.8 fixed point) | RW | 1 |
 | `$05:0721` | NOIADSR | Noise channel ADSR envelope | RW | 2 |
 
