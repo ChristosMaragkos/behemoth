@@ -214,3 +214,5 @@ To execute an I/O operation and increment `VMADDR` using the port:
 
 - Reads: read from `VMDATAL`
 - Writes: write to `VMDATAL`
+
+Because of how this mechanism works, executing the first within a chain of IO operations requires a dummy read/write.
