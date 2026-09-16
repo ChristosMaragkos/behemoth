@@ -36,7 +36,7 @@ VmpControl :: bit_field u8 {
 VideoMemoryPort :: struct {
 	control: VmpControl,
 	using _: bit_field u32 {
-		addr: u32 | 17,
+		addr: u32 | 24,
 	},
 	data_l:  u8,
 	data_h:  u8,
