@@ -167,10 +167,10 @@ DMA controllers are documented in [dma.md](./dma.md).
 | `$05:0523` | BG2GFXSRC | 17-bit source address for background 2 graphics data | RW | 3 |
 | `$05:0526` | BG3GFXSRC | 17-bit source address for background 3 graphics data | RW | 3 |
 | `$05:0529` | BG4GFXSRC | 17-bit source address for background 4 graphics data | RW | 3 |
-| `$05:0530` | BG1CTRL | Background 1 control bitfield (see below) | RW | 1 |
-| `$05:0531` | BG2CTRL | Background 2 control bitfield (see below) | RW | 1 |
-| `$05:0532` | BG3CTRL | Background 3 control bitfield (see below) | RW | 1 |
-| `$05:0533` | BG4CTRL | Background 4 control bitfield (see below) | RW | 1 |
+| `$05:052c` | BG1CTRL | Background 1 control bitfield (see below) | RW | 1 |
+| `$05:052d` | BG2CTRL | Background 2 control bitfield (see below) | RW | 1 |
+| `$05:052e` | BG3CTRL | Background 3 control bitfield (see below) | RW | 1 |
+| `$05:052f` | BG4CTRL | Background 4 control bitfield (see below) | RW | 1 |
 
 - `BG`*`CTRL` (`BG1CTRL`..`BG4CTRL`), identical layout for each layer:
   - Bit 0: Disable. Set to 1 to skip drawing this layer; if 0 the layer is drawn.
@@ -183,8 +183,8 @@ DMA controllers are documented in [dma.md](./dma.md).
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:052c` | OAMGFXSRC | 17-bit source address for OAM graphics data | RW | 3 |
-| `$05:052f` | OAMCTRL | OAM control bitfield (see below) | RW | 1 |
+| `$05:0530` | OAMGFXSRC | 17-bit source address for OAM graphics data | RW | 3 |
+| `$05:0533` | OAMCTRL | OAM control bitfield (see below) | RW | 1 |
 
 - `OAMCTRL`:
   - Bits 0-1: Color depth for all sprites (see [[#Tile data]]): 0 -> 1bpp, 1 -> 2bpp, 2 -> 4bpp, 3 -> 8bpp.
