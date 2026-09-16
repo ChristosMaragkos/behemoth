@@ -50,6 +50,7 @@ bus_write_byte :: proc(bus: ^MemoryBus, addr: u32, val: byte) {
 
 	if addr == SDMASTART do bus_system_dma(bus)
 	else if addr == VDMASTART do bus_video_dma(bus)
+	else if addr == VMDATAL do bus_try_vmp_write(bus)
 }
 
 bus_write_word :: proc(bus: ^MemoryBus, addr: u32, val: u16) {
@@ -59,4 +60,6 @@ bus_write_word :: proc(bus: ^MemoryBus, addr: u32, val: u16) {
 	ram_write_word(bus.ram[:], addr, val)
 	if addr == SDMASTART do bus_system_dma(bus)
 	else if addr == VDMASTART do bus_video_dma(bus)
+	else if addr == VMDATAL do bus_try_vmp_write(bus)
+	else if addr == VMDATAL - 1 do bus_try_vmp_write(bus)
 }
