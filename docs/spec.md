@@ -109,10 +109,16 @@ The 16mb address space is split into 256 pages of 64kb each, for the following r
 
 # Cycle Budget
 
-- 170880 cycles per frame during active display (240 scanlines of 712 cycles each). Each scanline is 512 cycles of
-visible output followed by 200 cycles of horizontal blanking, so HBLNK triggers 240 times per frame if not masked and lasts
-200 cycles. Vertical blanking lasts 25 scanline periods, i.e. 17800 CPU cycles. In total 188680 cycles per frame. Targeting
-60FPS, this amounts to a frequency of about 11.32MHz.
+122880 cycles per frame during active display (240 scanlines of 512 cycles each). H-blank triggers 239 times per frame at the end of each scanline
+if not masked and lasts 200 CPU cycles. Vertical blanking triggers after drawing the 240th line and lasts 25 scanline periods' worth of active display time,
+i.e. 12800 CPU cycles. In total:
+
+- 240 scanlines of active display * 512 cycles per scanline = 122880
+- 239 horizontal blanks * 200 cycles each = 47800
+- 25 scanlines' worth of vertical blanking * 512 cycles per line = 12800
+
+Sum total: 183480 cycles per frame. Targeting 60 frames per second, this amounts
+to a frequency of ~11MHz.
 
 > [!NOTE]
 > Please keep in mind that this is purely a specification and future revisions may add or remove content.
