@@ -159,10 +159,10 @@ DMA controllers are documented in [dma.md](./dma.md).
 | `$05:050e` | BG3VOFS | 16-bit signed vertical offset for background layer 3 | RW | 2 |
 | `$05:0510` | BG4HOFS | 16-bit signed horizontal offset for background layer 4 | RW | 2 |
 | `$05:0512` | BG4VOFS | 16-bit signed vertical offset for background layer 4 | RW | 2 |
-| `$05:0514` | BG1SRC | 17-bit source address for background 1 entry data | RW | 3 |
-| `$05:0517` | BG2SRC | 17-bit source address for background 2 entry data | RW | 3 |
-| `$05:051a` | BG3SRC | 17-bit source address for background 3 entry data | RW | 3 |
-| `$05:051d` | BG4SRC | 17-bit source address for background 4 entry data | RW | 3 |
+| `$05:0514` | BG1ESRC | 17-bit source address for background 1 entry data | RW | 3 |
+| `$05:0517` | BG2ESRC | 17-bit source address for background 2 entry data | RW | 3 |
+| `$05:051a` | BG3ESRC | 17-bit source address for background 3 entry data | RW | 3 |
+| `$05:051d` | BG4ESRC | 17-bit source address for background 4 entry data | RW | 3 |
 | `$05:0520` | BG1GFXSRC | 17-bit source address for background 1 graphics data | RW | 3 |
 | `$05:0523` | BG2GFXSRC | 17-bit source address for background 2 graphics data | RW | 3 |
 | `$05:0526` | BG3GFXSRC | 17-bit source address for background 3 graphics data | RW | 3 |
