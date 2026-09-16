@@ -2,7 +2,7 @@ package memory
 
 is_valid_write :: proc(addr: u32) -> bool {
 	switch addr {
-		case CART_ROM_START ..< (CART_ROM_END + 1):
+		case CART_ROM_START ..= CART_ROM_END:
 			return false
 		case:
 			return true
