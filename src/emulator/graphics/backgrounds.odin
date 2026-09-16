@@ -16,15 +16,15 @@ BgCtrl :: bit_field u8 {
 }
 
 BgConfig :: struct {
-	h_offs:  i16,
-	v_offs:  i16,
-	using _: bit_field u32 {
+	h_offs:     i16,
+	v_offs:     i16,
+	using _:    bit_field u32 {
 		entry_src: u32 | 17,
 	},
-	using _: bit_field u32 {
+	using _:    bit_field u32 {
 		gfx_src: u32 | 17,
 	},
-	using _: BgCtrl,
+	using ctrl: BgCtrl,
 }
 
 BgEntry :: bit_field u16 {
