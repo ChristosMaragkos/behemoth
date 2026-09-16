@@ -83,11 +83,11 @@ To bypass the limitation of having 16-bit registers, we use internal page regist
 - `pp`: Program page. Supplies the top 8 bits of the 24-bit address that the program counter reads from (instructions fetch from `[pp:pc]`).
 If at any point the program counter exceeds `0xFFFF`, it wraps to zero and `pp` is incremented. Conversely, if `pc` underflows from zero, `pp` is decremented.
 - `dp`: Data page. Supplies the top 8 bits of the 24-bit address that load and store instructions operate on (by forming `[dp:reg16]`). The
-exception to this is the stack pointer which is hardwired to bank 4 (so dereferencing it loads from `[$04:sp]`).
+exception to this is the stack pointer which is hardwired to page 4 (so dereferencing it loads from `[$04:sp]`).
 
-The program and data page registers dictate which bank a "near" pointer can reach: a raw register pointer simply acts as an offset to the currently mapped page.
+The program and data page registers dictate which page a "near" pointer can reach: a raw register pointer simply acts as an offset to the currently mapped page.
 Each page has a size of 64kb with 256 possible, usable pages (2^16 * 2^8 = 2^24).
-To access data in another bank without changing `pp` or `dp`, we can use long variants of load, store, call and return instructions,
+To access data in another page without changing `pp` or `dp`, we can use long variants of load, store, call and return instructions,
 which take either a 24-bit absolute address or a register pair, such as:
 
 - `call.l $011234` -> push `pp` to stack, push `pc` to stack, set `pp` to `0x01` and `pc` to `0x1234`.
@@ -96,16 +96,16 @@ which take either a 24-bit absolute address or a register pair, such as:
 
 ## Memory map
 
-The 16mb address space is split into 256 banks of 64kb each, for the following regions:
+The 16mb address space is split into 256 pages of 64kb each, for the following regions:
 
-- Banks 0-3: WRAM (256kb)
-- Bank 4: Stack (64kb)
-- Bank 5: Interrupt vector table (256 24-bit little endian addresses), memory-mapped registers (PPU, APU), 3 DMA
+- Pages 0-3: WRAM (256kb)
+- Page 4: Stack (64kb)
+- Page 5: Interrupt vector table (256 24-bit little endian addresses), memory-mapped registers (PPU, APU), 3 DMA
   controllers, 2 expansion ports
   - The reset vector is not part of the IVT, and is instead located at `0x0000` within the ROM-mapped region. More below.
-- Banks 6-197: Game ROM. The reset vector is located at `$06:0000`, so on boot, `pp` is set to `0x06` and `pc` to `0x0000`. Not writable.
-- Banks 198-201: Cartridge SRAM (the save file, if found at boot, is mapped here, and writes are flushed periodically).
-- Banks 202-255: Reserved for future expansion.
+- Pages 6-197: Game ROM. The reset vector is located at `$06:0000`, so on boot, `pp` is set to `0x06` and `pc` to `0x0000`. Not writable.
+- Pages 198-201: Cartridge SRAM (the save file, if found at boot, is mapped here, and writes are flushed periodically).
+- Pages 202-255: Reserved for future expansion.
 
 # Cycle Budget
 
