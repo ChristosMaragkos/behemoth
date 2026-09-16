@@ -117,10 +117,12 @@ ppu_step :: proc(ppu: ^Ppu) {
 		// sort in descending order so the larger priorities end up first
 		slice.reverse_sort_by(candidates[:], candidate_less_than)
 		chosen_color := ppu.backdrop
+		using_backdrop := true
 		for i in 0 ..< 5 {
 			if candidates[i].color_index % 16 == 0 do continue
 
 			chosen_color = candidates[i].color_index
+			using_backdrop = false
 			break
 		}
 
@@ -131,7 +133,7 @@ ppu_step :: proc(ppu: ^Ppu) {
 		ppu.frame_buffer[pixel_idx].r = r
 		ppu.frame_buffer[pixel_idx].g = g
 		ppu.frame_buffer[pixel_idx].b = b
-		ppu.frame_buffer[pixel_idx].a = chosen_color % 16 == 0 ? 0 : 0xff
+		ppu.frame_buffer[pixel_idx].a = chosen_color % 16 == 0 && !using_backdrop ? 0 : 0xff
 	}
 
 	if .InHblank not_in ppu.status {
