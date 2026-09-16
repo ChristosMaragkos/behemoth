@@ -129,7 +129,7 @@ DMA controllers are documented in [dma.md](./dma.md).
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
 | `$05:0500` | PPUSTATUS | PPU status flags bitmask (see below) | R | 1 |
-| `$05:0501` | CRNTLN | Current scanline being drawn by the PPU. Is updated after horizontal blanking. | R | 1 |
+| `$05:0501` | CRNTLN | Current scanline being drawn by the PPU. Is updated at the start of horizontal blanking. | R | 1 |
 | `$05:0502` | PPUCTRL | PPU control bitmask (see below) | RW | 1 |
 | `$05:0503` | BACKDROP | CRAM index of the backdrop color, drawn where nothing else has an opaque pixel | RW | 1 |
 
