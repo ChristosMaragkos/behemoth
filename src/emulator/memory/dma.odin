@@ -174,18 +174,20 @@ bus_try_vmp_write :: proc(bus: ^MemoryBus) {
 
 	ptr: ^u8
 
+	width := ctrl.width
+	offset := u32(width)
 	switch dest {
 		case .Vram:
-			if addr > 0x1ffff do return
+			if addr > 0x1ffff - offset do return
 
 			ptr = (^u8)(bus.vram)
 		case .Cram:
-			if addr > 0x1ff do return
+			if addr > 0x1ff - offset do return
 
 			ptr = (^u8)(bus.cram)
 		case .Oam:
 		case .Reserved:
-			if addr > 0x7ff do return
+			if addr > 0x7ff - offset do return
 
 			ptr = (^u8)(bus.oam)
 	}
@@ -193,7 +195,6 @@ bus_try_vmp_write :: proc(bus: ^MemoryBus) {
 	ptr = mem.ptr_offset(ptr, addr)
 	value := bus_read_word(bus, VMDATAL)
 
-	width := ctrl.width
 	switch width {
 		case .Byte:
 			ptr^ = u8(value)
@@ -201,7 +202,7 @@ bus_try_vmp_write :: proc(bus: ^MemoryBus) {
 			ptr_word := (^u16)(ptr)
 			ptr_word^ = value
 	}
-	addr += 1 + u32(width)
+	addr += 1 + offset
 	bus_write_u24(bus, VMPADDR, addr)
 
 	is_blanking := bus_read_byte(bus, PPUSTATUS) & 0b11 != 0
