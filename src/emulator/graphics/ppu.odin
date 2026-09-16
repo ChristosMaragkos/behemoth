@@ -4,7 +4,9 @@ package graphics
 HBLANK_DURATION :: 100
 PPU_MMIO_OFFSET :: 0x0500
 
+import "../common"
 import "core:slice"
+
 PpuStatus :: bit_set[enum u8 {
 	InVblank,
 	InHblank,
@@ -29,7 +31,7 @@ Ppu :: struct {
 	bg3_conf:     BgConfig,
 	bg4_conf:     BgConfig,
 	oam_conf:     OamConfig,
-	vmp:          VideoMemoryPort,
+	vmp:          common.VideoMemoryPort,
 	vram:         VideoRam,
 	cram:         ColorRam,
 	oam:          SpriteRam,
@@ -68,7 +70,7 @@ ppu_decode_from_mmio :: proc(ppu: ^Ppu) {
 	ppu.oam_conf.gfx_src = read_u24(ppu.mmio_view, 0x30) & 0x1ffff
 	ppu.oam_conf.color_depth = ColorDepth(read_u8(ppu.mmio_view, 0x33))
 
-	ppu.vmp.control = VmpControl(read_u8(ppu.mmio_view, 0x34))
+	ppu.vmp.control = common.VmpControl(read_u8(ppu.mmio_view, 0x34))
 	ppu.vmp.addr = read_u24(ppu.mmio_view, 0x35)
 	ppu.vmp.data_l = read_u8(ppu.mmio_view, 0x38)
 	ppu.vmp.data_h = read_u8(ppu.mmio_view, 0x39)

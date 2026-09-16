@@ -45,6 +45,9 @@ system_init :: proc() -> ^System {
 		&bus.ram[memory.calculate_address(MMIO_PAGE, gfx.PPU_MMIO_OFFSET)],
 		0xff,
 	)
+	sys.bus.vram = &ppu.vram
+	sys.bus.cram = &ppu.cram
+	sys.bus.oam = &ppu.oam
 
 	exec.cpu_init(sys.cpu, sys.bus)
 	return sys
