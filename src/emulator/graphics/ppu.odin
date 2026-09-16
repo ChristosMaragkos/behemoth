@@ -2,6 +2,7 @@ package graphics
 
 // Horizontal blank duration in PPU cycles (CPU runs at 2x the speed)
 HBLANK_DURATION :: 100
+PPU_MMIO_OFFSET :: 0x0500
 
 import "core:slice"
 PpuStatus :: bit_set[enum u8 {
@@ -22,6 +23,7 @@ Ppu :: struct {
 	current_col:  u8,
 	current_line: u16,
 	hblank_count: u8,
+	mmio_view:    []byte,
 	bg1_conf:     BgConfig,
 	bg2_conf:     BgConfig,
 	bg3_conf:     BgConfig,
@@ -34,7 +36,62 @@ Ppu :: struct {
 	frame_buffer: FrameBuffer,
 }
 
-ppu_init :: proc(ppu: ^Ppu) {
+// Extract writeable PPU registers from MMIO
+ppu_decode_from_mmio :: proc(ppu: ^Ppu) {
+	ppu.ctrl = transmute(PpuCtrl)read_u8(ppu.mmio_view, 0x02)
+	ppu.backdrop = read_u8(ppu.mmio_view, 0x03)
+
+	ppu.bg1_conf.h_offs = i16(read_u16(ppu.mmio_view, 0x04))
+	ppu.bg1_conf.v_offs = i16(read_u16(ppu.mmio_view, 0x06))
+	ppu.bg2_conf.h_offs = i16(read_u16(ppu.mmio_view, 0x08))
+	ppu.bg2_conf.v_offs = i16(read_u16(ppu.mmio_view, 0x0a))
+	ppu.bg3_conf.h_offs = i16(read_u16(ppu.mmio_view, 0x0c))
+	ppu.bg3_conf.v_offs = i16(read_u16(ppu.mmio_view, 0x0e))
+	ppu.bg4_conf.h_offs = i16(read_u16(ppu.mmio_view, 0x10))
+	ppu.bg4_conf.v_offs = i16(read_u16(ppu.mmio_view, 0x12))
+
+	ppu.bg1_conf.entry_src = read_u24(ppu.mmio_view, 0x14) & 0x1ffff
+	ppu.bg2_conf.entry_src = read_u24(ppu.mmio_view, 0x17) & 0x1ffff
+	ppu.bg3_conf.entry_src = read_u24(ppu.mmio_view, 0x1a) & 0x1ffff
+	ppu.bg4_conf.entry_src = read_u24(ppu.mmio_view, 0x1d) & 0x1ffff
+
+	ppu.bg1_conf.gfx_src = read_u24(ppu.mmio_view, 0x20) & 0x1ffff
+	ppu.bg2_conf.gfx_src = read_u24(ppu.mmio_view, 0x23) & 0x1ffff
+	ppu.bg3_conf.gfx_src = read_u24(ppu.mmio_view, 0x26) & 0x1ffff
+	ppu.bg4_conf.gfx_src = read_u24(ppu.mmio_view, 0x29) & 0x1ffff
+
+	ppu.bg1_conf.ctrl = transmute(BgCtrl)read_u8(ppu.mmio_view, 0x2c)
+	ppu.bg2_conf.ctrl = transmute(BgCtrl)read_u8(ppu.mmio_view, 0x2d)
+	ppu.bg3_conf.ctrl = transmute(BgCtrl)read_u8(ppu.mmio_view, 0x2e)
+	ppu.bg4_conf.ctrl = transmute(BgCtrl)read_u8(ppu.mmio_view, 0x2f)
+
+	ppu.oam_conf.gfx_src = read_u24(ppu.mmio_view, 0x30) & 0x1ffff
+	ppu.oam_conf.color_depth = ColorDepth(read_u8(ppu.mmio_view, 0x33))
+
+	ppu.vmp.control = VmpControl(read_u8(ppu.mmio_view, 0x34))
+	ppu.vmp.addr = read_u24(ppu.mmio_view, 0x35)
+	ppu.vmp.data_l = read_u8(ppu.mmio_view, 0x38)
+	ppu.vmp.data_h = read_u8(ppu.mmio_view, 0x39)
+}
+
+@(private = "file")
+read_u8 :: proc(view: []byte, addr: u8) -> u8 {
+	return view[addr]
+}
+
+@(private = "file")
+read_u16 :: proc(view: []byte, addr: u8) -> u16 {
+	return u16(view[addr]) | u16(view[addr + 1] << 8)
+}
+
+@(private = "file")
+read_u24 :: proc(view: []byte, addr: u8) -> u32 {
+	return u32(view[addr]) | u32(view[addr + 1] << 8) | u32(view[addr + 2] << 16)
+}
+
+ppu_encode_to_mmio :: proc(ppu: ^Ppu) {
+	ppu.mmio_view[0x00] = transmute(u8)ppu.status
+	ppu.mmio_view[0x01] = u8(ppu.current_line)
 }
 
 ppu_step :: proc(ppu: ^Ppu) {

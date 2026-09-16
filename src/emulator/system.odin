@@ -5,8 +5,9 @@ import gfx "/graphics"
 import "/memory"
 import "core:mem"
 import "core:os"
+import "core:slice"
 
-CYCLES_PER_FRAME :: 170880
+MMIO_PAGE :: 0x05
 CPU_PPU_CYCLE_RATIO :: 2
 
 System :: struct {
@@ -40,6 +41,10 @@ system_init :: proc() -> ^System {
 	sys.cpu = cpu
 	sys.bus = bus
 	sys.ppu = ppu
+	ppu.mmio_view = slice.bytes_from_ptr(
+		&bus.ram[memory.calculate_address(MMIO_PAGE, gfx.PPU_MMIO_OFFSET)],
+		0xff,
+	)
 
 	exec.cpu_init(sys.cpu, sys.bus)
 	return sys
