@@ -102,7 +102,7 @@ bus_video_dma :: proc(bus: ^MemoryBus) {
 	ram_ptr := &bus.ram[ram_addr]
 
 	cycle_cost: int = 1
-	is_blanking := bus_read_byte(bus, PPUSTATUS) & 0b11 == 0
+	is_blanking := bus_read_byte(bus, PPUSTATUS) & 0b11 != 0
 	if !is_blanking do cycle_cost += 2
 
 	switch ctrl.direction {
@@ -161,8 +161,8 @@ bus_try_vmp_read :: proc(bus: ^MemoryBus) {
 	addr += 1 + u32(width)
 	bus_write_u24(bus, VMPADDR, addr)
 
-	is_blanking := bus_read_byte(bus, PPUSTATUS) & 0b11 == 0
-	if is_blanking do bus.contention = 2
+	is_blanking := bus_read_byte(bus, PPUSTATUS) & 0b11 != 0
+	if !is_blanking do bus.contention = 2
 }
 
 bus_try_vmp_write :: proc(bus: ^MemoryBus) {
@@ -204,6 +204,6 @@ bus_try_vmp_write :: proc(bus: ^MemoryBus) {
 	addr += 1 + u32(width)
 	bus_write_u24(bus, VMPADDR, addr)
 
-	is_blanking := bus_read_byte(bus, PPUSTATUS) & 0b11 == 0
-	if is_blanking do bus.contention = 2
+	is_blanking := bus_read_byte(bus, PPUSTATUS) & 0b11 != 0
+	if !is_blanking do bus.contention = 2
 }
