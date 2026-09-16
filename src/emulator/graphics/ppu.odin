@@ -93,11 +93,12 @@ read_u24 :: proc(view: []byte, addr: u8) -> u32 {
 
 ppu_encode_to_mmio :: proc(ppu: ^Ppu) {
 	ppu.mmio_view[0x00] = transmute(u8)ppu.status
-	ppu.mmio_view[0x01] = u8(ppu.current_line)
+	ppu.mmio_view[0x01] = u8(clamp(ppu.current_line, 0, 239))
 }
 
 ppu_step :: proc(ppu: ^Ppu) {
 	if .ForceBlanking in ppu.ctrl {
+		ppu.status -= {.InHblank, .InVblank}
 		ppu.current_col = 0
 		ppu.current_line = 0
 		return
