@@ -200,7 +200,7 @@ Reads and writes from and to invalid addresses are simply dropped.
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
 | `$05:0534` | VMPCTRL | Video memory port control bitmask (see below) | RW | 1 |
-| `$05:0535` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. 17-bit due to 128kb VRAM. | RW | 3 |
+| `$05:0535` | VMADDR | Address in VRAM/CRAM/OAM to read from/write to. Incremented based on bit 0 of `VMPCTRL`. | RW | 3 |
 | `$05:0538` | VMDATAL | Low byte of word to write to (or read from) video memory | RW | 1 |
 | `$05:0539` | VMDATAH | High byte of word to write to (or read from) video memory | RW | 1 |
 
