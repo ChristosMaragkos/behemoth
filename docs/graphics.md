@@ -212,5 +212,5 @@ Reads and writes from and to invalid addresses are simply dropped.
 
 To execute an I/O operation and increment `VMADDR` using the port:
 
-- Reads: read from `VMDATAL` if Width = 0 or `VMDATAH` if Width = 1
-- Writes: write to `VMDATAL` if Width = 0 or `VMDATAH` if Width = 1
+- Reads: read from `VMDATAL`
+- Writes: write to `VMDATAL`
