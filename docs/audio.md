@@ -108,24 +108,24 @@ Each envelope value is a 4-bit integer, allowing programmers to neatly pack an A
 To reach amplitude 1.0 from 0.0 (or the inverse), the state machine must step 256 times. Attack, Decay and Release represent indices that map
 to an integer that represents how many samples must be generated before one step occurs:
 
-| Value | Attack Duration | Decay/Release Duration | Samples/Step (Attack) | Samples/Step (Decay/Release) | Typical Musical Use |
-| :---: | :---: | :---: | :---: | :---: | :--- |
-| `0x0` | **0 ms** | **0 ms** | 0 | 1 | Ultra-fast snap, clickless transient |
-| `0x1` | **5.8 ms** | **27.4 ms** | 1 | 4 | Snappy snare / hi-hat transient |
-| `0x2` | **16 ms** | **48 ms** | 3 | 8 | Tight bass pluck, staccato blip |
-| `0x3` | **24 ms** | **72 ms** | 4 | 12 | Mallet strike, fast marimba |
-| `0x4` | **38 ms** | **114 ms** | 7 | 20 | Slap bass, punchy key |
-| `0x5` | **56 ms** | **168 ms** | 10 | 29 | Woodwind bite, short tom decay |
-| `0x6` | **68 ms** | **204 ms** | 12 | 35 | Quick synth brass bite |
-| `0x7` | **80 ms** | **240 ms** | 14 | 41 | Short acoustic guitar decay |
-| `0x8` | **100 ms** | **300 ms** | 17 | 52 | Mellow key decay, 1/10th sec swell |
-| `0x9` | **250 ms** | **750 ms** | 43 | 129 | Quarter-second decay, piano chord tail |
-| `0xA` | **500 ms** | **1.5 s** | 86 | 258 | Half-second ride cymbal / horn decay |
-| `0xB` | **800 ms** | **2.4 s** | 138 | 413 | Medium room reverb tail |
-| `0xC` | **1.0 s** | **3.0 s** | 172 | 517 | 1-second string swell / slow brass |
-| `0xD` | **3.0 s** | **9.0 s** | 517 | 1,551 | Ambient pad attack / long gong ring |
-| `0xE` | **5.0 s** | **15.0 s** | 861 | 2,584 | Cinematic orchestral build |
-| `0xF` | **8.0 s** | **24.0 s** | 1,378 | 4,134 | Extreme atmospheric wash / drone fade |
+| Value | Attack Duration | Decay/Release Duration | Samples/Step (Attack) | Samples/Step (Decay/Release) |
+| :---: | :---: | :---: | :---: | :---: |
+| `0x0` | **0 ms** | **0 ms** | 0 | 1 |
+| `0x1` | **5.8 ms** | **27.4 ms** | 1 | 4 |
+| `0x2` | **16 ms** | **48 ms** | 3 | 8 |
+| `0x3` | **24 ms** | **72 ms** | 4 | 12 |
+| `0x4` | **38 ms** | **114 ms** | 7 | 20 |
+| `0x5` | **56 ms** | **168 ms** | 10 | 29 |
+| `0x6` | **68 ms** | **204 ms** | 12 | 35 |
+| `0x7` | **80 ms** | **240 ms** | 14 | 41 |
+| `0x8` | **100 ms** | **300 ms** | 17 | 52 |
+| `0x9` | **250 ms** | **750 ms** | 43 | 129 |
+| `0xA` | **500 ms** | **1.5 s** | 86 | 258 |
+| `0xB` | **800 ms** | **2.4 s** | 138 | 413 |
+| `0xC` | **1.0 s** | **3.0 s** | 172 | 517 |
+| `0xD` | **3.0 s** | **9.0 s** | 517 | 1,551 |
+| `0xE` | **5.0 s** | **15.0 s** | 861 | 2,584 |
+| `0xF` | **8.0 s** | **24.0 s** | 1,378 | 4,134 |
 
 > [!NOTE]
 > The above table is courtesy of the genius behind the Commodore 64's SID audio chip, Bob Yannes.
