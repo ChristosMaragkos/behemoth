@@ -97,8 +97,13 @@ different `pitch` values for a detuned, fatter unison sound.
 ### ADSR
 
 Finally, ADSR (attack, decay, sustain, release) envelopes are supported for all channels. ADSR is practically a
-state machine that provides a multiplier for the generated sample depending on the current state (and how long it has been maintained).
-Each envelope value is a 4-bit integer, allowing programmers to neatly pack an ADSR envelope into a 16-bit word.
+state machine that provides a multiplier (the amplitude) for the generated sample depending on the current state (and how long it has been maintained).
+Each envelope value is a 4-bit integer, allowing programmers to neatly pack an ADSR envelope into a 16-bit word as such:
+
+- Bits 0-3: Release
+- Bits 4-7: Sustain
+- Bits 8-11: Decay
+- Bits 12-15: Attack
 
 To reach amplitude 1.0 from 0.0 (or the inverse), the state machine must step 256 times. Attack, Decay and Release represent indices that map
 to an integer that represents how many samples must be generated before one step occurs:
