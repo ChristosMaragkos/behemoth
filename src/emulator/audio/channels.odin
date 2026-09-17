@@ -66,7 +66,5 @@ WavetableChannel :: struct {
 	volume:  u8,
 	pitch:   u16,
 	adsr:    u16,
-	using _: bit_field u8 {
-		index: u8 | 7,
-	},
+	index:   u8,
 }

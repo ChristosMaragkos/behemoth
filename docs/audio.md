@@ -61,13 +61,13 @@ At startup, the duty cycle is initialized to 4 (50%), producing a true square wa
   - Short mode: bit 6 is the tap bit. The LFSR sequence collapses to much fewer steps before it cycles back to the initial
     value, producing a metallic buzzing tone.
 - Wavetable: The wavetable channels can (or rather *must*) be configured as to which sample to play. As mentioned before,
-samples must be uploaded to Audio RAM before playback. The sample value of the wavetable channels is a 7-bit integer mapping to a 64-byte
-aligned memory region (8kb ARAM => 128 * 64-byte samples)
+samples must be uploaded to Audio RAM before playback. The sample value of the wavetable channels is an 8-bit integer mapping to a 64-byte
+aligned memory region (16kb ARAM => 256 * 64-byte samples)
 
 #### Wavetable sample data & indexing
 
-Audio RAM (ARAM) is 8 KB and is divided into **128 tables** of **64 bytes each** (128 × 64 = 8192). A wavetable channel is
-configured with a **7-bit table index** (0–127) that selects one of these 128 slots; the table index implicitly selects the byte
+Audio RAM (ARAM) is 8 KB and is divided into **256 tables** of **64 bytes each** (128 × 64 = 8192). A wavetable channel is
+configured with an **8-bit table index** (0–255) that selects one of these slots; the table index implicitly selects the byte
 range `[index × 64, index × 64 + 63]` within ARAM.
 
 Each table is a sequence of **64 signed 8-bit samples** (−128…+127), interpreted as the raw waveform one full cycle per table.
@@ -259,4 +259,4 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 - Bits 3-7: Reserved
 
-As a reminder, wavetable samples are expected to be aligned to 64 bytes. The index is masked to 7 bits when selecting the sample.
+As a reminder, wavetable samples are expected to be aligned to 64 bytes.
