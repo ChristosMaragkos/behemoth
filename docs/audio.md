@@ -64,31 +64,30 @@ At startup, the duty cycle is initialized to 4 (50%), producing a true square wa
 samples must be uploaded to Audio RAM before playback. The sample value of the wavetable channels is an 8-bit integer mapping to a 64-byte
 aligned memory region (16kb ARAM => 256 * 64-byte samples)
 
+#### Noise LFSR operation
+
+Channel 3 relies on a 15-bit Linear Feedback Shift Register (LFSR). Unlike pitch-driven channels that advance across a continuous 0.0–1.0 phase,
+the noise channel advances its shift register every `NOIRATE` audio samples. The register initializes to `0x7654` on boot. To generate a sample,
+the channel samples bit 0 of the register. If bit 0 is 0, the channel outputs `-1.0`; if bit 0 is 1, it outputs `+1.0`.
+
+Each time an internal counter reaches `NOIRATE` samples, the register steps once:
+
+1. Determine the feedback bit by XORing bit 0 with a selected tap bit based on `NOICTRL` bit 3:
+   - **Long mode (0):** Tap bit is bit 1 (`feedback = bit 0 ^ bit 1`). This yields a pseudo-random sequence of 32,767 steps before repeating, producing continuous, smooth white noise.
+   - **Short mode (1):** Tap bit is bit 6 (`feedback = bit 0 ^ bit 6`). The sequence collapses into an exceptionally short cycle of 127 steps,
+   transforming the output into a harsh, metallic periodic buzz.
+2. Shift the entire register 1 bit to the right (`shift_reg >> 1`).
+3. Place the calculated `feedback` bit into the newly vacated most-significant position (bit 14).
+
 #### Wavetable sample data & indexing
 
-Audio RAM (ARAM) is 8 KB and is divided into **256 tables** of **64 bytes each** (128 × 64 = 8192). A wavetable channel is
+Audio RAM (ARAM) is 16 KB and is divided into **256 tables** of **64 bytes each** (256 × 64 = 16384). A wavetable channel is
 configured with an **8-bit table index** (0–255) that selects one of these slots; the table index implicitly selects the byte
 range `[index × 64, index × 64 + 63]` within ARAM.
 
 Each table is a sequence of **64 signed 8-bit samples** (−128…+127), interpreted as the raw waveform one full cycle per table.
 The channel plays the table as a loop: as its phase advances across the waveform, it reads the table position and emits the
 sample value found there, wrapping back to byte 0 after byte 63.
-
-Indexing details:
-
-- The phase (0–1) maps onto the table linearly: table byte `floor(phase × 64)` is the current sample.
-- Because 64 is a power of two, `phase × 64` is simply the top 6 fractional bits of the phase, so indexing is just a
-  `phase >> (fraction_width − 6)` style shift — no multiplication needed in the emulator.
-- The phase advances by `pitch / 44100` per tick, so a higher pitch advances through all 64 bytes faster, raising the tone
-  (frequency = 44100 / (pitch × 64) cycles per second).
-- Since the table is rectangular, any bytes you do not explicitly fill are whatever the previous ARAM contents hold; always
-  write all 64 bytes (or start from a known-cleared slot) to avoid garbage.
-
-Preparing a new sound at runtime:
-
-1. Build or copy the desired 64-sample waveform into a **dedicated, unused slot** (filling all 64 bytes).
-2. Switch the wavetable channel's table index to that slot.
-3. Optionally re-trigger with the phase-reset bit so the note starts from the beginning of the table.
 
 Because the APU reads the table live, editing a slot that is *currently playing* changes the sound immediately. It
 is therefore advised to prepare new tables in spare slots and only switch when ready. The two wavetable
@@ -112,21 +111,21 @@ to an integer that represents how many samples must be generated before one step
 | Value | Attack Duration | Decay/Release Duration | Samples/Step (Attack) | Samples/Step (Decay/Release) |
 | :---: | :---: | :---: | :---: | :---: |
 | `0x0` | **0 ms** | **0 ms** | 0 | 1 |
-| `0x1` | **5.8 ms** | **27.4 ms** | 1 | 4 |
-| `0x2` | **16 ms** | **48 ms** | 3 | 8 |
+| `0x1` | **5.8 ms** | **27.4 ms** | 1 | 3 |
+| `0x2` | **16 ms** | **48 ms** | 3 | 9 |
 | `0x3` | **24 ms** | **72 ms** | 4 | 12 |
-| `0x4` | **38 ms** | **114 ms** | 7 | 20 |
-| `0x5` | **56 ms** | **168 ms** | 10 | 29 |
-| `0x6` | **68 ms** | **204 ms** | 12 | 35 |
-| `0x7` | **80 ms** | **240 ms** | 14 | 41 |
+| `0x4` | **38 ms** | **114 ms** | 7 | 21 |
+| `0x5` | **56 ms** | **168 ms** | 10 | 30 |
+| `0x6` | **68 ms** | **204 ms** | 12 | 36 |
+| `0x7` | **80 ms** | **240 ms** | 14 | 42 |
 | `0x8` | **100 ms** | **300 ms** | 17 | 52 |
 | `0x9` | **250 ms** | **750 ms** | 43 | 129 |
 | `0xA` | **500 ms** | **1.5 s** | 86 | 258 |
-| `0xB` | **800 ms** | **2.4 s** | 138 | 413 |
-| `0xC` | **1.0 s** | **3.0 s** | 172 | 517 |
-| `0xD` | **3.0 s** | **9.0 s** | 517 | 1,551 |
-| `0xE` | **5.0 s** | **15.0 s** | 861 | 2,584 |
-| `0xF` | **8.0 s** | **24.0 s** | 1,378 | 4,134 |
+| `0xB` | **800 ms** | **2.4 s** | 138 | 414 |
+| `0xC` | **1.0 s** | **3.0 s** | 172 | 516 |
+| `0xD` | **3.0 s** | **9.0 s** | 517 | 1551 |
+| `0xE` | **5.0 s** | **15.0 s** | 861 | 2583 |
+| `0xF` | **8.0 s** | **24.0 s** | 1378 | 4134 |
 
 > [!NOTE]
 > The above table is courtesy of the genius behind the Commodore 64's SID audio chip, Bob Yannes.
@@ -139,6 +138,9 @@ More specifically:
 - Sustain: Shifted left by four bits to sparsely calculate which of the 256 steps' amplitude to hold after Decay.
 Held as long as the channel is playing.
 - Release: After the channel is *manually* turned off, how many cycles/step to go from the Release level to 0.0 again.
+
+The final amplitude value is calculated as (current step / 256). As with volume, this does place the ceiling at slightly
+below 100%, but the difference is inaudible.
 
 #### Retriggering
 
