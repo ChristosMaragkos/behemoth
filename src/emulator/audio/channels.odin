@@ -23,10 +23,10 @@ Envelope :: struct #raw_union {
 
 // This is not the exact ordering used in the spec but it'll be packed tighter in memory
 PulseChannel :: struct {
-	using _: PulseCtrl,
-	volume:  u8,
-	pitch:   u16,
-	adsr:    Envelope,
+	using ctrl: PulseCtrl,
+	volume:     u8,
+	pitch:      u16,
+	adsr:       Envelope,
 }
 
 @(private = "file")
@@ -40,19 +40,19 @@ GenericChannelCtrl :: bit_field u8 {
 SawCtrl :: distinct GenericChannelCtrl
 
 SawChannel :: struct {
-	using _: SawCtrl,
-	volume:  u8,
-	pitch:   u16,
-	adsr:    Envelope,
+	using ctrl: SawCtrl,
+	volume:     u8,
+	pitch:      u16,
+	adsr:       Envelope,
 }
 
 TriangleCtrl :: distinct GenericChannelCtrl
 
 TriangleChannel :: struct {
-	using _: TriangleCtrl,
-	volume:  u8,
-	pitch:   u16,
-	adsr:    Envelope,
+	using ctrl: TriangleCtrl,
+	volume:     u8,
+	pitch:      u16,
+	adsr:       Envelope,
 }
 
 NoiseCtrl :: bit_field u8 {
@@ -66,18 +66,18 @@ NoiseCtrl :: bit_field u8 {
 }
 
 NoiseChannel :: struct {
-	using _: NoiseCtrl,
-	volume:  u8,
-	rate:    u16,
-	adsr:    Envelope,
+	using ctrl: NoiseCtrl,
+	volume:     u8,
+	rate:       u16,
+	adsr:       Envelope,
 }
 
 WavetableCtrl :: distinct GenericChannelCtrl
 
 WavetableChannel :: struct {
-	using _: WavetableCtrl,
-	volume:  u8,
-	pitch:   u16,
-	adsr:    Envelope,
-	index:   u8,
+	using ctrl: WavetableCtrl,
+	volume:     u8,
+	pitch:      u16,
+	adsr:       Envelope,
+	index:      u8,
 }
