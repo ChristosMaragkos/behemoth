@@ -54,6 +54,7 @@ This is configured through MMIO via a 3-bit value (0-7) that is used internally 
   - 5 -> 0.675 or 67.5%
   - 6 -> 0.75 or 75%
   - 7 -> 0.875 or 87.5%
+At startup, the duty cycle is initialized to 4 (50%), producing a true square wave.
 - Noise: Noise mode. A single bit value that can be switched between 0=Long mode and 1=Short mode.
   - Long mode: the LFSR register uses bit 1 as its tap bit and
     wraps back to its initial value less often, giving standard white noise. Useful for fire, explosions etc.
