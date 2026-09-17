@@ -38,6 +38,10 @@ Ppu :: struct {
 	frame_buffer: FrameBuffer,
 }
 
+ppu_init :: proc(ppu: ^Ppu, mmio_start_ptr: ^byte) {
+	ppu.mmio_view = slice.from_ptr(mmio_start_ptr, 0xff)
+}
+
 // Extract writeable PPU registers from MMIO
 ppu_decode_from_mmio :: proc(ppu: ^Ppu) {
 	ppu.ctrl = transmute(PpuCtrl)read_u8(ppu.mmio_view, 0x02)
