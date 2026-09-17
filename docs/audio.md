@@ -257,3 +257,5 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 - Bit 1: Gate (drives ADSR - 0->1 note on -> Attack, 1->0 Release)
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 - Bits 3-7: Reserved
+
+As a reminder, wavetable samples are expected to be aligned to 64 bytes. The index is masked to 7 bits when selecting the sample.
