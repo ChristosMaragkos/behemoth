@@ -51,7 +51,7 @@ This is configured through MMIO via a 3-bit value (0-7) that is used internally 
   - 2 -> 0.25 or 25%
   - 3 -> 0.375 or 37.5%
   - 4 -> 0.5 or 50%
-  - 5 -> 0.675 or 67.5%
+  - 5 -> 0.625 or 62.5%
   - 6 -> 0.75 or 75%
   - 7 -> 0.875 or 87.5%
 At startup, the duty cycle is initialized to 4 (50%), producing a true square wave.
