@@ -184,7 +184,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 `PULCTRL` layout:
 
-- Bit 0: Enable (0 silences the channel and freezes envelope/phase state)
+- Bit 0: Disable (1 silences the channel and freezes envelope/phase state)
 - Bit 1: Gate (drives ADSR - 0->1 note on -> Attack, 1->0 Release)
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 - Bits 3-5: Duty cycle (Q0.3 fixed point)
@@ -201,7 +201,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 `SAWCTRL` layout:
 
-- Bit 0: Enable (0 silences the channel and freezes envelope/phase state)
+- Bit 0: Disable (1 silences the channel and freezes envelope/phase state)
 - Bit 1: Gate (drives ADSR - 0->1 note on -> Attack, 1->0 Release)
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 
@@ -216,7 +216,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 `TRICTRL` layout:
 
-- Bit 0: Enable (0 silences the channel and freezes envelope/phase state)
+- Bit 0: Disable (1 silences the channel and freezes envelope/phase state)
 - Bit 1: Gate (drives ADSR - 0->1 note on -> Attack, 1->0 Release)
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 
@@ -231,7 +231,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 `NOICTRL` layout:
 
-- Bit 0: Enable (0 silences the channel and freezes envelope/phase state)
+- Bit 0: Disable (1 silences the channel and freezes envelope/phase state)
 - Bit 1: Gate (drives ADSR - 0->1 note on -> Attack, 1->0 Release)
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 - Bit 3: Noise mode. Set to 0 for long, 1 for short.
@@ -253,7 +253,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 `WTnCTRL` layout:
 
-- Bit 0: Enable (0 silences the channel and freezes envelope/phase state)
+- Bit 0: Disable (1 silences the channel and freezes envelope/phase state)
 - Bit 1: Gate (drives ADSR - 0->1 note on -> Attack, 1->0 Release)
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 - Bits 3-7: Reserved
