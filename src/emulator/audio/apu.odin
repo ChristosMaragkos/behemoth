@@ -1,0 +1,121 @@
+package audio
+
+import "core:slice"
+
+APUCTRL :: 0x0a
+GLBLVOL :: 0x0b
+
+PULCTRL :: 0x0c
+PULPITCH :: 0x0d
+PULVOL :: 0x0f
+PULADSR :: 0x10
+
+SAWCTRL :: 0x12
+SAWPITCH :: 0x13
+SAWVOL :: 0x15
+SAWADSR :: 0x16
+
+TRICTRL :: 0x17
+TRIPITCH :: 0x18
+TRIVOL :: 0x1a
+TRIADSR :: 0x1b
+
+NOICTRL :: 0x1d
+NOIRATE :: 0x1e
+NOIVOL :: 0x20
+NOIADSR :: 0x21
+
+WT1CTRL :: 0x23
+WT1PITCH :: 0x24
+WT1VOL :: 0x26
+WT1ADSR :: 0x27
+WT1IDX :: 0x29
+
+WT2CTRL :: 0x2a
+WT2PITCH :: 0x2b
+WT2VOL :: 0x2d
+WT2ADSR :: 0x2e
+WT2IDX :: 0x30
+
+AUDIO_RAM_SIZE :: 16 * 1024
+APU_MMIO_OFFSET :: 0x0700
+
+ApuCtrl :: bit_field u8 {
+	disabled: bool | 1,
+	reserved: u8   | 7,
+}
+
+Apu :: struct {
+	ctrl:       ApuCtrl,
+	global_vol: u8,
+	pulse:      PulseChannel,
+	saw:        SawChannel,
+	triangle:   TriangleChannel,
+	noise:      NoiseChannel,
+	wave1:      WavetableChannel,
+	wave2:      WavetableChannel,
+	mmio_view:  []byte,
+	aram:       [AUDIO_RAM_SIZE]byte,
+}
+
+apu_init :: proc(apu: ^Apu, mmio_start_ptr: ^byte) {
+	apu.mmio_view = slice.from_ptr(mmio_start_ptr, 0xff)
+	// TODO: Maybe a small boot routine/BIOS should handle the initial channel setup
+	apu.pulse.volume = 208
+	apu.saw.volume = 192
+	apu.triangle.volume = 248
+	apu.noise.volume = 192
+	apu.wave1.volume = 208
+	apu.wave2.volume = 208
+	apu_encode_to_mmio(apu)
+}
+
+apu_encode_to_mmio :: proc(apu: ^Apu) {
+	apu.mmio_view[PULVOL] = apu.pulse.volume
+	apu.mmio_view[SAWVOL] = apu.saw.volume
+	apu.mmio_view[TRIVOL] = apu.triangle.volume
+	apu.mmio_view[NOIVOL] = apu.noise.volume
+	apu.mmio_view[WT1VOL] = apu.wave1.volume
+	apu.mmio_view[WT2VOL] = apu.wave2.volume
+}
+
+apu_decode_from_mmio :: proc(apu: ^Apu) {
+	apu.ctrl = transmute(ApuCtrl)apu.mmio_view[APUCTRL]
+	apu.global_vol = apu.mmio_view[GLBLVOL]
+
+	apu.pulse.ctrl = transmute(PulseCtrl)apu.mmio_view[PULCTRL]
+	apu.pulse.pitch = u16(apu.mmio_view[PULPITCH]) | (u16(apu.mmio_view[PULPITCH + 1]) << 8)
+	apu.pulse.volume = apu.mmio_view[PULVOL]
+	apu.pulse.adsr.rs = apu.mmio_view[PULADSR]
+	apu.pulse.adsr.da = apu.mmio_view[PULADSR + 1]
+
+	apu.saw.ctrl = transmute(SawCtrl)apu.mmio_view[SAWCTRL]
+	apu.saw.pitch = u16(apu.mmio_view[SAWPITCH]) | (u16(apu.mmio_view[SAWPITCH + 1]) << 8)
+	apu.saw.volume = apu.mmio_view[SAWVOL]
+	apu.saw.adsr.rs = apu.mmio_view[SAWADSR]
+	apu.saw.adsr.da = apu.mmio_view[SAWADSR + 1]
+
+	apu.triangle.ctrl = transmute(TriangleCtrl)apu.mmio_view[TRICTRL]
+	apu.triangle.pitch = u16(apu.mmio_view[TRIPITCH]) | (u16(apu.mmio_view[TRIPITCH + 1]) << 8)
+	apu.triangle.volume = apu.mmio_view[TRIVOL]
+	apu.triangle.adsr.rs = apu.mmio_view[TRIADSR]
+	apu.triangle.adsr.da = apu.mmio_view[TRIADSR + 1]
+
+	apu.noise.ctrl = transmute(NoiseCtrl)apu.mmio_view[NOICTRL]
+	apu.noise.rate = u16(apu.mmio_view[NOIRATE]) | (u16(apu.mmio_view[NOIRATE + 1]) << 8)
+	apu.noise.volume = apu.mmio_view[NOIVOL]
+	apu.noise.adsr.rs = apu.mmio_view[NOIADSR]
+	apu.noise.adsr.da = apu.mmio_view[NOIADSR + 1]
+
+	apu.wave1.ctrl = transmute(WavetableCtrl)apu.mmio_view[WT1CTRL]
+	apu.wave1.pitch = u16(apu.mmio_view[WT1PITCH]) | (u16(apu.mmio_view[WT1PITCH + 1]) << 8)
+	apu.wave1.volume = apu.mmio_view[WT1VOL]
+	apu.wave1.adsr.rs = apu.mmio_view[WT1ADSR]
+	apu.wave1.adsr.da = apu.mmio_view[WT1ADSR + 1]
+
+	apu.wave2.ctrl = transmute(WavetableCtrl)apu.mmio_view[WT1CTRL]
+	apu.wave2.pitch = u16(apu.mmio_view[WT1PITCH]) | (u16(apu.mmio_view[WT1PITCH + 1]) << 8)
+	apu.wave2.volume = apu.mmio_view[WT1VOL]
+	apu.wave2.adsr.rs = apu.mmio_view[WT1ADSR]
+	apu.wave2.adsr.da = apu.mmio_view[WT1ADSR + 1]
+}
