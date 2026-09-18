@@ -108,3 +108,28 @@ system_load_cart_from_bytes :: proc(sys: ^System, bytes: []byte) {
 
 	mem.copy(&sys.bus.ram[low], &bytes[0], length)
 }
+
+system_step_instruction :: proc(sys: ^System) {
+	instr := exec.cpu_fetch_instruction(sys.cpu)
+	exec.cpu_decode_execute(sys.cpu, instr)
+
+	sys.cpu.cycle_delta += sys.bus.contention
+	sys.bus.contention = 0
+
+	ppu_cycles := sys.cpu.cycle_delta / CPU_PPU_CYCLE_RATIO
+	remaining := sys.cpu.cycle_delta % CPU_PPU_CYCLE_RATIO
+
+	sys.cpu.cycle_delta = remaining
+	gfx.ppu_decode_from_mmio(sys.ppu)
+
+	for i in 0 ..< ppu_cycles {
+		gfx.ppu_step(sys.ppu)
+	}
+	gfx.ppu_encode_to_mmio(sys.ppu)
+
+	if .InVblank in sys.ppu.status {
+		exec.cpu_trigger_interrupt(sys.cpu, exec.VBLNK_VEC_IDX, false)
+	} else if .InHblank in sys.ppu.status {
+		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false)
+	}
+}
