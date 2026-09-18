@@ -37,6 +37,8 @@ apu_init :: proc(apu: ^Apu, mmio_start_ptr: ^byte) {
 }
 
 apu_encode_to_mmio :: proc(apu: ^Apu) {
+	apu.mmio_view[common.APUCTRL] = transmute(u8)apu.ctrl
+	apu.mmio_view[common.GLBLVOL] = apu.global_vol
 	apu.mmio_view[PULVOL] = apu.pulse.volume
 	apu.mmio_view[SAWVOL] = apu.saw.volume
 	apu.mmio_view[TRIVOL] = apu.triangle.volume
