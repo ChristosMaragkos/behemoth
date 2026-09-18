@@ -38,6 +38,7 @@ apu_init :: proc(apu: ^Apu, mmio_start_ptr: ^byte) {
 	apu.wave1.volume = 208
 	apu.wave2.volume = 208
 	apu_encode_to_mmio(apu)
+	apu.noise.lfsr = LFSR_INIT
 }
 
 apu_encode_to_mmio :: proc(apu: ^Apu) {
