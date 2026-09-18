@@ -262,6 +262,7 @@ cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool) {
 	pc_new := cpu_read_word(cpu, addr)
 	pp_new := cpu_read_byte(cpu, addr + size_of(u16))
 
+	cpu.flags += {.IgnoreInterrupts}
 	cpu.pc = pc_new
 	cpu.pp = pp_new
 }
