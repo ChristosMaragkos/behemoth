@@ -193,7 +193,7 @@ cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
 	val: u16
 
 	if sp.full - 2 > sp.full {
-		cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
+		cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true, false)
 		return
 	}
 
@@ -220,7 +220,7 @@ cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 	sp := cpu_get_reg(cpu, SP_REG_IDX)
 
 	if sp.full + 2 < sp.full {
-		cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
+		cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true, false)
 		return
 	}
 
@@ -245,7 +245,9 @@ cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 	sp.full += size_of(u16)
 }
 
-cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool) {
+cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool, maskable: bool) {
+	if maskable && .IgnoreInterrupts in cpu.flags do return
+	cpu.halted = false
 	if !fault {
 		cpu_push(cpu, .Flags)
 		cpu_push(cpu, .PP)

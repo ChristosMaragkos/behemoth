@@ -128,14 +128,14 @@ exec_swi_imm :: proc(cpu: ^Cpu) {
 	imm8 := cpu_pc_fetch_byte(cpu)
 
 	idx := (imm8 & 0b1111111) + 128
-	cpu_trigger_interrupt(cpu, idx, false)
+	cpu_trigger_interrupt(cpu, idx, false, false)
 }
 
 exec_swi_reg :: proc(reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 
 	idx := (r1.low & 0b1111111) + 128
-	cpu_trigger_interrupt(cpu, idx, false)
+	cpu_trigger_interrupt(cpu, idx, false, false)
 }
 
 exec_sec :: proc(cpu: ^Cpu) {
