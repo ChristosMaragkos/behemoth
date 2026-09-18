@@ -1,14 +1,12 @@
 package behemoth
 
 import "/audio"
+import c "/common"
 import exec "/execution"
 import gfx "/graphics"
 import "/memory"
 import "core:mem"
 import "core:os"
-
-MMIO_PAGE :: 0x05
-CPU_PPU_CYCLE_RATIO :: 2
 
 System :: struct {
 	cpu:           ^exec.Cpu,
@@ -52,8 +50,8 @@ system_init :: proc() -> ^System {
 	sys.ppu = ppu
 	sys.apu = apu
 	g_apu = apu
-	gfx.ppu_init(ppu, &bus.ram[memory.calculate_address(MMIO_PAGE, gfx.PPU_MMIO_OFFSET)])
-	audio.apu_init(apu, &bus.ram[memory.calculate_address(MMIO_PAGE, audio.APU_MMIO_OFFSET)])
+	gfx.ppu_init(ppu, &bus.ram[memory.calculate_address(c.MMIO_PAGE, c.PPU_MMIO_OFFSET)])
+	audio.apu_init(apu, &bus.ram[memory.calculate_address(c.MMIO_PAGE, c.APU_MMIO_OFFSET)])
 
 	sys.bus.vram = &ppu.vram
 	sys.bus.cram = &ppu.cram
@@ -116,8 +114,8 @@ system_step_instruction :: proc(sys: ^System) {
 	sys.cpu.cycle_delta += sys.bus.contention
 	sys.bus.contention = 0
 
-	ppu_cycles := sys.cpu.cycle_delta / CPU_PPU_CYCLE_RATIO
-	remaining := sys.cpu.cycle_delta % CPU_PPU_CYCLE_RATIO
+	ppu_cycles := sys.cpu.cycle_delta / c.CPU_PPU_CYCLE_RATIO
+	remaining := sys.cpu.cycle_delta % c.CPU_PPU_CYCLE_RATIO
 
 	sys.cpu.cycle_delta = remaining
 	gfx.ppu_decode_from_mmio(sys.ppu)

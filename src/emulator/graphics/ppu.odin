@@ -2,7 +2,6 @@ package graphics
 
 // Horizontal blank duration in PPU cycles (CPU runs at 2x the speed)
 HBLANK_DURATION :: 100
-PPU_MMIO_OFFSET :: 0x0500
 
 import "../common"
 import "core:slice"

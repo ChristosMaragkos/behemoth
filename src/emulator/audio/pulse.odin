@@ -1,5 +1,6 @@
 package audio
 
+import c "../common"
 import "core:math"
 
 PULCTRL :: 0x0c
@@ -29,7 +30,7 @@ pulse_generate :: proc(ch: ^PulseChannel) -> f32 {
 
 	amp := envelope_step(&ch.state, ch.adsr, ch.gate_on, ch.reset_on_retrigger, &ch.phase)
 
-	ch.phase += f32(ch.pitch) / SAMPLE_RATE
+	ch.phase += f32(ch.pitch) / c.SAMPLE_RATE
 	ch.phase -= math.floor(ch.phase)
 
 	duty_cycle := duty_cycle_values[ch.duty_cycle]

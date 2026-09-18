@@ -1,5 +1,6 @@
 package audio
 
+import c "../common"
 import "core:math"
 
 SAWCTRL :: 0x12
@@ -23,7 +24,7 @@ saw_generate :: proc(ch: ^SawChannel) -> f32 {
 
 	amp := envelope_step(&ch.state, ch.adsr, ch.gate_on, ch.reset_on_retrigger, &ch.phase)
 
-	ch.phase += f32(ch.pitch) / SAMPLE_RATE
+	ch.phase += f32(ch.pitch) / c.SAMPLE_RATE
 	ch.phase -= math.floor(ch.phase)
 
 	vol := q0_8_expand(ch.volume)

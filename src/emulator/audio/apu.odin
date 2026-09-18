@@ -4,14 +4,6 @@ import "../common"
 import "core:math"
 import "core:slice"
 
-APUCTRL :: 0x0a
-GLBLVOL :: 0x0b
-
-AUDIO_RAM_SIZE :: 16 * 1024
-APU_MMIO_OFFSET :: 0x0700
-
-SAMPLE_RATE :: 44100.0
-
 ApuCtrl :: bit_field u8 {
 	disabled: bool | 1,
 	reserved: u8   | 7,
@@ -27,7 +19,7 @@ Apu :: struct {
 	wave1:      WavetableChannel,
 	wave2:      WavetableChannel,
 	mmio_view:  []byte,
-	aram:       [AUDIO_RAM_SIZE]byte,
+	aram:       [common.AUDIO_RAM_SIZE]byte,
 }
 
 apu_init :: proc(apu: ^Apu, mmio_start_ptr: ^byte) {
@@ -54,8 +46,8 @@ apu_encode_to_mmio :: proc(apu: ^Apu) {
 }
 
 apu_decode_from_mmio :: proc(apu: ^Apu) {
-	apu.ctrl = transmute(ApuCtrl)apu.mmio_view[APUCTRL]
-	apu.global_vol = apu.mmio_view[GLBLVOL]
+	apu.ctrl = transmute(ApuCtrl)apu.mmio_view[common.APUCTRL]
+	apu.global_vol = apu.mmio_view[common.GLBLVOL]
 
 	apu.pulse.ctrl = transmute(PulseCtrl)apu.mmio_view[PULCTRL]
 	apu.pulse.pitch = u16(apu.mmio_view[PULPITCH]) | (u16(apu.mmio_view[PULPITCH + 1]) << 8)
