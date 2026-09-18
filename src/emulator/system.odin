@@ -1,5 +1,6 @@
 package behemoth
 
+import "/audio"
 import exec "/execution"
 import gfx "/graphics"
 import "/memory"
@@ -12,9 +13,13 @@ CPU_PPU_CYCLE_RATIO :: 2
 System :: struct {
 	cpu:           ^exec.Cpu,
 	ppu:           ^gfx.Ppu,
+	apu:           ^audio.Apu,
 	bus:           ^memory.MemoryBus,
 	cycle_counter: u64,
 }
+
+// Necessary for audio callbacks with fixed signatures
+g_apu: ^audio.Apu
 
 system_init :: proc() -> ^System {
 	sys, sys_err := new(System)
@@ -32,6 +37,11 @@ system_init :: proc() -> ^System {
 		panic("Could not allocate memory for the PPU.")
 	}
 
+	apu, apu_err := new(audio.Apu)
+	if apu_err != .None {
+		panic("Could not allocate memory for the APU.")
+	}
+
 	bus, bus_err := new(memory.MemoryBus)
 	if bus_err != .None {
 		panic("Could not allocate memory for the memory bus, require 16mb.")
@@ -40,7 +50,10 @@ system_init :: proc() -> ^System {
 	sys.cpu = cpu
 	sys.bus = bus
 	sys.ppu = ppu
+	sys.apu = apu
+	g_apu = apu
 	gfx.ppu_init(ppu, &bus.ram[memory.calculate_address(MMIO_PAGE, gfx.PPU_MMIO_OFFSET)])
+	audio.apu_init(apu, &bus.ram[memory.calculate_address(MMIO_PAGE, audio.APU_MMIO_OFFSET)])
 
 	sys.bus.vram = &ppu.vram
 	sys.bus.cram = &ppu.cram
@@ -64,6 +77,11 @@ system_cleanup :: proc(sys: ^System) {
 	ppu_err := free(sys.ppu)
 	if ppu_err != .None {
 		panic("Could not free the PPU's backing memory. Perhaps a bad pointer was passed.")
+	}
+
+	apu_err := free(sys.apu)
+	if apu_err != .None {
+		panic("Could not free the APU's backing memory. Perhaps a bad pointer was passed.")
 	}
 
 	sys_err := free(sys)
