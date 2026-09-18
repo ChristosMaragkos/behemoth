@@ -104,11 +104,14 @@ system_load_cart_from_file :: proc(sys: ^System, path: string) -> os.Error {
 	return os.General_Error.None
 }
 
-system_load_cart_from_bytes :: proc(sys: ^System, bytes: []byte) {
+@(require_results)
+system_load_cart_from_bytes :: proc(sys: ^System, bytes: []byte) -> os.Error {
+	if len(bytes) == 0 do return .Short_Buffer
 	length := min(len(bytes), memory.TOTAL_ROM_SPACE)
 	low := memory.CART_ROM_START
 
 	mem.copy(&sys.bus.ram[low], &bytes[0], length)
+	return os.General_Error.None
 }
 
 system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank: bool) {
