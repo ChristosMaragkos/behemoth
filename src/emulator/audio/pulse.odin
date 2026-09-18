@@ -24,3 +24,23 @@ PulseChannel :: struct {
 	state:      EnvState,
 }
 
+pulse_generate :: proc(ch: ^PulseChannel) -> f32 {
+	if ch.disabled do return 0.0
+
+	amp := envelope_step(&ch.state, ch.adsr, ch.gate_on, ch.reset_on_retrigger, &ch.phase)
+
+	ch.phase += f32(ch.pitch) / SAMPLE_RATE
+	ch.phase -= math.floor(ch.phase)
+
+	duty_cycle := duty_cycle_values[ch.duty_cycle]
+	vol := q0_8_expand(ch.volume)
+
+	sample: f32 = ch.phase < duty_cycle ? 1.0 : -1.0
+	sample *= amp * vol
+	return sample
+}
+
+@(rodata)
+@(private = "file")
+// Precalculated duty cycle values to avoid converting q0.3 fixed point to float every sample
+duty_cycle_values := [8]f32{0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}

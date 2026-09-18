@@ -89,3 +89,8 @@ apu_decode_from_mmio :: proc(apu: ^Apu) {
 	apu.wave2.adsr.rs = apu.mmio_view[WT1ADSR]
 	apu.wave2.adsr.da = apu.mmio_view[WT1ADSR + 1]
 }
+
+apu_generate_sample :: #force_inline proc(apu: ^Apu) -> f32 {
+	// TODO: Implement
+	unimplemented("Audio generation not implemented yet")
+}
