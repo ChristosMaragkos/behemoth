@@ -4,7 +4,7 @@ PAGE_SIZE :: 64 * 1024 // 64kb per page
 RAM_SIZE_TOTAL :: 256 * PAGE_SIZE // 256 pages total -> 16mb address space
 
 CART_ROM_START :: 6 * PAGE_SIZE
-CART_ROM_END :: 197 * PAGE_SIZE - 1 // The final address, not the start of the next region
+CART_ROM_END :: 198 * PAGE_SIZE - 1 // The final address, not the start of the next region
 TOTAL_ROM_PAGES :: 192
 TOTAL_ROM_SPACE :: TOTAL_ROM_PAGES * PAGE_SIZE
 
