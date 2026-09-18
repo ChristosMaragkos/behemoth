@@ -109,7 +109,7 @@ system_load_cart_from_bytes :: proc(sys: ^System, bytes: []byte) {
 	mem.copy(&sys.bus.ram[low], &bytes[0], length)
 }
 
-system_step_instruction :: proc(sys: ^System) {
+system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank: bool) {
 	instr := exec.cpu_fetch_instruction(sys.cpu)
 	exec.cpu_decode_execute(sys.cpu, instr)
 
@@ -119,6 +119,7 @@ system_step_instruction :: proc(sys: ^System) {
 	ppu_cycles := sys.cpu.cycle_delta / c.CPU_PPU_CYCLE_RATIO
 	remaining := sys.cpu.cycle_delta % c.CPU_PPU_CYCLE_RATIO
 
+	consumed = u64(sys.cpu.cycle_delta)
 	sys.cpu.cycle_delta = remaining
 	gfx.ppu_decode_from_mmio(sys.ppu)
 
@@ -127,7 +128,7 @@ system_step_instruction :: proc(sys: ^System) {
 	}
 	gfx.ppu_encode_to_mmio(sys.ppu)
 
-	entered_vblank := .InVblank in sys.ppu.status && .InVblank not_in sys.ppu_prev_status
+	entered_vblank = .InVblank in sys.ppu.status && .InVblank not_in sys.ppu_prev_status
 	entered_hblank := .InHblank in sys.ppu.status && .InHblank not_in sys.ppu_prev_status
 	sys.ppu_prev_status = sys.ppu.status
 
@@ -135,6 +136,18 @@ system_step_instruction :: proc(sys: ^System) {
 		exec.cpu_trigger_interrupt(sys.cpu, exec.VBLNK_VEC_IDX, false)
 	} else if entered_hblank && .DisableHblank not_in sys.ppu.ctrl {
 		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false, true)
+	}
+
+	return consumed, entered_vblank
+}
+
+system_step_frame :: proc(sys: ^System) {
+	start := sys.cycle_counter
+	for {
+		delta, entered := system_step_instruction(sys)
+		sys.cycle_counter += delta
+		if entered do break
+		if sys.cycle_counter - start >= c.CPU_CYCLES_PER_FRAME do break
 	}
 }
 
