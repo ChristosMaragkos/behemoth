@@ -245,7 +245,7 @@ cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
 	sp.full += size_of(u16)
 }
 
-cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool, maskable: bool) {
+cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool, maskable := false) {
 	if maskable && .IgnoreInterrupts in cpu.flags do return
 	cpu.halted = false
 	if !fault {

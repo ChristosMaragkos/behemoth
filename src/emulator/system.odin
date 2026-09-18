@@ -132,7 +132,7 @@ system_step_instruction :: proc(sys: ^System) {
 	sys.ppu_prev_status = sys.ppu.status
 
 	if entered_vblank && .DisableVblank not_in sys.ppu.ctrl {
-		exec.cpu_trigger_interrupt(sys.cpu, exec.VBLNK_VEC_IDX, false, false)
+		exec.cpu_trigger_interrupt(sys.cpu, exec.VBLNK_VEC_IDX, false)
 	} else if entered_hblank && .DisableHblank not_in sys.ppu.ctrl {
 		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false, true)
 	}
