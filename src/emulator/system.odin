@@ -10,11 +10,12 @@ import "core:mem"
 import "core:os"
 
 System :: struct {
-	cpu:           ^exec.Cpu,
-	ppu:           ^gfx.Ppu,
-	apu:           ^audio.Apu,
-	bus:           ^memory.MemoryBus,
-	cycle_counter: u64,
+	cpu:             ^exec.Cpu,
+	ppu:             ^gfx.Ppu,
+	apu:             ^audio.Apu,
+	bus:             ^memory.MemoryBus,
+	cycle_counter:   u64,
+	ppu_prev_status: gfx.PpuStatus,
 }
 
 // Necessary for audio callbacks with fixed signatures
@@ -126,10 +127,14 @@ system_step_instruction :: proc(sys: ^System) {
 	}
 	gfx.ppu_encode_to_mmio(sys.ppu)
 
-	if .InVblank in sys.ppu.status {
-		exec.cpu_trigger_interrupt(sys.cpu, exec.VBLNK_VEC_IDX, false)
-	} else if .InHblank in sys.ppu.status {
-		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false)
+	entered_vblank := .InVblank in sys.ppu.status && .InVblank not_in sys.ppu_prev_status
+	entered_hblank := .InHblank in sys.ppu.status && .InHblank not_in sys.ppu_prev_status
+	sys.ppu_prev_status = sys.ppu.status
+
+	if entered_vblank && .DisableVblank not_in sys.ppu.ctrl {
+		exec.cpu_trigger_interrupt(sys.cpu, exec.VBLNK_VEC_IDX, false, false)
+	} else if entered_hblank && .DisableHblank not_in sys.ppu.ctrl {
+		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false, true)
 	}
 }
 
