@@ -84,11 +84,11 @@ apu_decode_from_mmio :: proc(apu: ^Apu) {
 	apu.wave1.adsr.rs = apu.mmio_view[WT1ADSR]
 	apu.wave1.adsr.da = apu.mmio_view[WT1ADSR + 1]
 
-	apu.wave2.ctrl = transmute(WavetableCtrl)apu.mmio_view[WT1CTRL]
-	apu.wave2.pitch = u16(apu.mmio_view[WT1PITCH]) | (u16(apu.mmio_view[WT1PITCH + 1]) << 8)
-	apu.wave2.volume = apu.mmio_view[WT1VOL]
-	apu.wave2.adsr.rs = apu.mmio_view[WT1ADSR]
-	apu.wave2.adsr.da = apu.mmio_view[WT1ADSR + 1]
+	apu.wave2.ctrl = transmute(WavetableCtrl)apu.mmio_view[WT2CTRL]
+	apu.wave2.pitch = u16(apu.mmio_view[WT2PITCH]) | (u16(apu.mmio_view[WT2PITCH + 1]) << 8)
+	apu.wave2.volume = apu.mmio_view[WT2VOL]
+	apu.wave2.adsr.rs = apu.mmio_view[WT2ADSR]
+	apu.wave2.adsr.da = apu.mmio_view[WT2ADSR + 1]
 }
 
 apu_generate_sample :: #force_inline proc(apu: ^Apu) -> f32 {
