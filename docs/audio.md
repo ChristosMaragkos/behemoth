@@ -74,7 +74,7 @@ Each time an internal counter reaches `NOIRATE` samples, the register steps once
 
 1. Determine the feedback bit by XORing bit 0 with a selected tap bit based on `NOICTRL` bit 3:
    - **Long mode (0):** Tap bit is bit 1 (`feedback = bit 0 ^ bit 1`). This yields a pseudo-random sequence of 32,767 steps before repeating, producing continuous, smooth white noise.
-   - **Short mode (1):** Tap bit is bit 6 (`feedback = bit 0 ^ bit 6`). The sequence collapses into an exceptionally short cycle of 127 steps,
+   - **Short mode (1):** Tap bit is bit 6 (`feedback = bit 0 ^ bit 6`). The sequence collapses into an exceptionally short cycle of 93 steps,
    transforming the output into a harsh, metallic periodic buzz.
 2. Shift the entire register 1 bit to the right (`shift_reg >> 1`).
 3. Place the calculated `feedback` bit into the newly vacated most-significant position (bit 14).
