@@ -53,6 +53,33 @@ bus_system_dma :: proc(bus: ^MemoryBus) {
 	bus.contention = DMA_INIT_COST + amnt
 }
 
+bus_audio_dma :: proc(bus: ^MemoryBus) {
+	ADMACTL :: 0x05_0700
+	ADMASRC :: 0x05_0701
+	ADMADST :: 0x05_0704
+	ADMALEN :: 0x05_0707
+	ADMASTAT :: 0x05_0709
+
+	ARAM_SIZE :: 16 * 1024
+
+	src := bus_read_u24(bus, ADMASRC)
+	dst := bus_read_word(bus, ADMADST)
+
+	size := int((bus_read_byte(bus, ADMACTL) & 0b1) + 1)
+	len := int(bus_read_word(bus, ADMALEN))
+	amnt := u32(size * len)
+
+	dst_final := u32(dst) + amnt
+
+	if dst_final >= ARAM_SIZE {
+		bus_write_byte(bus, ADMASTAT, 0x01)
+		return
+	}
+
+	mem.copy(&bus.ram[dst], &bus.ram[src], size * len)
+	bus.contention = DMA_INIT_COST + amnt
+}
+
 bus_video_dma :: proc(bus: ^MemoryBus) {
 	VDMACTRL :: 0x05_053a
 	VDMASRC :: 0x05_053b
