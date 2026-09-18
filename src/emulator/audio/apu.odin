@@ -1,5 +1,7 @@
 package audio
 
+import "../common"
+import "core:math"
 import "core:slice"
 
 APUCTRL :: 0x0a
@@ -30,6 +32,7 @@ Apu :: struct {
 
 apu_init :: proc(apu: ^Apu, mmio_start_ptr: ^byte) {
 	apu.mmio_view = slice.from_ptr(mmio_start_ptr, 0xff)
+	apu.global_vol = 0xff
 	// TODO: Maybe a small boot routine/BIOS should handle the initial channel setup
 	apu.pulse.volume = 208
 	apu.saw.volume = 192
@@ -91,7 +94,19 @@ apu_decode_from_mmio :: proc(apu: ^Apu) {
 	apu.wave2.adsr.da = apu.mmio_view[WT2ADSR + 1]
 }
 
-apu_generate_sample :: #force_inline proc(apu: ^Apu) -> f32 {
-	// TODO: Implement
-	unimplemented("Audio generation not implemented yet")
+apu_generate_sample :: proc(apu: ^Apu) -> f32 {
+	apu_decode_from_mmio(apu)
+	if apu.ctrl.disabled do return 0.0
+
+	pulse := pulse_generate(&apu.pulse)
+	triangle := triangle_generate(&apu.triangle)
+	saw := saw_generate(&apu.saw)
+	noise := noise_generate(&apu.noise)
+	wave1 := wavetable_generate(&apu.wave1, apu.aram[:])
+	wave2 := wavetable_generate(&apu.wave2, apu.aram[:])
+
+	avg := (pulse + triangle + saw + noise + wave1 + wave2) / 3.3
+	vol := q0_8_expand(apu.global_vol)
+
+	return math.tanh(avg) * vol
 }
