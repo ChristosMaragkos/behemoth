@@ -86,12 +86,12 @@ read_u8 :: proc(view: []byte, addr: u8) -> u8 {
 
 @(private = "file")
 read_u16 :: proc(view: []byte, addr: u8) -> u16 {
-	return u16(view[addr]) | u16(view[addr + 1] << 8)
+	return u16(view[addr]) | (u16(view[addr + 1]) << 8)
 }
 
 @(private = "file")
 read_u24 :: proc(view: []byte, addr: u8) -> u32 {
-	return u32(view[addr]) | u32(view[addr + 1] << 8) | u32(view[addr + 2] << 16)
+	return u32(view[addr]) | (u32(view[addr + 1]) << 8) | (u32(view[addr + 2]) << 16)
 }
 
 ppu_encode_to_mmio :: proc(ppu: ^Ppu) {

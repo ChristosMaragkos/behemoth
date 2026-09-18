@@ -17,7 +17,7 @@ import "../common"
 
 @(private = "file")
 bus_read_u24 :: proc(bus: ^MemoryBus, addr: u32) -> u32 {
-	return u32(bus.ram[addr]) | u32(bus.ram[addr + 1] << 8) | u32(bus.ram[addr + 2] << 16)
+	return u32(bus.ram[addr]) | (u32(bus.ram[addr + 1]) << 8) | (u32(bus.ram[addr + 2]) << 16)
 }
 
 @(private = "file")

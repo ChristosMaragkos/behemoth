@@ -15,7 +15,7 @@ is_valid_read :: proc(addr: u32) -> bool {
 }
 
 calculate_address :: proc(page: u8, offset: u16) -> u32 {
-	return u32(page << 16) | u32(offset)
+	return (u32(page) << 16) | u32(offset)
 }
 
 MemoryBus :: struct {
