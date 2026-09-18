@@ -90,8 +90,10 @@ system_cleanup :: proc(sys: ^System) {
 	}
 }
 
+@(require_results)
 system_load_cart_from_file :: proc(sys: ^System, path: string) -> os.Error {
 	file := os.open(path) or_return
+	defer os.close(file)
 	flsz := os.file_size(file) or_return
 
 	length := min(flsz, memory.TOTAL_ROM_SPACE)
@@ -157,3 +159,5 @@ system_write_input :: proc(sys: ^System, j1, j2, j3, j4: input.Joypad) {
 	memory.bus_write_word(sys.bus, c.JOYPAD3, transmute(u16)j3)
 	memory.bus_write_word(sys.bus, c.JOYPAD4, transmute(u16)j4)
 }
+
+system_stream_audio :: audio.apu_generate_sample
