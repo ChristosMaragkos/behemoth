@@ -77,7 +77,7 @@ cpu_init :: proc(cpu: ^Cpu, bus: ^memory.MemoryBus) {
 	}
 	cpu.regs[SP_REG_IDX].full = SP_INIT_VAL
 	cpu.hi.full = 0
-	cpu.pp = 0
+	cpu.pp = 6
 	cpu.dp = 0
 	cpu.bus = bus
 }
