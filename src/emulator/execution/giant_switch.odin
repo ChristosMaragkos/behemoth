@@ -6,7 +6,10 @@ cpu_fetch_instruction :: proc(cpu: ^Cpu) -> Instruction {
 }
 
 cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
-	if cpu.halted do return
+	if cpu.halted {
+		cpu_advance_pc(cpu, -cpu.pc_delta)
+		return
+	}
 
 	cpu.cycle_delta += 1
 
