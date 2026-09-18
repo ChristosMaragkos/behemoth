@@ -4,6 +4,7 @@ import "/audio"
 import c "/common"
 import exec "/execution"
 import gfx "/graphics"
+import "/input"
 import "/memory"
 import "core:mem"
 import "core:os"
@@ -130,4 +131,11 @@ system_step_instruction :: proc(sys: ^System) {
 	} else if .InHblank in sys.ppu.status {
 		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false)
 	}
+}
+
+system_write_input :: proc(sys: ^System, j1, j2, j3, j4: input.Joypad) {
+	memory.bus_write_word(sys.bus, c.JOYPAD1, transmute(u16)j1)
+	memory.bus_write_word(sys.bus, c.JOYPAD2, transmute(u16)j2)
+	memory.bus_write_word(sys.bus, c.JOYPAD3, transmute(u16)j3)
+	memory.bus_write_word(sys.bus, c.JOYPAD4, transmute(u16)j4)
 }
