@@ -5,40 +5,10 @@ import "core:slice"
 APUCTRL :: 0x0a
 GLBLVOL :: 0x0b
 
-PULCTRL :: 0x0c
-PULPITCH :: 0x0d
-PULVOL :: 0x0f
-PULADSR :: 0x10
-
-SAWCTRL :: 0x12
-SAWPITCH :: 0x13
-SAWVOL :: 0x15
-SAWADSR :: 0x16
-
-TRICTRL :: 0x17
-TRIPITCH :: 0x18
-TRIVOL :: 0x1a
-TRIADSR :: 0x1b
-
-NOICTRL :: 0x1d
-NOIRATE :: 0x1e
-NOIVOL :: 0x20
-NOIADSR :: 0x21
-
-WT1CTRL :: 0x23
-WT1PITCH :: 0x24
-WT1VOL :: 0x26
-WT1ADSR :: 0x27
-WT1IDX :: 0x29
-
-WT2CTRL :: 0x2a
-WT2PITCH :: 0x2b
-WT2VOL :: 0x2d
-WT2ADSR :: 0x2e
-WT2IDX :: 0x30
-
 AUDIO_RAM_SIZE :: 16 * 1024
 APU_MMIO_OFFSET :: 0x0700
+
+SAMPLE_RATE :: 44100.0
 
 ApuCtrl :: bit_field u8 {
 	disabled: bool | 1,

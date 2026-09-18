@@ -1,13 +1,5 @@
 package audio
 
-PulseCtrl :: bit_field u8 {
-	disabled:           bool | 1,
-	gate_on:            bool | 1,
-	reset_on_retrigger: bool | 1,
-	duty_cycle:         u8   | 3,
-	reserved:           u8   | 2,
-}
-
 Envelope :: struct #raw_union {
 	using _: bit_field u16le {
 		r: u8 | 4,
@@ -21,15 +13,7 @@ Envelope :: struct #raw_union {
 	},
 }
 
-// This is not the exact ordering used in the spec but it'll be packed tighter in memory
-PulseChannel :: struct {
-	using ctrl: PulseCtrl,
-	volume:     u8,
-	pitch:      u16,
-	adsr:       Envelope,
-}
-
-@(private = "file")
+@(private)
 GenericChannelCtrl :: bit_field u8 {
 	disabled:           bool | 1,
 	gate_on:            bool | 1,
@@ -37,47 +21,6 @@ GenericChannelCtrl :: bit_field u8 {
 	reserved:           u8   | 5,
 }
 
-SawCtrl :: distinct GenericChannelCtrl
-
-SawChannel :: struct {
-	using ctrl: SawCtrl,
-	volume:     u8,
-	pitch:      u16,
-	adsr:       Envelope,
-}
-
-TriangleCtrl :: distinct GenericChannelCtrl
-
-TriangleChannel :: struct {
-	using ctrl: TriangleCtrl,
-	volume:     u8,
-	pitch:      u16,
-	adsr:       Envelope,
-}
-
-NoiseCtrl :: bit_field u8 {
-	disabled:           bool | 1,
-	gate_on:            bool | 1,
-	reset_on_retrigger: bool | 1,
-	mode:               enum u8 {
-		Long,
-		Short,
-	}     | 1,
-}
-
-NoiseChannel :: struct {
-	using ctrl: NoiseCtrl,
-	volume:     u8,
-	rate:       u16,
-	adsr:       Envelope,
-}
-
-WavetableCtrl :: distinct GenericChannelCtrl
-
-WavetableChannel :: struct {
-	using ctrl: WavetableCtrl,
-	volume:     u8,
-	pitch:      u16,
-	adsr:       Envelope,
-	index:      u8,
+q0_8_expand :: #force_inline proc(q: u8) -> f32 {
+	return f32(q) / 256.0
 }
