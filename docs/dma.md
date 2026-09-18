@@ -92,19 +92,18 @@ that wavetables can be streamed into audio RAM quickly (e.g. loading a table ban
 strictly one-way (main bus -> ARAM); there is no readback because ARAM is write-only. The audio documents
 ([audio.md](./audio.md)) describe ARAM and how wavetable channels consume it.
 
-A transfer is valid only if the destination address lies within ARAM (13 bits, covering the 8 KB) and the source lies
-on the main bus in a readable region (WRAM, ROM or SRAM). Any other combination (out-of-range destination, a source
-out of the main bus's readable range, or a destination overlapping an address treated specially by the APU) sets
-`ERROR` and does nothing. The transfer starts immediately when `ADMASTART` is written; it never waits for blanking
+A transfer is valid only if the destination address lies within ARAM (14 bits, covering the 16 KB) and the source lies
+on the main bus in a readable region (WRAM, ROM or SRAM). Any other combination (out-of-range destination or a source
+out of the main bus's readable range) sets `ERROR` and does nothing. The transfer starts immediately when `ADMASTART` is written; it never waits for blanking
 because it does not touch the video memory bus.
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | :-------------: | :-------------: | --------------- | :-------------: | :-------------: |
-| `$05:0700` | ADMASTAT | Audio DMA status bitmask (see below) | R | 1 |
-| `$05:0701` | ADMACTL | DMA control bitmask (see below) | RW | 1 |
-| `$05:0702` | ADMASRC | 24-bit source address; must lie in WRAM, ROM or SRAM | RW | 3 |
-| `$05:0705` | ADMADST | 13-bit ARAM destination address (covers the 8 KB) | RW | 2 |
-| `$05:0707` | ADMALEN | Transfer length in elements, where an element is one byte or one word per the width bit of `ADMACTL` | RW | 2 |
+| `$05:0700` | ADMACTL | DMA control bitmask (see below) | RW | 1 |
+| `$05:0701` | ADMASRC | 24-bit source address; must lie in WRAM, ROM or SRAM | RW | 3 |
+| `$05:0704` | ADMADST | 14-bit ARAM destination address (covers the 16 KB) | RW | 2 |
+| `$05:0706` | ADMALEN | Transfer length in elements, where an element is one byte or one word per the width bit of `ADMACTL` | RW | 2 |
+| `$05:0708` | ADMASTAT | Audio DMA status bitmask (see below) | R | 1 |
 | `$05:0709` | ADMASTART | Write any value to start a transfer | W | 1 |
 
 - ADMACTL:
