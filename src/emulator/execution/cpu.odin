@@ -7,10 +7,12 @@ SP_REG_IDX :: 7
 SP_INIT_VAL :: 0xFFFE
 SP_PAGE :: 0x04
 
+VBLNK_VEC_IDX :: 0x00
+HBLNK_VEC_IDX :: 0x01
+DIV0_VEC_IDX :: 0x02
 STACK_OVF_VEC_IDX :: 0x03
 STACK_UDF_VEC_IDX :: 0x04
 INVALID_OPCODE_VEC_IDX :: 0x05
-DIV0_VEC_IDX :: 0x02
 
 // This will NEVER be run in a big-endian computer,
 // but best to play it safe.
@@ -262,6 +264,4 @@ cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool) {
 
 	cpu.pc = pc_new
 	cpu.pp = pp_new
-	// FIXME: Remove this once interrupts are implemented
-	panic("Interrupts are not implemented yet")
 }
