@@ -238,3 +238,35 @@ MemoryOpcodes :: enum u8 {
 	Blkcp,
 	Blkmv,
 }
+
+ShoveValues :: enum u8 {
+	A,
+	B,
+	C,
+	D,
+	E,
+	F,
+	G,
+	Flags,
+	Hi,
+	DP,
+	Mode = 15,
+}
+
+ShoveBitmask :: bit_set[ShoveValues;u16]
+
+RegName :: enum u8 {
+	A,
+	B,
+	C,
+	D,
+	E,
+	F,
+	G,
+	SP,
+	Flags,
+	Hi,
+	PP,
+	DP,
+	PC,
+}

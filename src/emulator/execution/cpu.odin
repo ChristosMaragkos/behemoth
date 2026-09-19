@@ -1,5 +1,6 @@
 package execution
 
+import "../../shared"
 import "../memory"
 
 SP_REG_IDX :: 7
@@ -38,22 +39,6 @@ CpuFlags :: enum u16 {
 	Negative,
 	Overflow,
 	IgnoreInterrupts,
-}
-
-RegName :: enum u8 {
-	A,
-	B,
-	C,
-	D,
-	E,
-	F,
-	G,
-	SP,
-	Flags,
-	Hi,
-	PP,
-	DP,
-	PC,
 }
 
 FlagRegister :: bit_set[CpuFlags;u16]
@@ -187,7 +172,7 @@ cpu_write_byte :: #force_inline proc(cpu: ^Cpu, addr: u32, val: u8) {
 	memory.bus_write_byte(cpu.bus, addr, val)
 }
 
-cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
+cpu_push :: proc(cpu: ^Cpu, reg: shared.RegName) {
 	sp := cpu_get_reg(cpu, SP_REG_IDX)
 	addr := memory.calculate_address(SP_PAGE, sp.full)
 	val: u16
@@ -216,7 +201,7 @@ cpu_push :: proc(cpu: ^Cpu, reg: RegName) {
 	sp.full -= size_of(u16)
 }
 
-cpu_pop :: proc(cpu: ^Cpu, reg: RegName) {
+cpu_pop :: proc(cpu: ^Cpu, reg: shared.RegName) {
 	sp := cpu_get_reg(cpu, SP_REG_IDX)
 
 	if sp.full + 2 < sp.full {

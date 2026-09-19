@@ -331,35 +331,19 @@ exec_st_reg_regptr_predec :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^C
 }
 
 exec_push :: proc(reg1: u8, cpu: ^Cpu) {
-	cpu_push(cpu, RegName(reg1))
+	cpu_push(cpu, shared.RegName(reg1))
 }
 
 exec_pop :: proc(reg1: u8, cpu: ^Cpu) {
-	cpu_pop(cpu, RegName(reg1))
+	cpu_pop(cpu, shared.RegName(reg1))
 }
-
-ShoveValues :: enum u8 {
-	A,
-	B,
-	C,
-	D,
-	E,
-	F,
-	G,
-	Flags,
-	Hi,
-	DP,
-	Mode = 15,
-}
-
-ShoveBitmask :: bit_set[ShoveValues;u16]
 
 exec_shove :: proc(cpu: ^Cpu) {
-	bitmask := transmute(ShoveBitmask)(cpu_pc_fetch_word(cpu))
+	bitmask := transmute(shared.ShoveBitmask)(cpu_pc_fetch_word(cpu))
 
 	if .Mode not_in bitmask {
-		for idx in ShoveValues.A ..< ShoveValues.Flags {
-			if idx in bitmask do cpu_push(cpu, RegName(idx))
+		for idx in shared.ShoveValues.A ..< shared.ShoveValues.Flags {
+			if idx in bitmask do cpu_push(cpu, shared.RegName(idx))
 		}
 		if .Flags in bitmask do cpu_push(cpu, .Flags)
 		if .Hi in bitmask do cpu_push(cpu, .Hi)
@@ -368,8 +352,8 @@ exec_shove :: proc(cpu: ^Cpu) {
 		if .DP in bitmask do cpu_pop(cpu, .DP)
 		if .Hi in bitmask do cpu_pop(cpu, .Hi)
 		if .Flags in bitmask do cpu_pop(cpu, .Flags)
-		for idx: i16 = i16(ShoveValues.G); idx >= i16(ShoveValues.A); idx -= 1 { 	// just what the hell is this monstrosity
-			if ShoveValues(idx) in bitmask do cpu_pop(cpu, RegName(idx))
+		for idx: i16 = i16(shared.ShoveValues.G); idx >= i16(shared.ShoveValues.A); idx -= 1 { 	// just what the hell is this monstrosity
+			if shared.ShoveValues(idx) in bitmask do cpu_pop(cpu, shared.RegName(idx))
 		}
 	}
 }
