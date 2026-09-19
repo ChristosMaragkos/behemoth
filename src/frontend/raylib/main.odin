@@ -14,13 +14,16 @@ main :: proc() {
 	sys := emu.system_init()
 	defer emu.system_cleanup(sys)
 
-	fpath := os.args[1]
-	load_err := emu.system_load_cart_from_file(sys, fpath)
-	if load_err != os.General_Error.None {
-		fmt.printfln(
-			"Could not load cartridge from command line argument; load failed with error: %s",
-			load_err,
-		)
+	fpath_passed := len(os.args) > 1
+	if fpath_passed {
+		fpath := os.args[1]
+		load_err := emu.system_load_cart_from_file(sys, fpath)
+		if load_err != os.General_Error.None {
+			fmt.printfln(
+				"Could not load cartridge from command line argument; load failed with error: %s",
+				load_err,
+			)
+		}
 	}
 
 	rl.SetConfigFlags({.WINDOW_RESIZABLE})
