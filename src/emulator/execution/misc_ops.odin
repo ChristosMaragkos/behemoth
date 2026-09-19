@@ -1,34 +1,6 @@
 package execution
 
-MiscOpcodes :: enum u8 {
-	Nop,
-	Wfi,
-	Mov,
-	Cbw,
-	Zxt,
-	Xchg,
-	Swp,
-	Mfhi,
-	Mthi,
-	Mfpp,
-	Mtpp,
-	Mfdp,
-	Mtdp,
-	Swi_Imm,
-	Swi_Reg,
-	Sec,
-	Clc,
-	Sez,
-	Clz,
-	Sen,
-	Cln,
-	Sev,
-	Clv,
-	Sei,
-	Cli,
-	Mffr,
-	Mtfr,
-}
+import "../../shared"
 
 exec_nop :: proc(cpu: ^Cpu) {
 	// According to all known laws of aviation,
@@ -42,7 +14,7 @@ exec_wfi :: proc(cpu: ^Cpu) {
 	}
 }
 
-exec_mov :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_mov :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -64,7 +36,7 @@ exec_zxt :: proc(reg1: u8, cpu: ^Cpu) {
 	r1.full = u16(r1.low)
 }
 
-exec_xchg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_xchg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -82,7 +54,7 @@ exec_swp :: proc(reg1: u8, cpu: ^Cpu) {
 	r1.low, r1.high = r1.high, r1.low
 }
 
-exec_mfhi :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_mfhi :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 
 	switch size {
@@ -93,7 +65,7 @@ exec_mfhi :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_mthi :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_mthi :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 
 	switch size {
@@ -178,14 +150,14 @@ exec_cli :: proc(cpu: ^Cpu) {
 	cpu.flags -= {.IgnoreInterrupts}
 }
 
-exec_mffr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_mffr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 
 	if size == .Word do r1.full = transmute(u16)cpu.flags
 	else do r1.low = u8(transmute(u16)cpu.flags)
 }
 
-exec_mtfr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_mtfr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 
 	if size == .Word {

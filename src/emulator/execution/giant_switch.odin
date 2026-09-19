@@ -1,11 +1,13 @@
 package execution
 
-cpu_fetch_instruction :: proc(cpu: ^Cpu) -> Instruction {
+import "../../shared"
+
+cpu_fetch_instruction :: proc(cpu: ^Cpu) -> shared.Instruction {
 	cpu.pc_delta = 0
-	return Instruction(cpu_pc_fetch_word(cpu))
+	return shared.Instruction(cpu_pc_fetch_word(cpu))
 }
 
-cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
+cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 	if cpu.halted {
 		cpu_advance_pc(cpu, -cpu.pc_delta)
 		return
@@ -15,7 +17,7 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 
 	switch instr.type {
 		case .Misc:
-			switch MiscOpcodes(instr.opcode) {
+			switch shared.MiscOpcodes(instr.opcode) {
 				case .Nop:
 					exec_nop(cpu)
 				case .Wfi:
@@ -74,7 +76,7 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_cli(cpu)
 			}
 		case .Memory:
-			switch MemoryOpcodes(instr.opcode) {
+			switch shared.MemoryOpcodes(instr.opcode) {
 				case .Ld_Reg_Imm:
 					exec_ld_reg_imm(instr.size, instr.reg1, cpu)
 				case .Ld_Reg_RegPtr:
@@ -143,7 +145,7 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					cpu_trigger_interrupt(cpu, INVALID_OPCODE_VEC_IDX, true)
 			}
 		case .Math:
-			switch MathOpcodes(instr.opcode) {
+			switch shared.MathOpcodes(instr.opcode) {
 				case .Add_Reg_Reg:
 					exec_add_reg_reg(instr.size, instr.reg1, instr.reg2, false, cpu)
 				case .Add_Reg_Imm:
@@ -392,7 +394,7 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: Instruction) {
 					exec_sub_l_imm32(instr.reg1, instr.reg2, true, cpu)
 			}
 		case .ControlFlow:
-			switch FlowOps(instr.opcode) {
+			switch shared.FlowOps(instr.opcode) {
 				case .Jsr_Imm:
 					exec_jsr_imm(cpu)
 				case .Jsr_Reg:

@@ -1,45 +1,11 @@
 package execution
 
+import "../../shared"
 import "../memory"
 
 BLKCP_BLKMV_SIZE :: 4
 
-MemoryOpcodes :: enum u8 {
-	Ld_Reg_Imm,
-	Ld_Reg_RegPtr,
-	Ld_Reg_ImmPtr,
-	Ld_Reg_ImmOffs,
-	Ld_Reg_RegOffs,
-	Ld_Reg_RegPtr_PostInc,
-	Ld_Reg_RegPtr_PreInc,
-	Ld_Reg_RegPtr_PostDec,
-	Ld_Reg_RegPtr_PreDec,
-	St_Reg_RegPtr,
-	St_Reg_ImmPtr,
-	St_Reg_ImmOffs,
-	St_Reg_RegOffs,
-	St_Reg_RegPtr_PostInc,
-	St_Reg_RegPtr_PreInc,
-	St_Reg_RegPtr_PostDec,
-	St_Reg_RegPtr_PreDec,
-	Push,
-	Pop,
-	Shove,
-	Ld_L_Ptr24,
-	Ld_L_Ptr24_RegOffs,
-	Ld_L_RegPair,
-	Ld_L_RegPair_ImmOffs,
-	Ld_L_RegPair_RegOffs,
-	St_L_Ptr24,
-	St_L_Ptr24_RegOffs,
-	St_L_RegPair,
-	St_L_RegPair_ImmOffs,
-	St_L_RegPair_RegOffs,
-	Blkcp,
-	Blkmv,
-}
-
-exec_ld_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_ld_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 
 	switch size {
@@ -52,7 +18,7 @@ exec_ld_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -66,7 +32,7 @@ exec_ld_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_ld_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 
@@ -80,7 +46,7 @@ exec_ld_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_reg_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -96,7 +62,7 @@ exec_ld_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_reg_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111).full
@@ -112,7 +78,7 @@ exec_ld_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_reg_regptr_postinc :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -138,7 +104,7 @@ exec_ld_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_reg_regptr_preinc :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -164,7 +130,7 @@ exec_ld_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_reg_regptr_postdec :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -190,7 +156,7 @@ exec_ld_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_reg_regptr_predec :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -216,7 +182,7 @@ exec_ld_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -228,7 +194,7 @@ exec_st_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_st_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 
@@ -240,7 +206,7 @@ exec_st_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_reg_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -254,7 +220,7 @@ exec_st_reg_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_reg_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111).full
@@ -268,7 +234,7 @@ exec_st_reg_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_reg_regptr_postinc :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -292,7 +258,7 @@ exec_st_reg_regptr_postinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_reg_regptr_preinc :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -316,7 +282,7 @@ exec_st_reg_regptr_preinc :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_reg_regptr_postdec :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -340,7 +306,7 @@ exec_st_reg_regptr_postdec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_reg_regptr_predec :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_reg_regptr_predec :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 
@@ -408,7 +374,7 @@ exec_shove :: proc(cpu: ^Cpu) {
 	}
 }
 
-exec_ld_l_ptr24 :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_ld_l_ptr24 :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	offs := cpu_pc_fetch_word(cpu)
 	page := cpu_pc_fetch_byte(cpu)
@@ -424,7 +390,7 @@ exec_ld_l_ptr24 :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_l_ptr24_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_l_ptr24_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -441,7 +407,7 @@ exec_ld_l_ptr24_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_l_regpair :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_l_regpair :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -457,7 +423,7 @@ exec_ld_l_regpair :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_l_regpair_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_l_regpair_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -474,7 +440,7 @@ exec_ld_l_regpair_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_ld_l_regpair_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ld_l_regpair_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	next_byte := cpu_pc_fetch_byte(cpu)
@@ -493,7 +459,7 @@ exec_ld_l_regpair_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_l_ptr24 :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_st_l_ptr24 :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	offs := cpu_pc_fetch_word(cpu)
 	page := cpu_pc_fetch_byte(cpu)
@@ -507,7 +473,7 @@ exec_st_l_ptr24 :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_l_ptr24_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_l_ptr24_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -522,7 +488,7 @@ exec_st_l_ptr24_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_l_regpair :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_l_regpair :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -536,7 +502,7 @@ exec_st_l_regpair :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_l_regpair_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_l_regpair_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -551,7 +517,7 @@ exec_st_l_regpair_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_st_l_regpair_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_st_l_regpair_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	next_byte := cpu_pc_fetch_byte(cpu)

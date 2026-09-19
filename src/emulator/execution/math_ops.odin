@@ -1,128 +1,6 @@
 package execution
 
-MathOpcodes :: enum u8 {
-	// add
-	Add_Reg_Reg,
-	Add_Reg_Imm,
-	Add_Reg_RegPtr,
-	Add_Reg_ImmPtr,
-	Add_Reg_RegPtr_ImmOffs,
-	Add_Reg_RegPtr_RegOffs,
-	// sub
-	Sub_Reg_Reg,
-	Sub_Reg_Imm,
-	Sub_Reg_RegPtr,
-	Sub_Reg_ImmPtr,
-	Sub_Reg_RegPtr_ImmOffs,
-	Sub_Reg_RegPtr_RegOffs,
-	// mulu
-	Mulu_Reg_Reg,
-	Mulu_Reg_Imm,
-	Mulu_Reg_RegPtr,
-	Mulu_Reg_ImmPtr,
-	Mulu_Reg_RegPtr_ImmOffs,
-	Mulu_Reg_RegPtr_RegOffs,
-	// divu
-	Divu_Reg_Reg,
-	Divu_Reg_Imm,
-	Divu_Reg_RegPtr,
-	Divu_Reg_ImmPtr,
-	Divu_Reg_RegPtr_ImmOffs,
-	Divu_Reg_RegPtr_RegOffs,
-	// muls
-	Muls_Reg_Reg,
-	Muls_Reg_Imm,
-	Muls_Reg_RegPtr,
-	Muls_Reg_ImmPtr,
-	Muls_Reg_RegPtr_ImmOffs,
-	Muls_Reg_RegPtr_RegOffs,
-	// divs
-	Divs_Reg_Reg,
-	Divs_Reg_Imm,
-	Divs_Reg_RegPtr,
-	Divs_Reg_ImmPtr,
-	Divs_Reg_RegPtr_ImmOffs,
-	Divs_Reg_RegPtr_RegOffs,
-	// adc
-	Adc_Reg_Reg,
-	Adc_Reg_Imm,
-	Adc_Reg_RegPtr,
-	Adc_Reg_ImmPtr,
-	Adc_Reg_RegPtr_ImmOffs,
-	Adc_Reg_RegPtr_RegOffs,
-	// sbc
-	Sbc_Reg_Reg,
-	Sbc_Reg_Imm,
-	Sbc_Reg_RegPtr,
-	Sbc_Reg_ImmPtr,
-	Sbc_Reg_RegPtr_ImmOffs,
-	Sbc_Reg_RegPtr_RegOffs,
-	// cmp
-	Cmp_Reg_Reg,
-	Cmp_Reg_Imm,
-	Cmp_Reg_RegPtr,
-	Cmp_Reg_ImmPtr,
-	Cmp_Reg_RegPtr_ImmOffs,
-	Cmp_Reg_RegPtr_RegOffs,
-	// inc
-	Inc,
-	// dec
-	Dec,
-	// neg
-	Neg,
-	// and
-	And_Reg_Reg,
-	And_Reg_Imm,
-	And_Reg_RegPtr,
-	And_Reg_ImmPtr,
-	And_Reg_RegPtr_ImmOffs,
-	And_Reg_RegPtr_RegOffs,
-	// or
-	Or_Reg_Reg,
-	Or_Reg_Imm,
-	Or_Reg_RegPtr,
-	Or_Reg_ImmPtr,
-	Or_Reg_RegPtr_ImmOffs,
-	Or_Reg_RegPtr_RegOffs,
-	// xor
-	Xor_Reg_Reg,
-	Xor_Reg_Imm,
-	Xor_Reg_RegPtr,
-	Xor_Reg_ImmPtr,
-	Xor_Reg_RegPtr_ImmOffs,
-	Xor_Reg_RegPtr_RegOffs,
-	// bt
-	Bt_Reg_Reg,
-	Bt_Reg_Imm,
-	Bt_Reg_RegPtr,
-	Bt_Reg_ImmPtr,
-	Bt_Reg_RegPtr_ImmOffs,
-	Bt_Reg_RegPtr_RegOffs,
-	// not
-	Not,
-	// shifts
-	Lsl_Reg_Reg,
-	Lsl_Reg_Imm,
-	Lsr_Reg_Reg,
-	Lsr_Reg_Imm,
-	Asr_Reg_Reg,
-	Asr_Reg_Imm,
-	Rol_Reg_Reg,
-	Rol_Reg_Imm,
-	Ror_Reg_Reg,
-	Ror_Reg_Imm,
-	Rcl_Reg_Reg,
-	Rcl_Reg_Imm,
-	Rcr_Reg_Reg,
-	Rcr_Reg_Imm,
-	// 32-bit arithmetic
-	Add_L_RegPair,
-	Add_L_Imm32,
-	Sub_L_RegPair,
-	Sub_L_Imm32,
-	Cmp_L_RegPair,
-	Cmp_L_Imm32,
-}
+import "../../shared"
 
 compute_flags_add_l :: proc(accum: u64, op1, op2: u32) -> FlagRegister {
 	out: FlagRegister
@@ -146,7 +24,7 @@ compute_flags_sub_l :: proc(accum: u64, op1, op2: u32) -> FlagRegister {
 	return out
 }
 
-compute_flags_add :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
+compute_flags_add :: proc(size: shared.SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
 	out: FlagRegister
 	if size == .Word {
 		truncated := u16(accum)
@@ -168,7 +46,7 @@ compute_flags_add :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegi
 	return out
 }
 
-exec_add_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+exec_add_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -198,7 +76,7 @@ exec_add_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^
 	cpu.cycle_delta += 1
 }
 
-exec_add_reg_imm :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
+exec_add_reg_imm :: proc(size: shared.SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	carry: u32 = !use_carry ? 0 : (.Carry in (flags_old^) ? 1 : 0)
@@ -230,7 +108,7 @@ exec_add_reg_imm :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_add_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+exec_add_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -263,7 +141,7 @@ exec_add_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu
 	cpu.cycle_delta += 1
 }
 
-exec_add_reg_immptr :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
+exec_add_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -296,7 +174,12 @@ exec_add_reg_immptr :: proc(size: SizeMode, reg1: u8, use_carry: bool, cpu: ^Cpu
 	cpu.cycle_delta += 1
 }
 
-exec_add_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+exec_add_reg_regptr_immoffs :: proc(
+	size: shared.SizeMode,
+	reg1, reg2: u8,
+	use_carry: bool,
+	cpu: ^Cpu,
+) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -330,7 +213,12 @@ exec_add_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 	cpu.cycle_delta += 1
 }
 
-exec_add_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: bool, cpu: ^Cpu) {
+exec_add_reg_regptr_regoffs :: proc(
+	size: shared.SizeMode,
+	reg1, reg2: u8,
+	use_carry: bool,
+	cpu: ^Cpu,
+) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -365,7 +253,7 @@ exec_add_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, use_carry: b
 	cpu.cycle_delta += 1
 }
 
-compute_flags_sub :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
+compute_flags_sub :: proc(size: shared.SizeMode, accum: u32, op1, op2: u16) -> FlagRegister {
 	out: FlagRegister
 	if size == .Word {
 		truncated := u16(accum)
@@ -389,7 +277,12 @@ compute_flags_sub :: proc(size: SizeMode, accum: u32, op1, op2: u16) -> FlagRegi
 	return out
 }
 
-exec_sub_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+exec_sub_reg_reg :: proc(
+	size: shared.SizeMode,
+	reg1, reg2: u8,
+	use_borrow, discard: bool,
+	cpu: ^Cpu,
+) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -419,7 +312,7 @@ exec_sub_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard: bo
 	cpu.cycle_delta += 1
 }
 
-exec_sub_reg_imm :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+exec_sub_reg_imm :: proc(size: shared.SizeMode, reg1: u8, use_borrow, discard: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	carry: u32 = !use_borrow ? 0 : (.Carry in (flags_old^) ? 1 : 0)
@@ -451,7 +344,12 @@ exec_sub_reg_imm :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool, cp
 	cpu.cycle_delta += 1
 }
 
-exec_sub_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+exec_sub_reg_regptr :: proc(
+	size: shared.SizeMode,
+	reg1, reg2: u8,
+	use_borrow, discard: bool,
+	cpu: ^Cpu,
+) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -484,7 +382,12 @@ exec_sub_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, use_borrow, discard:
 	cpu.cycle_delta += 1
 }
 
-exec_sub_reg_immptr :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool, cpu: ^Cpu) {
+exec_sub_reg_immptr :: proc(
+	size: shared.SizeMode,
+	reg1: u8,
+	use_borrow, discard: bool,
+	cpu: ^Cpu,
+) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -518,7 +421,7 @@ exec_sub_reg_immptr :: proc(size: SizeMode, reg1: u8, use_borrow, discard: bool,
 }
 
 exec_sub_reg_regptr_immoffs :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	reg1, reg2: u8,
 	use_borrow, discard: bool,
 	cpu: ^Cpu,
@@ -557,7 +460,7 @@ exec_sub_reg_regptr_immoffs :: proc(
 }
 
 exec_sub_reg_regptr_regoffs :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	reg1, reg2: u8,
 	use_borrow, discard: bool,
 	cpu: ^Cpu,
@@ -596,7 +499,7 @@ exec_sub_reg_regptr_regoffs :: proc(
 	cpu.cycle_delta += 1
 }
 
-compute_flags_mul :: proc(size: SizeMode, result, hi: u16, signed: bool) -> FlagRegister {
+compute_flags_mul :: proc(size: shared.SizeMode, result, hi: u16, signed: bool) -> FlagRegister {
 	out: FlagRegister
 
 	if size == .Word {
@@ -616,7 +519,7 @@ compute_flags_mul :: proc(size: SizeMode, result, hi: u16, signed: bool) -> Flag
 	return out
 }
 
-exec_mulu_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_mulu_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -645,7 +548,7 @@ exec_mulu_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_mulu_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_mulu_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -675,7 +578,7 @@ exec_mulu_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_mulu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_mulu_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -706,7 +609,7 @@ exec_mulu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_mulu_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_mulu_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -737,7 +640,7 @@ exec_mulu_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_mulu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_mulu_reg_regptr_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -770,7 +673,7 @@ exec_mulu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 6
 }
 
-exec_mulu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_mulu_reg_regptr_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -803,7 +706,7 @@ exec_mulu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 6
 }
 
-compute_flags_div :: proc(size: SizeMode, result: u16, overflow: bool) -> FlagRegister {
+compute_flags_div :: proc(size: shared.SizeMode, result: u16, overflow: bool) -> FlagRegister {
 	out: FlagRegister
 
 	if size == .Word {
@@ -820,7 +723,7 @@ compute_flags_div :: proc(size: SizeMode, result: u16, overflow: bool) -> FlagRe
 	return out
 }
 
-compute_flags_logic :: proc(size: SizeMode, result: u16) -> FlagRegister {
+compute_flags_logic :: proc(size: shared.SizeMode, result: u16) -> FlagRegister {
 	out: FlagRegister
 
 	if size == .Word {
@@ -835,7 +738,11 @@ compute_flags_logic :: proc(size: SizeMode, result: u16) -> FlagRegister {
 	return out
 }
 
-compute_flags_shift :: proc(size: SizeMode, result: u16, carry, overflow: bool) -> FlagRegister {
+compute_flags_shift :: proc(
+	size: shared.SizeMode,
+	result: u16,
+	carry, overflow: bool,
+) -> FlagRegister {
 	out: FlagRegister
 
 	if carry do out += {.Carry}
@@ -853,7 +760,11 @@ compute_flags_shift :: proc(size: SizeMode, result: u16, carry, overflow: bool) 
 	return out
 }
 
-compute_flags_neg :: proc(size: SizeMode, res_full: u32, val, truncated: u16) -> FlagRegister {
+compute_flags_neg :: proc(
+	size: shared.SizeMode,
+	res_full: u32,
+	val, truncated: u16,
+) -> FlagRegister {
 	out: FlagRegister
 
 	if size == .Word {
@@ -875,7 +786,7 @@ compute_flags_neg :: proc(size: SizeMode, res_full: u32, val, truncated: u16) ->
 	return out
 }
 
-exec_divu_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divu_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -910,7 +821,7 @@ exec_divu_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divu_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_divu_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -946,7 +857,7 @@ exec_divu_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divu_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -983,7 +894,7 @@ exec_divu_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divu_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_divu_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -1020,7 +931,7 @@ exec_divu_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divu_reg_regptr_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -1059,7 +970,7 @@ exec_divu_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 8
 }
 
-exec_divu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divu_reg_regptr_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -1098,7 +1009,7 @@ exec_divu_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 8
 }
 
-exec_muls_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_muls_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -1127,7 +1038,7 @@ exec_muls_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_muls_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_muls_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -1157,7 +1068,7 @@ exec_muls_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_muls_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_muls_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -1188,7 +1099,7 @@ exec_muls_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_muls_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_muls_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -1219,7 +1130,7 @@ exec_muls_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 6
 }
 
-exec_muls_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_muls_reg_regptr_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -1252,7 +1163,7 @@ exec_muls_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 6
 }
 
-exec_muls_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_muls_reg_regptr_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -1285,7 +1196,7 @@ exec_muls_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 6
 }
 
-exec_divs_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divs_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -1326,7 +1237,7 @@ exec_divs_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divs_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_divs_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -1368,7 +1279,7 @@ exec_divs_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divs_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divs_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -1411,7 +1322,7 @@ exec_divs_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divs_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_divs_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -1454,7 +1365,7 @@ exec_divs_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 8
 }
 
-exec_divs_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divs_reg_regptr_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -1499,7 +1410,7 @@ exec_divs_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 8
 }
 
-exec_divs_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_divs_reg_regptr_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -1544,7 +1455,7 @@ exec_divs_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) 
 	cpu.cycle_delta += 8
 }
 
-exec_inc :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_inc :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.Carry, .IgnoreInterrupts}
@@ -1579,7 +1490,7 @@ exec_inc :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_dec :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_dec :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.Carry, .IgnoreInterrupts}
@@ -1615,7 +1526,7 @@ exec_dec :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 }
 
 shift_lsl :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	val, amount: u16,
 	carry_in: bool,
 ) -> (
@@ -1646,7 +1557,7 @@ shift_lsl :: proc(
 }
 
 shift_lsr :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	val, amount: u16,
 	carry_in: bool,
 ) -> (
@@ -1677,7 +1588,7 @@ shift_lsr :: proc(
 }
 
 shift_asr :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	val, amount: u16,
 	carry_in: bool,
 ) -> (
@@ -1708,7 +1619,7 @@ shift_asr :: proc(
 }
 
 rotate_rol :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	val, amount: u16,
 	carry_in: bool,
 ) -> (
@@ -1732,7 +1643,7 @@ rotate_rol :: proc(
 }
 
 rotate_ror :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	val, amount: u16,
 	carry_in: bool,
 ) -> (
@@ -1756,7 +1667,7 @@ rotate_ror :: proc(
 }
 
 rotate_rcl :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	val, amount: u16,
 	carry_in: bool,
 ) -> (
@@ -1782,7 +1693,7 @@ rotate_rcl :: proc(
 }
 
 rotate_rcr :: proc(
-	size: SizeMode,
+	size: shared.SizeMode,
 	val, amount: u16,
 	carry_in: bool,
 ) -> (
@@ -1807,7 +1718,7 @@ rotate_rcr :: proc(
 	return result, carry_out
 }
 
-exec_neg :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_neg :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -1827,7 +1738,7 @@ exec_neg :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_and_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, discard: bool, cpu: ^Cpu) {
+exec_and_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, discard: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -1846,7 +1757,7 @@ exec_and_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, discard: bool, cpu: ^Cp
 	cpu.cycle_delta += 1
 }
 
-exec_and_reg_imm :: proc(size: SizeMode, reg1: u8, discard: bool, cpu: ^Cpu) {
+exec_and_reg_imm :: proc(size: shared.SizeMode, reg1: u8, discard: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -1866,7 +1777,7 @@ exec_and_reg_imm :: proc(size: SizeMode, reg1: u8, discard: bool, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_and_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, discard: bool, cpu: ^Cpu) {
+exec_and_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, discard: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -1887,7 +1798,7 @@ exec_and_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, discard: bool, cpu: 
 	cpu.cycle_delta += 1
 }
 
-exec_and_reg_immptr :: proc(size: SizeMode, reg1: u8, discard: bool, cpu: ^Cpu) {
+exec_and_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, discard: bool, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -1908,7 +1819,12 @@ exec_and_reg_immptr :: proc(size: SizeMode, reg1: u8, discard: bool, cpu: ^Cpu) 
 	cpu.cycle_delta += 1
 }
 
-exec_and_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, discard: bool, cpu: ^Cpu) {
+exec_and_reg_regptr_immoffs :: proc(
+	size: shared.SizeMode,
+	reg1, reg2: u8,
+	discard: bool,
+	cpu: ^Cpu,
+) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -1930,7 +1846,12 @@ exec_and_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, discard: boo
 	cpu.cycle_delta += 1
 }
 
-exec_and_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, discard: bool, cpu: ^Cpu) {
+exec_and_reg_regptr_regoffs :: proc(
+	size: shared.SizeMode,
+	reg1, reg2: u8,
+	discard: bool,
+	cpu: ^Cpu,
+) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -1953,7 +1874,7 @@ exec_and_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, discard: boo
 	cpu.cycle_delta += 1
 }
 
-exec_or_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_or_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -1972,7 +1893,7 @@ exec_or_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_or_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_or_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -1992,7 +1913,7 @@ exec_or_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_or_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_or_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2013,7 +1934,7 @@ exec_or_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_or_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_or_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -2034,7 +1955,7 @@ exec_or_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_or_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_or_reg_regptr_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -2056,7 +1977,7 @@ exec_or_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_or_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_or_reg_regptr_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -2079,7 +2000,7 @@ exec_or_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_xor_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_xor_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2098,7 +2019,7 @@ exec_xor_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_xor_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_xor_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -2118,7 +2039,7 @@ exec_xor_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_xor_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_xor_reg_regptr :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2139,7 +2060,7 @@ exec_xor_reg_regptr :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_xor_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_xor_reg_immptr :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	immptr := cpu_pc_fetch_word(cpu)
 	flags_old := cpu_get_flags(cpu)
@@ -2160,7 +2081,7 @@ exec_xor_reg_immptr :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_xor_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_xor_reg_regptr_immoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	offs := cpu_pc_fetch_word(cpu)
@@ -2182,7 +2103,7 @@ exec_xor_reg_regptr_immoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_xor_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_xor_reg_regptr_regoffs :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	r3 := cpu_get_reg(cpu, cpu_pc_fetch_byte(cpu) & 0b111)
@@ -2205,7 +2126,7 @@ exec_xor_reg_regptr_regoffs :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_not :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_not :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.Carry, .Overflow, .IgnoreInterrupts}
@@ -2223,7 +2144,7 @@ exec_not :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_lsl_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_lsl_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2246,7 +2167,7 @@ exec_lsl_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_lsl_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_lsl_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -2268,7 +2189,7 @@ exec_lsl_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_lsr_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_lsr_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2289,7 +2210,7 @@ exec_lsr_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_lsr_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_lsr_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -2309,7 +2230,7 @@ exec_lsr_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_asr_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_asr_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2330,7 +2251,7 @@ exec_asr_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_asr_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_asr_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -2350,7 +2271,7 @@ exec_asr_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_rol_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_rol_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2371,7 +2292,7 @@ exec_rol_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_rol_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_rol_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -2391,7 +2312,7 @@ exec_rol_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_ror_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_ror_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2412,7 +2333,7 @@ exec_ror_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_ror_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_ror_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -2432,7 +2353,7 @@ exec_ror_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_rcl_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_rcl_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2453,7 +2374,7 @@ exec_rcl_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_rcl_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_rcl_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}
@@ -2473,7 +2394,7 @@ exec_rcl_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_rcr_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
+exec_rcr_reg_reg :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r2 := cpu_get_reg(cpu, reg2)
 	flags_old := cpu_get_flags(cpu)
@@ -2494,7 +2415,7 @@ exec_rcr_reg_reg :: proc(size: SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	cpu.cycle_delta += 1
 }
 
-exec_rcr_reg_imm :: proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_rcr_reg_imm :: proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	flags_old := cpu_get_flags(cpu)
 	flags_new := (flags_old^) & {.IgnoreInterrupts}

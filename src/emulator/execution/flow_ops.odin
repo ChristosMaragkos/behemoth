@@ -1,36 +1,7 @@
 package execution
 
+import "../../shared"
 import "../memory"
-
-FlowOps :: enum u8 {
-	Jsr_Imm,
-	Jsr_Reg,
-	Jmp_Imm,
-	Jmp_Reg,
-	Rts,
-	Rti,
-	Rtf,
-	Jz,
-	Jnz,
-	Jc,
-	Jnc,
-	Jmi,
-	Jpl,
-	Jv,
-	Jnv,
-	Jges,
-	Jgts,
-	Jles,
-	Jlts,
-	Jgtu,
-	Jleu,
-	Djnz,
-	Jsr_L_Imm,
-	Jsr_L_Regpair,
-	Jmp_L_Imm,
-	Jmp_L_Regpair,
-	Rts_L,
-}
 
 exec_jsr_imm :: proc(cpu: ^Cpu) {
 	imm := cpu_pc_fetch_word(cpu)
@@ -76,7 +47,7 @@ exec_rtf :: proc(cpu: ^Cpu) {
 }
 
 @(private = "file")
-exec_relative_branch :: proc(size: SizeMode, condition: bool, cpu: ^Cpu) {
+exec_relative_branch :: proc(size: shared.SizeMode, condition: bool, cpu: ^Cpu) {
 	offs: i16
 	cpu.cycle_delta += 1
 
@@ -92,69 +63,69 @@ exec_relative_branch :: proc(size: SizeMode, condition: bool, cpu: ^Cpu) {
 	}
 }
 
-exec_jz :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jz :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Zero in cpu.flags, cpu)
 }
 
-exec_jnz :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jnz :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Zero not_in cpu.flags, cpu)
 }
 
-exec_jc :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jc :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Carry in cpu.flags, cpu)
 }
 
-exec_jnc :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jnc :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Carry not_in cpu.flags, cpu)
 }
 
-exec_jmi :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jmi :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Negative in cpu.flags, cpu)
 }
 
-exec_jpl :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jpl :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Negative not_in cpu.flags, cpu)
 }
 
-exec_jv :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jv :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Overflow in cpu.flags, cpu)
 }
 
-exec_jnv :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jnv :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, .Overflow not_in cpu.flags, cpu)
 }
 
-exec_jges :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jges :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	cond := .Overflow in cpu.flags == .Negative in cpu.flags
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_jgts :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jgts :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	cond := .Zero not_in cpu.flags && (.Overflow in cpu.flags == .Negative in cpu.flags)
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_jles :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jles :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	cond := .Zero in cpu.flags || (.Overflow in cpu.flags != .Negative in cpu.flags)
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_jlts :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jlts :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	cond := .Overflow in cpu.flags != .Negative in cpu.flags
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_jgtu :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jgtu :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	cond := FlagRegister({.Carry, .Zero}) & cpu.flags == {}
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_jleu :: #force_inline proc(size: SizeMode, cpu: ^Cpu) {
+exec_jleu :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	cond := .Carry in cpu.flags || .Zero in cpu.flags
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_djnz :: #force_inline proc(size: SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_djnz :: #force_inline proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	exec_dec(size, reg1, cpu)
 	exec_jnz(size, cpu)
 }
