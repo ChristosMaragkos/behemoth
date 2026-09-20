@@ -118,18 +118,18 @@ Pushing occurs in ascending order (a->dp) while popping is done in descending or
 | 0x02 | ld | reg, immptr | 4 | Set value of register to value stored in `dp:immptr` | 8, 16 |
 | 0x03 | ld | reg, regptr + simm16 | 4 | Set value of register to value stored in (`dp:regptr` + simm16) | 8, 16 |
 | 0x04 | ld | reg, regptr + reg16 | 4 | Set value of register to value stored in (`dp:regptr` + reg16) | 8, 16 |
-| 0x05 | ld | reg, (regptr+) | 3 | Dereference pointer and increment (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
-| 0x06 | ld | reg, (+regptr) | 3 | Increment and dereference pointer | 8, 16 |
-| 0x07 | ld | reg, (regptr-) | 3 | Dereference pointer and decrement (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
-| 0x08 | ld | reg, (-regptr) | 3 | Decrement and dereference pointer | 8, 16 |
+| 0x05 | ld | reg, [regptr+] | 3 | Dereference pointer and increment (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
+| 0x06 | ld | reg, [+regptr] | 3 | Increment and dereference pointer | 8, 16 |
+| 0x07 | ld | reg, [regptr-] | 3 | Dereference pointer and decrement (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
+| 0x08 | ld | reg, [-regptr] | 3 | Decrement and dereference pointer | 8, 16 |
 | 0x09 | st | reg, regptr | 3 | Store value of register into word/byte starting at `dp:regptr` | 8, 16 |
 | 0x0a | st | reg, immptr | 4 | Store value of register into `dp:immptr` | 8, 16 |
 | 0x0b | st | reg, regptr + simm16 | 4 | Store value of register into address (`dp:regptr` + simm16) | 8, 16 |
 | 0x0c | st | reg, regptr + reg16 | 4 | Store value of register into address (`dp:regptr` + reg16) | 8, 16 |
-| 0x0d | st | reg, (regptr+) | 3 | Store value of register and increment pointer (by 1 in 8-bit mode, 2 in 16-bit mode) | 8, 16 |
-| 0x0e | st | reg, (+regptr) | 3 | Increment pointer and store register value | 8, 16 |
-| 0x0f | st | reg, (regptr-) | 3 | Store value of register and decrement pointer | 8, 16 |
-| 0x10 | st | reg, (-regptr) | 3 | Decrement pointer and store register value | 8, 16 |
+| 0x0d | st | reg, [regptr+] | 3 | Store value of register and increment pointer (by 1 in 8-bit mode, 2 in 16-bit mode) | 8, 16 |
+| 0x0e | st | reg, [+regptr] | 3 | Increment pointer and store register value | 8, 16 |
+| 0x0f | st | reg, [regptr-] | 3 | Store value of register and decrement pointer | 8, 16 |
+| 0x10 | st | reg, [-regptr] | 3 | Decrement pointer and store register value | 8, 16 |
 | 0x11 | push | reg16 | 3 | Push register onto stack and decrement `sp` | 16 |
 | 0x12 | pop | reg16 | 3 | Pop register from stack and increment `sp` | 16 |
 | 0x13 | shove | imm16 | 3 + n | Push or pop multiple registers from the stack (see [[#`SHOVE` opcode bitmask]]). | 16 |
