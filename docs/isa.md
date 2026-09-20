@@ -144,7 +144,7 @@ These hard-code the full 24-bit address. All offsets are sign-extended into 24 b
 | 0x15 | ld.l | reg, `ptr24 + reg16` | 5 | Load from ptr24 + sign-extended offset | 8, 16 |
 | 0x16 | ld.l | reg, `reg8:reg16` | 4 | Load from address formed by: reg8 = bank, reg16 = offset). | 8, 16 |
 | 0x17 | ld.l | reg, `reg8:reg16 + simm16` | 5 | Load from pair address + simm16 (pack word + offset word) | 8, 16 |
-| 0x18 | ld.l | reg, `reg8:reg16 + reg16` | 4 | Load from pair address + sign-extended reg offset (both extra regs in one pack byte) | 8, 16 |
+| 0x18 | ld.l | reg, `reg8:reg16 + reg16` | 4 | Load from pair address + sign-extended reg offset | 8, 16 |
 | 0x19 | st.l | reg, `ptr24` | 5 | Store to absolute 24-bit address | 8, 16 |
 | 0x1a | st.l | reg, `ptr24 + reg16` | 5 | Store to ptr24 + sign-extended offset | 8, 16 |
 | 0x1b | st.l | reg, `reg8:reg16` | 4 | Store to address formed by pair | 8, 16 |
