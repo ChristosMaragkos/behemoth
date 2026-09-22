@@ -27,7 +27,7 @@ main :: proc() {
 	}
 
 	rl.SetConfigFlags({.WINDOW_RESIZABLE})
-	rl.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Console")
+	rl.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "BHMTH")
 	rl.SetWindowMonitor(0)
 	rl.SetTargetFPS(60)
 	rl.SetWindowMinSize(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -59,6 +59,7 @@ main :: proc() {
 		rl.SetMouseScale(scale_scaled, scale_scaled)
 		rl.SetMouseOffset(i32(-off_x), i32(-off_y))
 
+		emu.system_write_input(sys, get_input())
 		emu.system_step_frame(sys)
 		rl.UpdateTexture(tex.texture, &sys.ppu.frame_buffer[0])
 		rl.BeginDrawing()
