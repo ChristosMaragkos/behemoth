@@ -24,8 +24,8 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 					exec_wfi(cpu)
 				case .Mov:
 					exec_mov(instr.size, instr.reg1, instr.reg2, cpu)
-				case .Cbw:
-					exec_cbw(instr.reg1, cpu)
+				case .Sxt:
+					exec_sxt(instr.reg1, cpu)
 				case .Zxt:
 					exec_zxt(instr.reg1, cpu)
 				case .Xchg:
@@ -394,7 +394,7 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 					exec_sub_l_imm32(instr.reg1, instr.reg2, true, cpu)
 			}
 		case .ControlFlow:
-			switch shared.FlowOps(instr.opcode) {
+			switch shared.FlowOpcodes(instr.opcode) {
 				case .Jsr_Imm:
 					exec_jsr_imm(cpu)
 				case .Jsr_Reg:

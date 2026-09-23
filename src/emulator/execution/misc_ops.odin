@@ -26,7 +26,7 @@ exec_mov :: proc(size: shared.SizeMode, reg1, reg2: u8, cpu: ^Cpu) {
 	}
 }
 
-exec_cbw :: proc(reg1: u8, cpu: ^Cpu) {
+exec_sxt :: proc(reg1: u8, cpu: ^Cpu) {
 	r1 := cpu_get_reg(cpu, reg1)
 	r1.full = u16(i16(i8(r1.low)))
 }

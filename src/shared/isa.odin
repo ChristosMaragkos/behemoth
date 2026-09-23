@@ -13,7 +13,7 @@ InstructionType :: enum u8 {
 }
 
 Instruction :: bit_field u16 {
-	opcode: u16             | 7,
+	opcode: u8              | 7,
 	type:   InstructionType | 2,
 	size:   SizeMode        | 1,
 	reg1:   u8              | 3,
@@ -24,7 +24,7 @@ MiscOpcodes :: enum u8 {
 	Nop,
 	Wfi,
 	Mov,
-	Cbw,
+	Sxt,
 	Zxt,
 	Xchg,
 	Swp,
@@ -50,7 +50,7 @@ MiscOpcodes :: enum u8 {
 	Mtfr,
 }
 
-FlowOps :: enum u8 {
+FlowOpcodes :: enum u8 {
 	Jsr_Imm,
 	Jsr_Reg,
 	Jmp_Imm,

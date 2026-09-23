@@ -81,7 +81,7 @@ Pushing occurs in ascending order (a->dp) while popping is done in descending or
 | 0x00 | nop | - | 2 | No operation | - |
 | 0x01 | wfi | - | - | Yield CPU until next non-masked interrupt | - |
 | 0x02 | mov | reg, reg | 2 | Set value of reg1 to value of reg2 | 8, 16 |
-| 0x03 | cbw | reg8 | 2 | Sign extend low-byte register into full register (e.g. `al` into `a`) | 8 |
+| 0x03 | sxt | reg8 | 2 | Sign extend low-byte register into full register (e.g. `al` into `a`) | 8 |
 | 0x04 | zxt | reg8 | 2 | Zero extend low-byte register into full register | 8 |
 | 0x05 | xchg | reg, reg | 2 | Exchange register values | 8, 16 |
 | 0x06 | swp | reg16 | 2 | Swap low and high byte of 16-bit register (endianness swap) | 16 |
