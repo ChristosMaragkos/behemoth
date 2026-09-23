@@ -48,8 +48,6 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 					exec_swi_imm(cpu)
 				case .Swi_Reg:
 					exec_swi_reg(instr.reg1, cpu)
-				case:
-					cpu_trigger_interrupt(cpu, INVALID_OPCODE_VEC_IDX, true)
 				case .Sec:
 					exec_sec(cpu)
 				case .Clc:
@@ -74,6 +72,8 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 					exec_sei(cpu)
 				case .Cli:
 					exec_cli(cpu)
+				case:
+					cpu_trigger_interrupt(cpu, INVALID_OPCODE_VEC_IDX, true)
 			}
 		case .Memory:
 			switch shared.MemoryOpcodes(instr.opcode) {
