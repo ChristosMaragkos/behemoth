@@ -327,7 +327,8 @@ For a reference on which flags are altered by which opcodes, check [[#Math opcod
 ### Conditional jumps
 
 All of these instructions take signed immediate operands,
-which represent an offset (in bytes) from the position of the program counter *after* the conditional jump opcode.
+which represent an offset (in bytes) from the position of the program counter *after* the conditional jump opcode and its operands.
+This means that the offset must be extended by one for 16-bit jumps.
 If an offset causes `pc` to overflow in either direction, `pp` is also bumped by 1 in the same direction.
 Branches incur a 1-cycle penalty when taken.
 
