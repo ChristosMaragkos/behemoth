@@ -64,7 +64,7 @@ Effectively, the size bit serves only semantic purposes. This encoding format ha
 It's wasted space for instructions with fewer than two operands or only immediate operands,
 as those do not fit within the 6 operand bits.
 3 bits for each register operand maps, from 0-7, to: `a` through `g` and then `sp`.
-Addressing `sp` and `flags` as 8-bit is not explicitly disallowed at runtime, but try to avoid doing it (such as by manually editing opcode bytes).
+Addressing `sp` as 8-bit is not explicitly disallowed at runtime, but try to avoid doing it (such as by manually editing opcode bytes).
 Lastly, loading and storing multi-byte values at page boundaries is undefined behavior and should be avoided.
 
 ## Opcode byte layout
