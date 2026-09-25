@@ -20,7 +20,11 @@ For reference on instruction encoding, see [Specification - Encoding](./spec.md#
   - regptr: 16-bit register as pointer
   - immptr: 16-bit immediate as pointer
 - Cycles: how many cycles this opcode requires to finish
-- Notes: instruction details Size: which size modes are supported by the instruction (determines size of `reg` operands)
+- Notes: instruction details
+- Size: which size modes are supported by the instruction (determines size of `reg` operands)
+
+> [!NOTE]
+> Any register and immediate offsets in memory dereferences are treated as signed.
 
 ## `SHOVE` opcode bitmask
 
