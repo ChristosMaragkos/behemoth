@@ -3,14 +3,16 @@ package syntax
 import "../common"
 import "../cpu"
 
+ExpressionType :: enum u8 {
+	Symbol,
+	Integer,
+}
+
 Expression :: struct {
 	val:       i64,
 	symbol:    string,
 	is_signed: bool,
-	type:      enum u8 {
-		Symbol,
-		Integer,
-	},
+	type:      ExpressionType,
 }
 
 Op_Reg :: struct {
