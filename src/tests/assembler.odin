@@ -288,3 +288,207 @@ invalid_deref_operands_error :: proc(t: ^testing.T) {
 		delete(tokens)
 	}
 }
+
+@(test)
+immediates_symbols_strings_succeed :: proc(t: ^testing.T) {
+	SOURCE :: `
+data:
+    .db "Hello, world!", 0
+    .dw 0x1234, -42, SOME_SYMBOL
+main:
+    ld a, 42
+    ld b, -100
+    ld c, 0b1010_0101
+    ld d, label_target
+`
+	tokens, lex_err := syntax.tokenize("source.asm", SOURCE)
+	defer asm_common.free_error(&lex_err)
+	defer delete(tokens)
+	testing.expectf(t, !lex_err.raised, "Lexer error: %s", lex_err.msg)
+
+	lines := syntax.split_lines(tokens[:])
+	defer delete(lines)
+
+	stmts, parse_err := syntax.parse_into_statements(lines[:])
+	defer {
+		for s in stmts {
+			#partial switch d in s {
+				case syntax.Directive:
+					delete(d.operands)
+			}
+		}
+		delete(stmts)
+		asm_common.free_error(&parse_err)
+	}
+	testing.expectf(t, !parse_err.raised, "Parser error: %s", parse_err.msg)
+
+	// Resolve operands without worrying about symbols
+	for &stmt in stmts {
+		#partial switch &s in stmt {
+			case syntax.Directive:
+				for i in 0 ..< len(s.operands) {
+					raw := s.operands[i].(syntax.RawOperand)
+					resolved, r_err := syntax.resolve_operand(raw)
+					if r_err.raised {
+						testing.expectf(
+							t,
+							false,
+							"Failed resolving directive operand %d: %s",
+							i,
+							r_err.msg,
+						)
+						asm_common.free_error(&r_err)
+						continue
+					}
+					s.operands[i] = resolved
+				}
+			case syntax.Mnemonic:
+				for i in 0 ..< s.amount {
+					raw := s.operands[i].(syntax.RawOperand)
+					resolved, r_err := syntax.resolve_operand(raw)
+					if r_err.raised {
+						testing.expectf(
+							t,
+							false,
+							"Failed resolving mnemonic operand %d: %s",
+							i,
+							r_err.msg,
+						)
+						asm_common.free_error(&r_err)
+						continue
+					}
+					s.operands[i] = resolved
+				}
+		}
+	}
+
+	// .db "Hello, world!", 0
+	db_dir := stmts[1].(syntax.Directive)
+	testing.expect_value(t, len(db_dir.operands), 2)
+	str_op, str_ok := db_dir.operands[0].(syntax.ResolvedOperand).(syntax.Op_String)
+	testing.expect(t, str_ok, "Expected Op_String for first .db operand")
+	testing.expect_value(t, str_op.value, "Hello, world!")
+
+	zero_op, zero_ok := db_dir.operands[1].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect(t, zero_ok, "Expected Op_Imm for second .db operand")
+	testing.expect_value(t, zero_op.expr.val, 0)
+
+	// .dw 0x1234, -42, SOME_SYMBOL
+	dw_dir := stmts[2].(syntax.Directive)
+	testing.expect_value(t, len(dw_dir.operands), 3)
+
+	imm0 := dw_dir.operands[0].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect_value(t, imm0.expr.val, 0x1234)
+
+	imm1 := dw_dir.operands[1].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect_value(t, imm1.expr.val, -42)
+	testing.expect(t, imm1.expr.is_signed, "Expected -42 to be marked signed")
+
+	sym_op := dw_dir.operands[2].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect_value(t, sym_op.expr.type, syntax.ExpressionType.Symbol)
+	testing.expect_value(t, sym_op.expr.symbol, "SOME_SYMBOL")
+
+	// ld a, 42
+	m_ld_a := stmts[4].(syntax.Mnemonic)
+	imm_42 := m_ld_a.operands[1].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect_value(t, imm_42.expr.val, 42)
+
+	// ld b, -100
+	m_ld_b := stmts[5].(syntax.Mnemonic)
+	imm_neg100 := m_ld_b.operands[1].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect_value(t, imm_neg100.expr.val, -100)
+	testing.expect(t, imm_neg100.expr.is_signed, "Expected -100 to be signed")
+
+	// ld c, 0b1010_0101
+	m_ld_c := stmts[6].(syntax.Mnemonic)
+	imm_bin := m_ld_c.operands[1].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect_value(t, imm_bin.expr.val, 165)
+
+	// ld d, label_target
+	m_ld_d := stmts[7].(syntax.Mnemonic)
+	sym_target := m_ld_d.operands[1].(syntax.ResolvedOperand).(syntax.Op_Imm)
+	testing.expect_value(t, sym_target.expr.symbol, "label_target")
+}
+
+@(test)
+directive_operands_validate :: proc(t: ^testing.T) {
+	VALID_SOURCE :: `
+    .org 0x060000
+    .db 0xFF, -128, 0, "test"
+    .dw 0xFFFF, -32768, 1234
+`
+	tokens, _ := syntax.tokenize("source.asm", VALID_SOURCE)
+	defer delete(tokens)
+	lines := syntax.split_lines(tokens[:])
+	defer delete(lines)
+	stmts, _ := syntax.parse_into_statements(lines[:])
+	defer {
+		for s in stmts {
+			#partial switch d in s {
+				case syntax.Directive:
+					delete(d.operands)
+			}
+		}
+		delete(stmts)
+	}
+
+	for &stmt in stmts {
+		#partial switch &dir in stmt {
+			case syntax.Directive:
+				for i in 0 ..< len(dir.operands) {
+					raw := dir.operands[i].(syntax.RawOperand)
+					resolved, _ := syntax.resolve_operand(raw)
+					dir.operands[i] = resolved
+				}
+				val_err := syntax.validate_directive_operands(&dir)
+				defer asm_common.free_error(&val_err)
+				testing.expectf(
+					t,
+					!val_err.raised,
+					"Directive validation failed for '%s': %s",
+					dir.directive.text,
+					val_err.msg,
+				)
+		}
+	}
+}
+
+@(test)
+invalid_directives_fail :: proc(t: ^testing.T) {
+	INVALID_DIRECTIVES := []string {
+		".db 256", // Exceeds 8 bits
+		".db -129", // Below 8-bit signed range
+		".dw 65536", // Exceeds 16 bits
+		".dw -32769", // Below 16-bit signed range
+		".org 0x1000000", // Exceeds 24 bits
+		".org", // Missing operand
+		".org 1, 2", // Too many operands
+	}
+
+	for src in INVALID_DIRECTIVES {
+		tokens, _ := syntax.tokenize("source.asm", src)
+		lines := syntax.split_lines(tokens[:])
+		stmts, _ := syntax.parse_into_statements(lines[:])
+
+		dir := stmts[0].(syntax.Directive)
+		for i in 0 ..< len(dir.operands) {
+			raw := dir.operands[i].(syntax.RawOperand)
+			resolved, _ := syntax.resolve_operand(raw)
+			dir.operands[i] = resolved
+		}
+
+		err := syntax.validate_directive_operands(&dir)
+		testing.expectf(
+			t,
+			err.raised,
+			"Expected validation to fail for '%s', but it succeeded",
+			src,
+		)
+
+		asm_common.free_error(&err)
+		delete(dir.operands)
+		delete(stmts)
+		delete(lines)
+		delete(tokens)
+	}
+}
