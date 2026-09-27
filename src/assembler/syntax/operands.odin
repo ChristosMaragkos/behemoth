@@ -49,11 +49,16 @@ Op_Deref :: struct {
 	imm_offs: Expression,
 }
 
+Op_String :: struct {
+	value: string,
+}
+
 ResolvedOperand :: union {
 	Op_Reg,
 	Op_Reg_Pair,
 	Op_Imm,
 	Op_Deref,
+	Op_String,
 }
 
 RawOperand :: distinct []Token
@@ -112,6 +117,8 @@ resolve_operand :: proc(raw: RawOperand) -> (ResolvedOperand, common.AssemblerEr
 		if reg, ok := cpu.parse_reg(toks[0].text); ok {
 			return Op_Reg{reg = reg}, common.no_error()
 		}
+	} else if len(toks) == 1 && toks[0].type == .StringLiteral {
+		return Op_String{value = toks[0].text}, common.no_error()
 	}
 
 	// Anything else is an immediate
