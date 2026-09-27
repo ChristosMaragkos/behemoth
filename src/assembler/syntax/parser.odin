@@ -11,10 +11,8 @@ split_lines :: proc(tokens: []Token) -> [dynamic]Line {
 	for i in 0 ..< len(tokens) {
 		current := tokens[i]
 		if current.type == .Newline || current.type == .EOF {
-			if start_idx < len(tokens) - 1 && tokens[start_idx].type == .Newline do start_idx += 1
-
 			line := Line(tokens[start_idx:i])
-			start_idx = i
+			start_idx = i + 1
 			if len(line) > 0 do append(&out, line)
 		}
 	}
@@ -45,7 +43,7 @@ split_statement :: proc(line: ^Line) -> (Statement, common.AssemblerError) {
 			label = line[0],
 		}
 		if len(line) == 2 {
-			line^ = line[1:1] // empty slice
+			line^ = {}
 		} else {
 			line^ = line[2:]
 		}
@@ -63,7 +61,7 @@ split_statement :: proc(line: ^Line) -> (Statement, common.AssemblerError) {
 				directive = line[0],
 				operands  = operands,
 			}
-			line^ = line[1:1]
+			line^ = {}
 			return dir, common.no_error()
 		} else {
 			if len(operands) > 3 {
@@ -81,7 +79,7 @@ split_statement :: proc(line: ^Line) -> (Statement, common.AssemblerError) {
 				mnem.operands[i] = operands[i]
 			}
 			delete(operands)
-			line^ = line[1:1]
+			line^ = {}
 			return mnem, common.no_error()
 		}
 	}
