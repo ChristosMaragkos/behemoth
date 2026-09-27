@@ -161,3 +161,130 @@ parser_splits_statements :: proc(t: ^testing.T) {
 			testing.expectf(t, false, "Statement 2 was not a Directive, got %v", stmts[2])
 	}
 }
+
+@(test)
+valid_deref_operands_succeed :: proc(t: ^testing.T) {
+	SOURCE :: `data:
+    .dw 0xDEAD
+main:
+    ld a, [sp]
+    add a, [1000]
+    ld al, [b+]
+    ld a, [data]
+    ld c, [-b]
+    add a, [cl:b + 2]
+    ld d, [cl:b + a]
+    ld d, [c + b]
+    ld d, [a + 1]
+    ld.l a, [0x060000 + e]`
+
+	tokens, lex_err := syntax.tokenize("source.asm", SOURCE)
+	defer asm_common.free_error(&lex_err)
+	defer delete(tokens)
+	testing.expectf(t, !lex_err.raised, "Lexer error: %s", lex_err.msg)
+
+	lines := syntax.split_lines(tokens[:])
+	defer delete(lines)
+
+	stmts, parse_err := syntax.parse_into_statements(lines[:])
+	defer {
+		for stmt in stmts {
+			#partial switch s in stmt {
+				case syntax.Directive:
+					delete(s.operands)
+			}
+		}
+		delete(stmts)
+		asm_common.free_error(&parse_err)
+	}
+	testing.expectf(t, !parse_err.raised, "Parser error: %s", parse_err.msg)
+
+	// Resolve all raw operands in mnemonics
+	for &stmt in stmts {
+		#partial switch &m in stmt {
+			case syntax.Mnemonic:
+				for i in 0 ..< m.amount {
+					raw := m.operands[i].(syntax.RawOperand)
+					resolved, r_err := syntax.resolve_operand(raw)
+					defer asm_common.free_error(&r_err)
+					testing.expectf(
+						t,
+						!r_err.raised,
+						"Failed resolving operand %d in '%s': %s",
+						i,
+						m.mnemonic.text,
+						r_err.msg,
+					)
+					m.operands[i] = resolved
+				}
+		}
+	}
+
+	// Spot-check specific dereference modes
+	//  ld a, [sp] -> stmt index 3 (after data label, .dw, main label)
+	check_mnemonic_deref_mode(t, stmts[3], 1, .Reg)
+
+	// add a, [1000]
+	check_mnemonic_deref_mode(t, stmts[4], 1, .Imm)
+
+	// ld al, [b+]
+	check_mnemonic_deref_mode(t, stmts[5], 1, .Reg_PostInc)
+
+	// ld a, [data]
+	check_mnemonic_deref_mode(t, stmts[6], 1, .Imm)
+
+	// ld c, [-b]
+	check_mnemonic_deref_mode(t, stmts[7], 1, .Reg_PreDec)
+
+	// add a, [cl:b + 2]
+	check_mnemonic_deref_mode(t, stmts[8], 1, .Reg_Pair_ImmOffset)
+
+	// ld d, [cl:b + a]
+	check_mnemonic_deref_mode(t, stmts[9], 1, .Reg_Pair_RegOffset)
+
+	// ld d, [c + b]
+	check_mnemonic_deref_mode(t, stmts[10], 1, .Reg_RegOffset)
+
+	// ld d, [a + 1]
+	check_mnemonic_deref_mode(t, stmts[11], 1, .Reg_ImmOffset)
+
+	// ld.l a, [0x060000 + e]
+	check_mnemonic_deref_mode(t, stmts[12], 1, .Imm_Long_RegOffset)
+}
+
+@(test)
+invalid_deref_operands_error :: proc(t: ^testing.T) {
+	FAILING_CASES := []string {
+		"ld a, [c - b]", // Register subtraction is invalid
+		"ld b, [cl:dl]", // Low register of pair must be 16-bit
+		"ld a, [al]", // Base pointer must be 16-bit
+		"ld a, [+al]", // Pre-inc register must be 16-bit
+		"ld a, [0x060000 - e]", // Absolute pointer subtraction
+		"ld a, []", // Empty dereference
+	}
+
+	for src in FAILING_CASES {
+		tokens, lex_err := syntax.tokenize("source.asm", src)
+		testing.expect(t, !lex_err.raised)
+
+		lines := syntax.split_lines(tokens[:])
+		stmts, parse_err := syntax.parse_into_statements(lines[:])
+		testing.expect(t, !parse_err.raised)
+
+		m := stmts[0].(syntax.Mnemonic)
+		raw := m.operands[1].(syntax.RawOperand)
+		_, err := syntax.resolve_operand(raw)
+
+		testing.expectf(
+			t,
+			err.raised,
+			"Expected resolution to fail for input '%s', but it succeeded",
+			src,
+		)
+
+		asm_common.free_error(&err)
+		delete(stmts)
+		delete(lines)
+		delete(tokens)
+	}
+}
