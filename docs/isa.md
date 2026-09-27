@@ -171,7 +171,7 @@ ld d, $0000
 
 ld e, #300 ; N
 
-blkcp al:b, cl:d, e
+blkcp [al:b], [cl:d], e
 ; Every loop iteration:
 ; - Copies one byte
 ; - Increments b and d
