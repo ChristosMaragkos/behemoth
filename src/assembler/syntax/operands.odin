@@ -282,8 +282,8 @@ resolve_deref :: proc(toks: []Token) -> (Op_Deref, common.AssemblerError) {
 
 				// is the right side a register? [b+c]
 				if len(right_toks) == 1 && right_toks[0].type == .Identifier {
-					off_reg, r_err := cpu.parse_reg(right_toks[0].text)
-					if r_err {
+					off_reg, ok := cpu.parse_reg(right_toks[0].text)
+					if ok {
 						if is_minus {
 							return {}, token_error(&toks[op_idx], "Register offsets cannot be subtracted")
 						}
