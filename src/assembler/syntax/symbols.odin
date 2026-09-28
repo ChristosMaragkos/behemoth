@@ -3,8 +3,6 @@ package syntax
 import "../common"
 import "core:strconv"
 
-SYMBOLS: map[string]i64
-
 parse_integer_token :: proc(
 	tok: ^Token,
 	negative := false,
@@ -38,4 +36,15 @@ fits_width :: proc(#any_int val: i64, width: u8) -> bool {
 	if val < min_val || val > max_val do return false
 
 	return true
+}
+
+// Constants take precedence. Dual definition is rejected at define time,
+// so a name can never resolve from both tables.
+resolve_symbol :: proc(name: string) -> (val: i64, is_label: bool, err: common.AssemblerError) {
+	if c, ok := CONSTANTS[name]; ok {
+		if c.is_signed do return i64(c.signed), false, common.no_error()
+		return i64(c.unsigned), false, common.no_error()
+	}
+	if l, ok := LABELS[name]; ok do return i64(l.addr), true, common.no_error()
+	return 0, false, common.make_errorf("Unknown symbol '%s'", name)
 }
