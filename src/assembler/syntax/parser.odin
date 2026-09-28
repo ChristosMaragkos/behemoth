@@ -37,6 +37,32 @@ parse_into_statements :: proc(lines: []Line) -> ([dynamic]Statement, common.Asse
 	return out, common.no_error()
 }
 
+replace_operands :: proc(stmts: []Statement) -> common.AssemblerError {
+	for &statement in stmts {
+		#partial switch &st in statement {
+			case Directive:
+				for &op in st.operands {
+					raw, ok := op.(RawOperand)
+					if !ok do continue
+					resolved, err := resolve_operand(raw)
+					if err.raised do return err
+
+					op = resolved
+				}
+			case Mnemonic:
+				for i in 0 ..< st.amount {
+					raw, ok := st.operands[i].(RawOperand)
+					if !ok do continue
+					resolved, err := resolve_operand(raw)
+					if err.raised do return err
+
+					st.operands[i] = resolved
+				}
+		}
+	}
+	return common.no_error()
+}
+
 split_statement :: proc(line: ^Line) -> (Statement, common.AssemblerError) {
 	if len(line) >= 2 && line[0].type == .Identifier && line[1].type == .Colon {
 		label := LabelDef {
