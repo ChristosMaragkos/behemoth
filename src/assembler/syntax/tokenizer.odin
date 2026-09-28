@@ -165,12 +165,12 @@ emit_integer :: proc(t: ^Tokenizer) -> Token {
 			if current != '0' && current != '1' && current != '_' do break
 			tokenizer_advance(t)
 		}
-		} else if is_octal_prefix(prefix) {
-			for {
-				current := tokenizer_peek(t)
-				if current != '_' && !(current >= '0' && current <= '7') do break
-				tokenizer_advance(t)
-			}
+	} else if is_octal_prefix(prefix) {
+		for {
+			current := tokenizer_peek(t)
+			if current != '_' && !(current >= '0' && current <= '7') do break
+			tokenizer_advance(t)
+		}
 	} else {
 		for is_decimal_digit(tokenizer_peek(t)) {
 			tokenizer_advance(t)
@@ -261,7 +261,7 @@ tokenize :: proc(filename, source: string) -> ([dynamic]Token, common.AssemblerE
 		source   = source,
 		filename = filename,
 		pos      = 0,
-		line     = 0,
+		line     = 1,
 	}
 
 	for {
