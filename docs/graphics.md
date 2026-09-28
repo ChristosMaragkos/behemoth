@@ -1,4 +1,3 @@
-
 # Graphics
 
 The graphics chip (PPU) comes with:
