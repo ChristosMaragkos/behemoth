@@ -333,8 +333,8 @@ get_tile_size :: #force_inline proc(depth: ColorDepth) -> u32 {
 }
 
 scale_to_rgb :: proc(clr: CramColor) -> (r, g, b: u8) {
-	r = clr.r * 255 / 31
-	g = clr.g * 255 / 31
-	b = clr.b * 255 / 31
+	r = u8((u16(clr.r) * 255) / 31)
+	g = u8((u16(clr.g) * 255) / 31)
+	b = u8((u16(clr.b) * 255) / 31)
 	return
 }
