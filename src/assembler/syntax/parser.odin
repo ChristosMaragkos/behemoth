@@ -138,3 +138,13 @@ split_raw_operands :: proc(tokens: []Token) -> ([dynamic]OperandSlot, common.Ass
 	append(&out, RawOperand(tokens[start:]))
 	return out, common.no_error()
 }
+
+free_statements :: proc(stmts: [dynamic]Statement) {
+	for &st in stmts {
+		#partial switch &s in st {
+			case Directive:
+				delete(s.operands)
+		}
+	}
+	delete(stmts)
+}
