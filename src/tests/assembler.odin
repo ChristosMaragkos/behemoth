@@ -7,32 +7,32 @@ import "core:testing"
 @(test)
 lexer_identifies_correct_token_types :: proc(t: ^testing.T) {
 	EXPECTED_TOKENS := []syntax.Token {
-		{filename = "source.asm", line = 0, type = .Identifier, text = ".org"},
-		{filename = "source.asm", line = 0, type = .IntegerLiteral, text = "0x060000"},
-		{filename = "source.asm", line = 0, type = .Newline, text = "<newline>"},
-		{filename = "source.asm", line = 1, type = .Identifier, text = "main"},
-		{filename = "source.asm", line = 1, type = .Colon, text = ":"},
+		{filename = "source.asm", line = 1, type = .Identifier, text = ".org"},
+		{filename = "source.asm", line = 1, type = .IntegerLiteral, text = "0x060000"},
 		{filename = "source.asm", line = 1, type = .Newline, text = "<newline>"},
-		{filename = "source.asm", line = 2, type = .Identifier, text = "ld"},
-		{filename = "source.asm", line = 2, type = .Identifier, text = "a"},
-		{filename = "source.asm", line = 2, type = .Comma, text = ","},
-		{filename = "source.asm", line = 2, type = .IntegerLiteral, text = "0x1234"},
+		{filename = "source.asm", line = 2, type = .Identifier, text = "main"},
+		{filename = "source.asm", line = 2, type = .Colon, text = ":"},
 		{filename = "source.asm", line = 2, type = .Newline, text = "<newline>"},
 		{filename = "source.asm", line = 3, type = .Identifier, text = "ld"},
-		{filename = "source.asm", line = 3, type = .Identifier, text = "b"},
+		{filename = "source.asm", line = 3, type = .Identifier, text = "a"},
 		{filename = "source.asm", line = 3, type = .Comma, text = ","},
-		{filename = "source.asm", line = 3, type = .BrackLeft, text = "["},
-		{filename = "source.asm", line = 3, type = .Identifier, text = "cl"},
-		{filename = "source.asm", line = 3, type = .Colon, text = ":"},
-		{filename = "source.asm", line = 3, type = .Identifier, text = "d"},
-		{filename = "source.asm", line = 3, type = .Plus, text = "+"},
-		{filename = "source.asm", line = 3, type = .IntegerLiteral, text = "10"},
-		{filename = "source.asm", line = 3, type = .BrackRight, text = "]"},
+		{filename = "source.asm", line = 3, type = .IntegerLiteral, text = "0x1234"},
 		{filename = "source.asm", line = 3, type = .Newline, text = "<newline>"},
+		{filename = "source.asm", line = 4, type = .Identifier, text = "ld"},
+		{filename = "source.asm", line = 4, type = .Identifier, text = "b"},
+		{filename = "source.asm", line = 4, type = .Comma, text = ","},
+		{filename = "source.asm", line = 4, type = .BrackLeft, text = "["},
+		{filename = "source.asm", line = 4, type = .Identifier, text = "cl"},
+		{filename = "source.asm", line = 4, type = .Colon, text = ":"},
+		{filename = "source.asm", line = 4, type = .Identifier, text = "d"},
+		{filename = "source.asm", line = 4, type = .Plus, text = "+"},
+		{filename = "source.asm", line = 4, type = .IntegerLiteral, text = "10"},
+		{filename = "source.asm", line = 4, type = .BrackRight, text = "]"},
 		{filename = "source.asm", line = 4, type = .Newline, text = "<newline>"},
-		{filename = "source.asm", line = 5, type = .Identifier, text = "shove"},
-		{filename = "source.asm", line = 5, type = .IntegerLiteral, text = "0b1111111111111111"},
-		{filename = "source.asm", line = 5, type = .EOF, text = "<EOF>"},
+		{filename = "source.asm", line = 5, type = .Newline, text = "<newline>"},
+		{filename = "source.asm", line = 6, type = .Identifier, text = "shove"},
+		{filename = "source.asm", line = 6, type = .IntegerLiteral, text = "0b1111111111111111"},
+		{filename = "source.asm", line = 6, type = .EOF, text = "<EOF>"},
 	}
 
 	SOURCE :: `.org 0x060000
@@ -59,14 +59,14 @@ lexer_identifies_correct_token_types :: proc(t: ^testing.T) {
 parser_discards_leading_newlines_when_splitting_lines :: proc(t: ^testing.T) {
 	EXPECTED_LINES := []syntax.Line {
 		{
-			{type = .Identifier, line = 0, filename = "source.asm", text = "label"},
-			{type = .Colon, line = 0, filename = "source.asm", text = ":"},
+			{type = .Identifier, line = 1, filename = "source.asm", text = "label"},
+			{type = .Colon, line = 1, filename = "source.asm", text = ":"},
 		},
 		{
-			{type = .Identifier, line = 4, filename = "source.asm", text = "mov"},
-			{type = .Identifier, line = 4, filename = "source.asm", text = "a"},
-			{type = .Comma, line = 4, filename = "source.asm", text = ","},
-			{type = .Identifier, line = 4, filename = "source.asm", text = "b"},
+			{type = .Identifier, line = 5, filename = "source.asm", text = "mov"},
+			{type = .Identifier, line = 5, filename = "source.asm", text = "a"},
+			{type = .Comma, line = 5, filename = "source.asm", text = ","},
+			{type = .Identifier, line = 5, filename = "source.asm", text = "b"},
 		},
 	}
 
@@ -124,7 +124,7 @@ parser_splits_statements :: proc(t: ^testing.T) {
 	#partial switch s in stmts[0] {
 		case syntax.LabelDef:
 			testing.expect_value(t, s.label.text, "main")
-			testing.expect_value(t, s.label.line, 0)
+			testing.expect_value(t, s.label.line, 1)
 		case:
 			testing.expectf(t, false, "Statement 0 was not a LabelDef, got %v", stmts[0])
 	}
@@ -132,7 +132,7 @@ parser_splits_statements :: proc(t: ^testing.T) {
 	#partial switch s in stmts[1] {
 		case syntax.Mnemonic:
 			testing.expect_value(t, s.mnemonic.text, "ld")
-			testing.expect_value(t, s.mnemonic.line, 1)
+			testing.expect_value(t, s.mnemonic.line, 2)
 			testing.expect_value(t, s.amount, 2)
 
 			op0 := s.operands[0].(syntax.RawOperand)
@@ -151,7 +151,7 @@ parser_splits_statements :: proc(t: ^testing.T) {
 	#partial switch s in stmts[2] {
 		case syntax.Directive:
 			testing.expect_value(t, s.directive.text, ".org")
-			testing.expect_value(t, s.directive.line, 2)
+			testing.expect_value(t, s.directive.line, 3)
 			testing.expect_value(t, len(s.operands), 1)
 
 			dir_op := s.operands[0].(syntax.RawOperand)
