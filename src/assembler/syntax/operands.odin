@@ -354,6 +354,16 @@ resolve_expr :: proc(toks: []Token) -> (Expression, common.AssemblerError) {
 	}
 
 	if len(tok_list) != 1 {
+		all_atoms := true
+		for t in tok_list {
+			if t.type != .Identifier && t.type != .IntegerLiteral && t.type != .StringLiteral {
+				all_atoms = false
+				break
+			}
+		}
+		if all_atoms {
+			return {}, token_errorf(&tok_list[0], "Unexpected '%s' after '%s' (did you forget a comma?)", tok_list[1].text, tok_list[0].text)
+		}
 		return {}, token_error(&tok_list[0], "Malformed expression")
 	}
 
