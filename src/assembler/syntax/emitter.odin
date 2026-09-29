@@ -467,6 +467,7 @@ encode_mnemonic :: proc(
 				if verr.raised do return verr
 				append(&values, int(v))
 				append(&value_toks, imm.expr.tok)
+				if imm.expr.symbol != "" do value_from_name = true
 			case .Symbol:
 				imm := op.(Op_Imm)
 				if imm.expr.type != .Symbol do return common.make_error("Internal error: symbol operand malformed")
