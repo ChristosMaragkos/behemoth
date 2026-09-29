@@ -18,7 +18,7 @@ parse_integer_token :: proc(
 	sval := i64(val)
 	if negative do sval = -sval
 
-	return Expression{val = sval, is_signed = negative, type = .Integer}, common.no_error()
+	return Expression{val = sval, is_signed = negative, type = .Integer, tok = tok^}, common.no_error()
 }
 
 fits_width :: proc(#any_int val: i64, width: u8) -> bool {
@@ -38,8 +38,6 @@ fits_width :: proc(#any_int val: i64, width: u8) -> bool {
 	return true
 }
 
-// Constants take precedence. Dual definition is rejected at define time,
-// so a name can never resolve from both tables.
 resolve_symbol :: proc(name: string) -> (val: i64, is_label: bool, err: common.AssemblerError) {
 	if c, ok := CONSTANTS[name]; ok {
 		if c.is_signed do return i64(c.signed), false, common.no_error()

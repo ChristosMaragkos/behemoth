@@ -13,6 +13,7 @@ Expression :: struct {
 	symbol:    string,
 	is_signed: bool,
 	type:      ExpressionType,
+	tok:       Token,
 }
 
 Op_Reg :: struct {
@@ -83,6 +84,7 @@ Mnemonic :: struct {
 	mnemonic: Token,
 	operands: [3]OperandSlot, // The instructions with the most operands are blkcp and blkmv (reg8:reg16, reg8:reg16, reg16). Our cap is 3. Storing inline is fine.
 	amount:   uint,
+	wide:     bool,
 }
 
 Statement :: union {
@@ -376,6 +378,7 @@ resolve_expr :: proc(toks: []Token) -> (Expression, common.AssemblerError) {
 				symbol = target.text,
 				is_signed = is_neg,
 				type = .Symbol,
+				tok = target,
 			}, common.no_error()
 		case:
 			return {}, token_errorf(&target, "Expected number or identifier, got '%s'", target.text)
