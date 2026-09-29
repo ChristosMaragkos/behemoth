@@ -1,6 +1,7 @@
 package syntax
 
 import "../common"
+import "core:fmt"
 
 CONSTANTS: map[string]Constant
 
@@ -17,7 +18,10 @@ init_constants :: proc() {
 }
 
 free_constants :: proc() {
-	delete(CONSTANTS)
+	if CONSTANTS == nil do return
+	err := delete(CONSTANTS)
+	if err != .None do fmt.panicf("Error freeing constants table: %s", err)
+	CONSTANTS = nil
 }
 
 const_is_width :: proc(c: ^Constant, width_bits: u8) -> common.AssemblerError {

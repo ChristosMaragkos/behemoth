@@ -27,7 +27,10 @@ init_labels :: proc() {
 }
 
 free_labels :: proc() {
-	delete(LABELS)
+	if LABELS == nil do return
+	err := delete(LABELS)
+	if err != .None do fmt.panicf("Error freeing label table: %s", err)
+	LABELS = nil
 }
 
 define_label :: proc(name: string, address: u32) -> common.AssemblerError {
