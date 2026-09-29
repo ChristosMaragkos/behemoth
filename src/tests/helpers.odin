@@ -1,7 +1,11 @@
 package tests
 
+import asm_common "../assembler/common"
 import "../assembler/syntax"
+import "core:sync"
 import "core:testing"
+
+TEST_MUTEX: sync.Mutex
 
 
 token_outputs_equivalent :: proc(seq1, seq2: []syntax.Token) -> bool {
@@ -62,4 +66,73 @@ check_mnemonic_deref_mode :: proc(
 		m.mnemonic.text,
 		deref.mode,
 	)
+}
+
+prepare_stmts :: proc(
+	t: ^testing.T,
+	source: string,
+) -> (
+	[dynamic]syntax.Token,
+	[dynamic]syntax.Statement,
+	bool,
+) {
+	tokens, lerr := syntax.tokenize("test.asm", source)
+	if lerr.raised {
+		testing.expectf(t, false, "lex failed: %s", lerr.msg)
+		asm_common.free_error(&lerr)
+		return nil, nil, false
+	}
+	lines := syntax.split_lines(tokens[:])
+	stmts, perr := syntax.parse_into_statements(lines[:])
+	delete(lines)
+	if perr.raised {
+		testing.expectf(t, false, "parse failed: %s", perr.msg)
+		asm_common.free_error(&perr)
+		delete(tokens)
+		return nil, nil, false
+	}
+	if terr := syntax.resolve_temp_labels(stmts[:]); terr.raised {
+		testing.expectf(t, false, "temp labels failed: %s", terr.msg)
+		asm_common.free_error(&terr)
+		syntax.free_statements(stmts)
+		delete(tokens)
+		return nil, nil, false
+	}
+	if rerr := syntax.replace_operands(stmts[:]); rerr.raised {
+		testing.expectf(t, false, "replace failed: %s", rerr.msg)
+		asm_common.free_error(&rerr)
+		syntax.free_statements(stmts)
+		delete(tokens)
+		return nil, nil, false
+	}
+	if eqerr := syntax.emitter_pass_0(stmts[:]); eqerr.raised {
+		testing.expectf(t, false, "pass_0 failed: %s", eqerr.msg)
+		asm_common.free_error(&eqerr)
+		syntax.free_statements(stmts)
+		delete(tokens)
+		return nil, nil, false
+	}
+	syntax.substitute_constants(stmts[:])
+	for i in 0 ..< len(stmts) {
+		d, is_dir := stmts[i].(syntax.Directive)
+		if !is_dir do continue
+		if verr := syntax.validate_directive_operands(&d); verr.raised {
+			testing.expectf(t, false, "validate failed: %s", verr.msg)
+			asm_common.free_error(&verr)
+			syntax.free_statements(stmts)
+			delete(tokens)
+			return nil, nil, false
+		}
+	}
+	return tokens, stmts, true
+}
+
+check_label :: proc(t: ^testing.T, name: string, want: u32) {
+	lbl, lerr := syntax.resolve_label(name)
+	asm_common.free_error(&lerr)
+	if lerr.raised {
+		testing.expectf(t, false, "label '%s' missing", name)
+		return
+	}
+	testing.expectf(t, lbl.addr == want, "label '%s' address %v, want %v", name, lbl.addr, want)
 }

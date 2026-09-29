@@ -2,6 +2,8 @@ package tests
 
 import asm_common "../assembler/common"
 import "../assembler/syntax"
+import "core:strings"
+import "core:sync"
 import "core:testing"
 
 @(test)
@@ -490,5 +492,253 @@ invalid_directives_fail :: proc(t: ^testing.T) {
 		delete(stmts)
 		delete(lines)
 		delete(tokens)
+	}
+}
+
+@(test)
+region_labels_and_pad :: proc(t: ^testing.T) {
+	SOURCE :: `.org 0x060000
+start:
+.db 1
+.wram
+wvar:
+.pad 16
+wend:
+.org 0x20
+worg:
+.rom
+after:
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
+		testing.expectf(t, false, "pass1 failed: %s", perr.msg)
+		asm_common.free_error(&perr)
+		return
+	}
+	check_label(t, "start", 0x060000)
+	check_label(t, "wvar", 0x000000)
+	check_label(t, "wend", 0x000010)
+	check_label(t, "worg", 0x000020)
+	check_label(t, "after", 0x060001)
+}
+
+@(test)
+wram_mnemonic_rejected :: proc(t: ^testing.T) {
+	SOURCE :: `.wram
+nop
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); !perr.raised {
+		testing.expect(t, false, "expected pass1 to reject mnemonic in WRAM")
+		return
+	} else {
+		testing.expect(t, strings.contains(perr.msg, "WRAM"), "expected WRAM error")
+		asm_common.free_error(&perr)
+	}
+}
+
+@(test)
+wram_data_rejected :: proc(t: ^testing.T) {
+	SOURCE :: `.wram
+.db 1
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); !perr.raised {
+		testing.expect(t, false, "expected pass1 to reject .db in WRAM")
+		return
+	} else {
+		testing.expect(t, strings.contains(perr.msg, "WRAM"), "expected WRAM error")
+		asm_common.free_error(&perr)
+	}
+}
+
+@(test)
+dl_d24_emit_bytes :: proc(t: ^testing.T) {
+	SOURCE :: `.org 0x060000
+.dl 0x01020304
+.d24 0x010203
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
+		testing.expectf(t, false, "pass1 failed: %s", perr.msg)
+		asm_common.free_error(&perr)
+		return
+	}
+	if aerr := syntax.pass2_emit(&e, stmts[:]); aerr.raised {
+		testing.expectf(t, false, "pass2 failed: %s", aerr.msg)
+		asm_common.free_error(&aerr)
+		return
+	}
+	want := [7]byte{0x04, 0x03, 0x02, 0x01, 0x03, 0x02, 0x01}
+	testing.expect(t, len(e.output) == len(want), "output length mismatch")
+	if len(e.output) == len(want) {
+		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
+	}
+}
+
+@(test)
+pad_zero_fills :: proc(t: ^testing.T) {
+	SOURCE :: `.org 0x060000
+.pad 4
+.db 9
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
+		testing.expectf(t, false, "pass1 failed: %s", perr.msg)
+		asm_common.free_error(&perr)
+		return
+	}
+	if aerr := syntax.pass2_emit(&e, stmts[:]); aerr.raised {
+		testing.expectf(t, false, "pass2 failed: %s", aerr.msg)
+		asm_common.free_error(&aerr)
+		return
+	}
+	want := [5]byte{0x00, 0x00, 0x00, 0x00, 0x09}
+	testing.expect(t, len(e.output) == len(want), "output length mismatch")
+	if len(e.output) == len(want) {
+		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
+	}
+}
+
+@(test)
+org_bounds_rejected :: proc(t: ^testing.T) {
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, ".org 0x060000\n.org 0xC60001\n")
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); !perr.raised {
+		testing.expect(t, false, "expected pass1 to reject out-of-ROM .org")
+		return
+	} else {
+		testing.expect(t, strings.contains(perr.msg, "bounds"), "expected bounds error")
+		asm_common.free_error(&perr)
+	}
+}
+
+@(test)
+wram_org_bounds_rejected :: proc(t: ^testing.T) {
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, ".wram\n.org 0x060000\n")
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); !perr.raised {
+		testing.expect(t, false, "expected pass1 to reject ROM address in WRAM")
+		return
+	} else {
+		testing.expect(t, strings.contains(perr.msg, "bounds"), "expected bounds error")
+		asm_common.free_error(&perr)
+	}
+}
+
+@(test)
+equ_constant_emitted :: proc(t: ^testing.T) {
+	SOURCE :: `.equ VAL, 0x42
+.db VAL
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
+		testing.expectf(t, false, "pass1 failed: %s", perr.msg)
+		asm_common.free_error(&perr)
+		return
+	}
+	if aerr := syntax.pass2_emit(&e, stmts[:]); aerr.raised {
+		testing.expectf(t, false, "pass2 failed: %s", aerr.msg)
+		asm_common.free_error(&aerr)
+		return
+	}
+	want := [1]byte{0x42}
+	testing.expect(t, len(e.output) == len(want), "output length mismatch")
+	if len(e.output) == len(want) {
+		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
 	}
 }
