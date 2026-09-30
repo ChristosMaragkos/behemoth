@@ -1,11 +1,11 @@
 package behemoth
 
-import "/audio"
-import c "/common"
-import exec "/execution"
-import gfx "/graphics"
-import "/input"
-import "/memory"
+import "./audio"
+import c "./common"
+import exec "./execution"
+import gfx "./graphics"
+import "./input"
+import "./memory"
 import "core:mem"
 import "core:os"
 
