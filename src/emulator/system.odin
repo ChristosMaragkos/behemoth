@@ -8,6 +8,15 @@ import "./input"
 import "./memory"
 import "core:mem"
 import "core:os"
+import "core:sync"
+
+AUDIO_FIFO_SAMPLES :: 4096
+
+AudioFifo :: struct {
+	buf:  [AUDIO_FIFO_SAMPLES]f32,
+	head: u32,
+	tail: u32,
+}
 
 System :: struct {
 	cpu:             ^exec.Cpu,
@@ -16,10 +25,11 @@ System :: struct {
 	bus:             ^memory.MemoryBus,
 	cycle_counter:   u64,
 	ppu_prev_status: gfx.PpuStatus,
+	audio_fifo:         AudioFifo,
+	audio_cycle_scaled: u64,
 }
 
-// Necessary for audio callbacks with fixed signatures
-g_apu: ^audio.Apu
+g_audio_fifo: ^AudioFifo
 
 system_init :: proc() -> ^System {
 	sys, sys_err := new(System)
@@ -51,7 +61,7 @@ system_init :: proc() -> ^System {
 	sys.bus = bus
 	sys.ppu = ppu
 	sys.apu = apu
-	g_apu = apu
+	g_audio_fifo = &sys.audio_fifo
 	gfx.ppu_init(ppu, &bus.ram[memory.calculate_address(c.MMIO_PAGE, c.PPU_MMIO_OFFSET)])
 	audio.apu_init(apu, &bus.ram[memory.calculate_address(c.MMIO_PAGE, c.APU_MMIO_OFFSET)])
 
@@ -144,7 +154,36 @@ system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank:
 		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false, true)
 	}
 
+	sys.audio_cycle_scaled += consumed * c.AUDIO_SAMPLES_PER_FRAME
+	for sys.audio_cycle_scaled >= c.CPU_CYCLES_PER_FRAME {
+		sys.audio_cycle_scaled -= c.CPU_CYCLES_PER_FRAME
+		audio_fifo_produce(&sys.audio_fifo, audio.apu_generate_sample(sys.apu))
+	}
+
 	return consumed, entered_vblank
+}
+
+audio_fifo_produce :: proc(fifo: ^AudioFifo, sample: f32) {
+	head := sync.atomic_load(&fifo.head)
+	tail := sync.atomic_load(&fifo.tail)
+	if head - tail >= AUDIO_FIFO_SAMPLES {
+		sync.atomic_store(&fifo.tail, tail + 1)
+	}
+	fifo.buf[head & (AUDIO_FIFO_SAMPLES - 1)] = sample
+	sync.atomic_store(&fifo.head, head + 1)
+}
+
+audio_fifo_consume :: proc(fifo: ^AudioFifo) -> (sample: f32, ok: bool) {
+	head := sync.atomic_load(&fifo.head)
+	tail := sync.atomic_load(&fifo.tail)
+	if head == tail do return 0.0, false
+	sample = fifo.buf[tail & (AUDIO_FIFO_SAMPLES - 1)]
+	sync.atomic_store(&fifo.tail, tail + 1)
+	return sample, true
+}
+
+audio_fifo_pending :: proc(fifo: ^AudioFifo) -> u32 {
+	return sync.atomic_load(&fifo.head) - sync.atomic_load(&fifo.tail)
 }
 
 system_step_frame :: proc(sys: ^System) {

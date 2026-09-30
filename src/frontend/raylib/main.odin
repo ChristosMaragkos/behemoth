@@ -76,6 +76,11 @@ audio_callback :: proc "c" (buffer: rawptr, amnt: c.uint) {
 	context = runtime.default_context()
 	samples := transmute([^]f32)buffer
 	for i in 0 ..< amnt {
-		samples[i] = emu.system_stream_audio(emu.g_apu)
+		if emu.g_audio_fifo == nil {
+			samples[i] = 0.0
+			continue
+		}
+		sample, ok := emu.audio_fifo_consume(emu.g_audio_fifo)
+		samples[i] = sample if ok else 0.0
 	}
 }
