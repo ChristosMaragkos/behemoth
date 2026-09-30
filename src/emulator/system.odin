@@ -58,6 +58,7 @@ system_init :: proc() -> ^System {
 	sys.bus.vram = &ppu.vram
 	sys.bus.cram = &ppu.cram
 	sys.bus.oam = &ppu.oam
+	sys.bus.aram = &apu.aram
 
 	exec.cpu_init(sys.cpu, sys.bus)
 	return sys

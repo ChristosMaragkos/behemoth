@@ -5,6 +5,7 @@ DMA_INIT_COST :: 10
 
 SDMASTART :: 0x05_060a
 VDMASTART :: 0x05_0544
+ADMASTART :: 0x05_0709
 
 VMPCTRL :: 0x05_0534
 VMPADDR :: 0x05_0535
@@ -57,8 +58,8 @@ bus_audio_dma :: proc(bus: ^MemoryBus) {
 	ADMACTL :: 0x05_0700
 	ADMASRC :: 0x05_0701
 	ADMADST :: 0x05_0704
-	ADMALEN :: 0x05_0707
-	ADMASTAT :: 0x05_0709
+	ADMALEN :: 0x05_0706
+	ADMASTAT :: 0x05_0708
 
 	ARAM_SIZE :: 16 * 1024
 
@@ -76,7 +77,7 @@ bus_audio_dma :: proc(bus: ^MemoryBus) {
 		return
 	}
 
-	mem.copy(&bus.ram[dst], &bus.ram[src], size * len)
+	mem.copy(bus.aram, &bus.ram[src], size * len)
 	bus.contention = DMA_INIT_COST + amnt
 }
 
