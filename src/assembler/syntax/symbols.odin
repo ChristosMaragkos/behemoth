@@ -18,7 +18,12 @@ parse_integer_token :: proc(
 	sval := i64(val)
 	if negative do sval = -sval
 
-	return Expression{val = sval, is_signed = negative, type = .Integer, tok = tok^}, common.no_error()
+	return Expression {
+		val = sval,
+		is_signed = negative,
+		type = .Integer,
+		tok = tok^,
+	}, common.no_error()
 }
 
 fits_width :: proc(#any_int val: i64, width: u8) -> bool {
@@ -30,8 +35,8 @@ fits_width :: proc(#any_int val: i64, width: u8) -> bool {
 		return true
 	}
 
-	min_val := -(i64(1) << (width - 1)) // e.g. -128 for 8-bit
-	max_val := (i64(1) << width) - 1 // e.g.  255 for 8-bit
+	min_val := -(i64(1) << (width - 1))
+	max_val := (i64(1) << width) - 1
 
 	if val < min_val || val > max_val do return false
 

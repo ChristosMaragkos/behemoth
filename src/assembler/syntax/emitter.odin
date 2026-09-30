@@ -79,8 +79,6 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 
 			switch first.expr.type {
 				case .Symbol:
-					// TODO: Implement. This should probably be done after pass 1 so we can properly validate
-					// constant sizes and labels (we'd need to handle branch relaxation beforehand as well)
 					return token_error(
 						&directive.directive,
 						"Using the .org directive with a label or constant is not implemented yet",
@@ -98,7 +96,6 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 
 				switch imm.expr.type {
 					case .Symbol:
-						// TODO: Same as .org
 						return token_error(
 							&directive.directive,
 							"Using the .dw directive with a label or constant is not implemented yet",
@@ -121,7 +118,6 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 
 				switch imm.expr.type {
 					case .Symbol:
-						// TODO: Same as .org, but labels can never be 16-bit, will have to validate constant width too
 						return token_error(
 							&directive.directive,
 							"Using the .db directive with a label or constant is not implemented yet",
