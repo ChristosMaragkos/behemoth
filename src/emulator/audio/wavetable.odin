@@ -43,7 +43,7 @@ wavetable_generate :: proc(ch: ^WavetableChannel, aram: []byte) -> f32 {
 
 	table_idx := int(ch.phase * TABLE_SIZE)
 
-	sample := (f32(table[table_idx]) / 255.0) * 2.0 - 1.0
+	sample := f32(i8(table[table_idx])) / 128.0
 	sample *= amp * vol
 	return sample
 }
