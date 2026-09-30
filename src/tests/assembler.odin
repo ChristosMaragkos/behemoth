@@ -742,3 +742,84 @@ equ_constant_emitted :: proc(t: ^testing.T) {
 		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
 	}
 }
+
+@(test)
+temp_labels_bind_in_scope :: proc(t: ^testing.T) {
+	SOURCE :: `.org 0x060000
+main:
+    ld a, 3
+@loop:
+    dec a
+    jnz @loop
+    jmp @done
+@done:
+    nop
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	syntax.init_temp_labels()
+	defer syntax.free_temp_labels()
+	syntax.init_mnemonics()
+	defer syntax.free_mnemonics()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
+		testing.expectf(t, false, "pass1 failed: %s", perr.msg)
+		asm_common.free_error(&perr)
+		return
+	}
+	if aerr := syntax.pass2_emit(&e, stmts[:]); aerr.raised {
+		testing.expectf(t, false, "pass2 failed: %s", aerr.msg)
+		asm_common.free_error(&aerr)
+		return
+	}
+	want := [15]byte{0x80, 0x00, 0x03, 0x00, 0x37, 0x01, 0x88, 0x03, 0xfb, 0x82, 0x01, 0x0d, 0x00, 0x00, 0x00}
+	testing.expect(t, len(e.output) == len(want), "output length mismatch")
+	if len(e.output) == len(want) {
+		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
+	}
+}
+
+@(test)
+temp_labels_reject_out_of_scope :: proc(t: ^testing.T) {
+	SOURCE :: `first:
+    jmp @loop
+second:
+    ld al, 25
+@loop:
+    djnz al, @loop
+third:
+    jmp @loop
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_temp_labels()
+	defer syntax.free_temp_labels()
+	tokens, lerr := syntax.tokenize("test.asm", SOURCE)
+	defer asm_common.free_error(&lerr)
+	defer delete(tokens)
+	testing.expect(t, !lerr.raised, "lex failed")
+	if lerr.raised do return
+	lines := syntax.split_lines(tokens[:])
+	defer delete(lines)
+	stmts, perr := syntax.parse_into_statements(lines[:])
+	defer syntax.free_statements(stmts)
+	defer asm_common.free_error(&perr)
+	testing.expect(t, !perr.raised, "parse failed")
+	if perr.raised do return
+	terr := syntax.resolve_temp_labels(stmts[:])
+	defer asm_common.free_error(&terr)
+	testing.expect(t, terr.raised, "expected out-of-scope temp use to fail")
+	if !terr.raised do return
+	testing.expect(t, strings.contains(terr.msg, "not defined in this scope"), "expected scope error")
+	testing.expect(t, strings.contains(terr.msg, "@loop"), "expected temp name in error")
+}
