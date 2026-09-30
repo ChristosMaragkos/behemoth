@@ -44,6 +44,7 @@ is_temp_name :: #force_inline proc(s: string) -> bool {
 }
 
 TempDef :: struct {
+	scope: int,
 	index: int,
 	id:    string,
 }
@@ -57,10 +58,14 @@ resolve_temp_labels :: proc(stmts: []Statement) -> common.AssemblerError {
 	counters := make(map[string]int)
 	defer delete(counters)
 
+	scope := 0
 	for i in 0 ..< len(stmts) {
 		lbl, ok := stmts[i].(LabelDef)
 		if !ok do continue
-		if !is_temp_name(lbl.label.text) do continue
+		if !is_temp_name(lbl.label.text) {
+			scope += 1
+			continue
+		}
 		base := lbl.label.text
 		n := counters[base]
 		counters[base] = n + 1
@@ -70,23 +75,28 @@ resolve_temp_labels :: proc(stmts: []Statement) -> common.AssemblerError {
 		lbl.label.text = id
 		stmts[i] = lbl
 		list, _ := defs[base]
-		append(&list, TempDef{index = i, id = id})
+		append(&list, TempDef{scope = scope, index = i, id = id})
 		defs[base] = list
 	}
 
+	scope = 0
 	for i in 0 ..< len(stmts) {
+		if lbl, ok := stmts[i].(LabelDef); ok {
+			if !is_temp_name(lbl.label.text) do scope += 1
+			continue
+		}
 		#partial switch st in stmts[i] {
 		case Mnemonic:
 			for j in 0 ..< int(st.amount) {
 				raw, ok := st.operands[j].(RawOperand)
 				if !ok do continue
-				bind_temp_uses(([]Token)(raw), i, defs)
+				if berr := bind_temp_uses(([]Token)(raw), scope, i, defs); berr.raised do return berr
 			}
 		case Directive:
 			for j in 0 ..< len(st.operands) {
 				raw, ok := st.operands[j].(RawOperand)
 				if !ok do continue
-				bind_temp_uses(([]Token)(raw), i, defs)
+				if berr := bind_temp_uses(([]Token)(raw), scope, i, defs); berr.raised do return berr
 			}
 		}
 	}
@@ -94,7 +104,11 @@ resolve_temp_labels :: proc(stmts: []Statement) -> common.AssemblerError {
 	return common.no_error()
 }
 
-bind_temp_uses :: proc(toks: []Token, use_index: int, defs: map[string][dynamic]TempDef) {
+bind_temp_uses :: proc(
+	toks: []Token,
+	use_scope, use_index: int,
+	defs: map[string][dynamic]TempDef,
+) -> common.AssemblerError {
 	for k in 0 ..< len(toks) {
 		if toks[k].type != .Identifier do continue
 		if !is_temp_name(toks[k].text) do continue
@@ -102,6 +116,7 @@ bind_temp_uses :: proc(toks: []Token, use_index: int, defs: map[string][dynamic]
 		if !found do continue
 		chosen := -1
 		for d, m in list {
+			if d.scope != use_scope do continue
 			if d.index < use_index {
 				chosen = m
 			} else {
@@ -109,8 +124,13 @@ bind_temp_uses :: proc(toks: []Token, use_index: int, defs: map[string][dynamic]
 				break
 			}
 		}
-		if chosen != -1 do toks[k].text = list[chosen].id
+		if chosen == -1 {
+			return token_errorf(&toks[k], "Temporary label '%s' is not defined in this scope", toks[k].text)
+		}
+		toks[k].text = list[chosen].id
 	}
+
+	return common.no_error()
 }
 
 free_labels :: proc() {
