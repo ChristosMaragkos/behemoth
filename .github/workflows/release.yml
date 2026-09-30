@@ -1,0 +1,79 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            platform: linux
+          - os: ubuntu-24.04-arm
+            arch: aarch64
+            platform: linux
+          - os: windows-latest
+            arch: x86_64
+            platform: windows
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies (Raylib, OpenGL)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libasound2-dev
+
+      - name: Setup Odin
+        uses: laytan/setup-odin@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release: nightly
+
+      - name: Build and Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          DIST_DIR="behemoth-${TAG_NAME}-${{ matrix.platform }}-${{ matrix.arch }}"
+          mkdir -p "$DIST_DIR"
+
+          odin build src/assembler -out:"$DIST_DIR/bmasm" -o:size
+          odin build src/frontend/raylib -out:"$DIST_DIR/behemoth" -o:speed
+
+          cp -r docs "$DIST_DIR/"
+
+          tar -czvf "${DIST_DIR}.tar.gz" "$DIST_DIR"
+
+      - name: Build and Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $TagName = "${{ github.ref_name }}"
+          $DistDir = "behemoth-$TagName-${{ matrix.platform }}-${{ matrix.arch }}"
+          New-Item -ItemType Directory -Force -Path $DistDir
+
+          odin build src/assembler -out:"$DistDir/bmasm.exe" -o:size
+          odin build src/frontend/raylib -out:"$DistDir/behemoth.exe" -o:speed -subsystem:windows
+          Copy-Item -Path docs -Destination $DistDir -Recurse
+          Compress-Archive -Path $DistDir -DestinationPath "$DistDir.zip"
+
+      - name: Upload to Github Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.tar.gz
+            *.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
