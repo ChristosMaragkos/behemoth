@@ -855,13 +855,13 @@ substitute_operand_slot :: proc(slot: ^OperandSlot) {
 	if imm, is_imm := res.(Op_Imm); is_imm {
 		m := imm
 		substitute_expression(&m.expr)
-		slot^ = m
+		slot^ = ResolvedOperand(m)
 		return
 	}
 	if deref, is_deref := res.(Op_Deref); is_deref {
 		d := deref
 		substitute_expression(&d.imm_offs)
-		slot^ = d
+		slot^ = ResolvedOperand(d)
 		return
 	}
 }
