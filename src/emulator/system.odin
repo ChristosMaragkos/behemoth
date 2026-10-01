@@ -19,12 +19,13 @@ AudioFifo :: struct {
 }
 
 System :: struct {
-	cpu:             ^exec.Cpu,
-	ppu:             ^gfx.Ppu,
-	apu:             ^audio.Apu,
-	bus:             ^memory.MemoryBus,
-	cycle_counter:   u64,
-	ppu_prev_status: gfx.PpuStatus,
+	cpu:                ^exec.Cpu,
+	ppu:                ^gfx.Ppu,
+	apu:                ^audio.Apu,
+	bus:                ^memory.MemoryBus,
+	cycle_counter:      u64,
+	ppu_prev_status:    gfx.PpuStatus,
+	ppu_phase:          u32,
 	audio_fifo:         AudioFifo,
 	audio_cycle_scaled: u64,
 }
@@ -69,6 +70,14 @@ system_init :: proc() -> ^System {
 	sys.bus.cram = &ppu.cram
 	sys.bus.oam = &ppu.oam
 	sys.bus.aram = &apu.aram
+
+	ppu.current_line = 240
+	ppu.current_col = 0
+	ppu.status = {.InVblank}
+	ppu.hblank_count = 0
+	sys.ppu_prev_status = {.InVblank}
+	sys.ppu_phase = 0
+	gfx.ppu_encode_to_mmio(ppu)
 
 	exec.cpu_init(sys.cpu, sys.bus)
 	return sys
@@ -129,14 +138,15 @@ system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank:
 	instr := exec.cpu_fetch_instruction(sys.cpu)
 	exec.cpu_decode_execute(sys.cpu, instr)
 
-	sys.cpu.cycle_delta += sys.bus.contention
+	cpu_cycles := sys.cpu.cycle_delta + sys.bus.contention
 	sys.bus.contention = 0
 
-	ppu_cycles := sys.cpu.cycle_delta / c.CPU_PPU_CYCLE_RATIO
-	remaining := sys.cpu.cycle_delta % c.CPU_PPU_CYCLE_RATIO
+	total := cpu_cycles + sys.ppu_phase
+	ppu_cycles := total / c.CPU_PPU_CYCLE_RATIO
+	sys.ppu_phase = total % c.CPU_PPU_CYCLE_RATIO
 
-	consumed = u64(sys.cpu.cycle_delta)
-	sys.cpu.cycle_delta = remaining
+	consumed = u64(cpu_cycles)
+	sys.cpu.cycle_delta = 0
 	gfx.ppu_decode_from_mmio(sys.ppu)
 
 	for i in 0 ..< ppu_cycles {

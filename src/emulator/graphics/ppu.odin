@@ -3,6 +3,8 @@ package graphics
 // Horizontal blank duration in PPU cycles (CPU runs at 2x the speed)
 HBLANK_DURATION :: 100
 
+PPU_STEP_COUNT: u64
+
 import "../common"
 import "core:slice"
 
@@ -100,6 +102,7 @@ ppu_encode_to_mmio :: proc(ppu: ^Ppu) {
 }
 
 ppu_step :: proc(ppu: ^Ppu) {
+	PPU_STEP_COUNT += 1
 	if .ForceBlanking in ppu.ctrl {
 		ppu.status -= {.InHblank, .InVblank}
 		ppu.current_col = 0
