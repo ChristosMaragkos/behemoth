@@ -20,27 +20,46 @@ PpuCtrl :: bit_set[enum u8 {
 };u8]
 
 Ppu :: struct {
-	status:       PpuStatus,
-	ctrl:         PpuCtrl,
-	backdrop:     u8,
-	current_col:  u8,
-	current_line: u16,
-	hblank_count: u8,
-	mmio_view:    []byte,
-	bg1_conf:     BgConfig,
-	bg2_conf:     BgConfig,
-	bg3_conf:     BgConfig,
-	bg4_conf:     BgConfig,
-	oam_conf:     OamConfig,
-	vmp:          common.VideoMemoryPort,
-	vram:         VideoRam,
-	cram:         ColorRam,
-	oam:          SpriteRam,
-	frame_buffer: FrameBuffer,
+	status:            PpuStatus,
+	ctrl:              PpuCtrl,
+	backdrop:          u8,
+	current_col:       u8,
+	current_line:      u16,
+	hblank_count:      u8,
+	mmio_view:         []byte,
+	bg1_conf:          BgConfig,
+	bg2_conf:          BgConfig,
+	bg3_conf:          BgConfig,
+	bg4_conf:          BgConfig,
+	oam_conf:          OamConfig,
+	vmp:               common.VideoMemoryPort,
+	vram:              VideoRam,
+	cram:              ColorRam,
+	oam:               SpriteRam,
+	frame_buffer:      FrameBuffer,
+	line_sprites:      [256]u8,
+	line_sprite_count: int,
+	line_cache_line:   u16,
 }
 
 ppu_init :: proc(ppu: ^Ppu, mmio_start_ptr: ^byte) {
 	ppu.mmio_view = slice.from_ptr(mmio_start_ptr, 0xff)
+	ppu_cache_line_sprites(ppu)
+}
+
+// prefetch OAM sprites intersecting current scanline to avoid per-pixel lookups
+ppu_cache_line_sprites :: proc(ppu: ^Ppu) {
+	ppu.line_sprite_count = 0
+	ppu.line_cache_line = ppu.current_line
+	ly := int(ppu.current_line)
+	for &sprite, i in ppu.oam {
+		if sprite.disabled do continue
+		h := (int(sprite.size_v) + 1) * 8
+		if ly >= int(sprite.y) && ly < int(sprite.y) + h {
+			ppu.line_sprites[ppu.line_sprite_count] = u8(i)
+			ppu.line_sprite_count += 1
+		}
+	}
 }
 
 // Extract writeable PPU registers from MMIO
@@ -110,6 +129,7 @@ ppu_step :: proc(ppu: ^Ppu) {
 		return
 	}
 	if .InVblank not_in ppu.status && .InHblank not_in ppu.status {
+		if ppu.line_cache_line != ppu.current_line do ppu_cache_line_sprites(ppu)
 		candidates: [5]PixelCandidate
 		for i in PixelSource.Bg1 ..= PixelSource.Bg4 {
 			candidates[i] = get_pixel_candidate(
@@ -239,7 +259,8 @@ get_pixel_candidate :: proc(
 		// transform screen x, y into layer x, y:
 		layer_x := (scr_x - int(conf.h_offs)) & mask_x
 		layer_y := (scr_y - int(conf.v_offs)) & mask_y
-		tile_x, tile_y, offs_x, offs_y := layer_x / 8, layer_y / 8, layer_x % 8, layer_y % 8
+		tile_x, tile_y := layer_x >> 3, layer_y >> 3
+		offs_x, offs_y := layer_x & 7, layer_y & 7
 
 		idx := int(conf.entry_src) + (2 * (cadence * tile_y + tile_x))
 		low, high := u16(ppu.vram[idx]), u16(ppu.vram[idx + 1])
@@ -262,9 +283,9 @@ get_pixel_candidate :: proc(
 		depth := ppu.oam_conf.color_depth
 		gfx_src := ppu.oam_conf.gfx_src
 		tile_size := get_tile_size(depth)
-		for &sprite in ppu.oam {
+		for i in 0 ..< ppu.line_sprite_count {
+			sprite := &ppu.oam[ppu.line_sprites[i]]
 			TILE_WIDTH, TILE_HEIGHT :: 8, 8
-			if sprite.disabled do continue
 
 			tiles_h := int(sprite.size_h + 1)
 			tiles_v := int(sprite.size_v + 1)
@@ -284,8 +305,8 @@ get_pixel_candidate :: proc(
 
 			// for entries composed of more than one tile,
 			// get which tile we are at and the offset within that tile
-			col0, row0 := rel_x / 8, rel_y / 8
-			ofx0, ofy0 := rel_x % 8, rel_y % 8
+			col0, row0 := rel_x >> 3, rel_y >> 3
+			ofx0, ofy0 := rel_x & 7, rel_y & 7
 
 			col, ofx := col0, ofx0
 			row, ofy := row0, ofy0
