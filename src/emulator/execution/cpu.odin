@@ -209,6 +209,8 @@ cpu_pop :: proc(cpu: ^Cpu, reg: shared.RegName) {
 		return
 	}
 
+	sp.full += size_of(u16)
+
 	addr := memory.calculate_address(SP_PAGE, sp.full)
 	val := cpu_read_word(cpu, addr)
 
@@ -226,8 +228,6 @@ cpu_pop :: proc(cpu: ^Cpu, reg: shared.RegName) {
 		case .PC:
 			cpu.pc = val
 	}
-
-	sp.full += size_of(u16)
 }
 
 cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool, maskable := false) {
