@@ -101,7 +101,7 @@ apu_generate_sample :: proc(apu: ^Apu) -> f32 {
 	wave1 := wavetable_generate(&apu.wave1, apu.aram[:])
 	wave2 := wavetable_generate(&apu.wave2, apu.aram[:])
 
-	avg := (pulse + triangle + saw + noise + wave1 + wave2) / 3.3
+	avg := (pulse + triangle + saw + noise + wave1 + wave2) / 2.0
 	vol := q0_8_expand(apu.global_vol)
 
 	return math.tanh(avg) * vol
