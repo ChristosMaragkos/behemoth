@@ -20,6 +20,7 @@ FixupKind :: enum {
 	Abs8,
 	Abs16,
 	Abs24,
+	Abs32,
 	Rel8,
 	Rel16,
 }
@@ -96,10 +97,7 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 
 				switch imm.expr.type {
 					case .Symbol:
-						return token_error(
-							&directive.directive,
-							"Using the .dw directive with a label or constant is not implemented yet",
-						)
+						if imm.expr.is_signed do return token_error(&directive.directive, "Negated label in .dw directive is not supported")
 					case .Integer:
 						fits := fits_width(imm.expr.val, 16)
 						if !fits do return token_errorf(&directive.directive, "Value '%d' out of 16-bit range required by .dw directive", imm.expr.val)
@@ -118,10 +116,7 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 
 				switch imm.expr.type {
 					case .Symbol:
-						return token_error(
-							&directive.directive,
-							"Using the .db directive with a label or constant is not implemented yet",
-						)
+						if imm.expr.is_signed do return token_error(&directive.directive, "Negated label in .db directive is not supported")
 					case .Integer:
 						fits := fits_width(imm.expr.val, 8)
 						if !fits do return token_errorf(&directive.directive, "Value '%d' out of 8-bit range required by .db directive", imm.expr.val)
@@ -142,10 +137,7 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 
 				switch imm.expr.type {
 					case .Symbol:
-						return token_error(
-							&directive.directive,
-							"Using the .dl directive with a label or constant is not implemented yet",
-						)
+						if imm.expr.is_signed do return token_error(&directive.directive, "Negated label in .dl directive is not supported")
 					case .Integer:
 						fits := fits_width(imm.expr.val, 32)
 						if !fits do return token_errorf(&directive.directive, "Value '%d' out of 32-bit range required by .dl directive", imm.expr.val)
@@ -160,10 +152,7 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 
 				switch imm.expr.type {
 					case .Symbol:
-						return token_error(
-							&directive.directive,
-							"Using the .d24 directive with a label or constant is not implemented yet",
-						)
+						if imm.expr.is_signed do return token_error(&directive.directive, "Negated label in .d24 directive is not supported")
 					case .Integer:
 						fits := fits_width(imm.expr.val, 24)
 						if !fits do return token_errorf(&directive.directive, "Value '%d' out of 24-bit range required by .d24 directive", imm.expr.val)
@@ -619,6 +608,12 @@ apply_fixups :: proc(e: ^Emitter) -> common.AssemblerError {
 				e.output[f.pos] = u8(target)
 				e.output[f.pos + 1] = u8(target >> 8)
 				e.output[f.pos + 2] = u8(target >> 16)
+			case .Abs32:
+				if f.pos + 3 >= u32(len(e.output)) do return token_errorf(&f.tok, "Internal error: fixup outside output")
+				e.output[f.pos] = u8(target)
+				e.output[f.pos + 1] = u8(target >> 8)
+				e.output[f.pos + 2] = u8(target >> 16)
+				e.output[f.pos + 3] = u8(target >> 24)
 			case .Rel8:
 				rel := i64(target) - i64(f.end)
 				if rel < -128 || rel > 127 do return token_errorf(&f.tok, "Branch out of range for 8-bit offset")
@@ -911,6 +906,8 @@ fixup_kind_for :: proc(
 				return .Abs16, common.no_error()
 			case 3:
 				return .Abs24, common.no_error()
+			case 4:
+				return .Abs32, common.no_error()
 		}
 		t := tok
 		return .Invalid, token_errorf(&t, "Internal error: cannot fix up symbol operand")
@@ -953,7 +950,13 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 			for op in dir.operands {
 				imm, ok := op.(ResolvedOperand).(Op_Imm)
 				if ok {
-					if imm.expr.type == .Symbol do return token_error(&dtok, "Internal error: unresolved symbol in .db")
+					if imm.expr.type == .Symbol {
+						pos := u32(len(e.output))
+						if err := emitter_emit_byte(e, 0); err.raised do return err
+						append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs8})
+						continue
+					}
+					if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: unresolved symbol in .db")
 					if err := emitter_emit_byte(e, u8(imm.expr.val)); err.raised do return err
 					continue
 				}
@@ -967,6 +970,12 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 		case ".dw":
 			for op in dir.operands {
 				imm := op.(ResolvedOperand).(Op_Imm)
+				if imm.expr.type == .Symbol {
+					pos := u32(len(e.output))
+					if err := emitter_emit_u16(e, 0); err.raised do return err
+					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs16})
+					continue
+				}
 				if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: .dw operand not resolved")
 				if err := emitter_emit_u16(e, u16(imm.expr.val)); err.raised do return err
 			}
@@ -974,6 +983,12 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 		case ".dl":
 			for op in dir.operands {
 				imm := op.(ResolvedOperand).(Op_Imm)
+				if imm.expr.type == .Symbol {
+					pos := u32(len(e.output))
+					if err := emitter_emit_u32(e, 0); err.raised do return err
+					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs32})
+					continue
+				}
 				if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: .dl operand not resolved")
 				if err := emitter_emit_u32(e, u32(imm.expr.val)); err.raised do return err
 			}
@@ -981,6 +996,12 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 		case ".d24":
 			for op in dir.operands {
 				imm := op.(ResolvedOperand).(Op_Imm)
+				if imm.expr.type == .Symbol {
+					pos := u32(len(e.output))
+					if err := emitter_emit_u24(e, 0); err.raised do return err
+					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs24})
+					continue
+				}
 				if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: .d24 operand not resolved")
 				if err := emitter_emit_u24(e, u32(imm.expr.val)); err.raised do return err
 			}
