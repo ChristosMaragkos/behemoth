@@ -99,4 +99,4 @@ some_other_variable:
 .equ MY_CONST, 20 ; Constants can be defined without issue since they emit no data
 ```
 
-- When in ROM, emission can continue normally. All mnemonics and directives can be used.
+- When in ROM, emission can continue normally. All mnemonics and directives can be used, but emission is restricted to ROM pages (6-197)
