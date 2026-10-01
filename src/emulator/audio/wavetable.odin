@@ -35,7 +35,7 @@ wavetable_generate :: proc(ch: ^WavetableChannel, aram: []byte) -> f32 {
 
 	amp := envelope_step(&ch.state, ch.adsr, ch.gate_on, ch.reset_on_retrigger, &ch.phase)
 
-	ch.phase += f32(ch.pitch) / c.SAMPLE_RATE
+	ch.phase += q12_4_expand(ch.pitch) / c.SAMPLE_RATE
 	ch.phase -= math.floor(ch.phase)
 
 	table := slice.bytes_from_ptr(&aram[int(ch.index) * TABLE_SIZE], TABLE_SIZE)

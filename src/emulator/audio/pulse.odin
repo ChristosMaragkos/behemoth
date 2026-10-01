@@ -30,7 +30,7 @@ pulse_generate :: proc(ch: ^PulseChannel) -> f32 {
 
 	amp := envelope_step(&ch.state, ch.adsr, ch.gate_on, ch.reset_on_retrigger, &ch.phase)
 
-	ch.phase += f32(ch.pitch) / c.SAMPLE_RATE
+	ch.phase += q12_4_expand(ch.pitch) / c.SAMPLE_RATE
 	ch.phase -= math.floor(ch.phase)
 
 	duty_cycle := duty_cycle_values[ch.duty_cycle]

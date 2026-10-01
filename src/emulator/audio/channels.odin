@@ -24,3 +24,7 @@ GenericChannelCtrl :: bit_field u8 {
 q0_8_expand :: #force_inline proc(q: u8) -> f32 {
 	return f32(q) / 256.0
 }
+
+q12_4_expand :: #force_inline proc(q: u16) -> f32 {
+	return f32(q) / 16.0
+}

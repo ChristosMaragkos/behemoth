@@ -22,6 +22,8 @@ The phase of a channel dictates how far along its waveform it currently is, and 
 will generate for its next sample.
 - Pitch: Each time a sample is generated, the phase of each sample is internally advanced by `pitch / sample rate`,
 meaning configuring a channel's pitch to be higher advances through its waveform faster, thus producing higher notes (or pitch, duh).
+Pitch values are represented in the q12.4 format (12 whole bits and 4 fractional bits) to allow for more granular control within the audible range.
+Thus, pitch values are converted to floating point numbers before dividing by `sample rate` to determine the phase step.
   - The noise channel does not have a notion of pitch or phase. Rather, it uses a `rate` control which dictates the rate (in samples) at which it
   advances its internal LFSR value.
 
@@ -181,7 +183,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
 | `$05:070c` | PULCTRL | Pulse channel control bitmask (see below) | RW | 1 |
-| `$05:070d` | PULPITCH | Pulse channel pitch | RW | 2 |
+| `$05:070d` | PULPITCH | Pulse channel pitch (Q12.4 fixed point) | RW | 2 |
 | `$05:070f` | PULVOL | Pulse channel volume (Q0.8 fixed point) | RW | 1 |
 | `$05:0710` | PULADSR | Pulse channel ADSR envelope | RW | 2 |
 
@@ -198,7 +200,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
 | `$05:0712` | SAWCTRL | Saw channel control bitmask (see below) | RW | 1 |
-| `$05:0713` | SAWPITCH | Saw channel pitch | RW | 2 |
+| `$05:0713` | SAWPITCH | Saw channel pitch (Q12.4 fixed point) | RW | 2 |
 | `$05:0715` | SAWVOL | Saw channel volume (Q0.8 fixed point) | RW | 1 |
 | `$05:0716` | SAWADSR | Saw channel ADSR envelope | RW | 2 |
 
@@ -213,7 +215,7 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
 | `$05:0717` | TRICTRL | Triangle channel control bitmask (see below) | RW | 1 |
-| `$05:0718` | TRIPITCH | Triangle channel pitch | RW | 2 |
+| `$05:0718` | TRIPITCH | Triangle channel pitch (Q12.4 fixed point) | RW | 2 |
 | `$05:071a` | TRIVOL | Triangle channel volume (Q0.8 fixed point) | RW | 1 |
 | `$05:071b` | TRIADSR | Triangle channel ADSR envelope | RW | 2 |
 
@@ -244,12 +246,12 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
 | `$05:0723` | WT1CTRL | Wavetable channel 1 control bitmask (see below) | RW | 1 |
-| `$05:0724` | WT1PITCH | Wavetable channel 1 pitch | RW | 2 |
+| `$05:0724` | WT1PITCH | Wavetable channel 1 pitch (Q12.4 fixed point) | RW | 2 |
 | `$05:0726` | WT1VOL | Wavetable channel 1 volume (Q0.8 fixed point) | RW | 1 |
 | `$05:0727` | WT1ADSR | Wavetable channel 1 ADSR envelope | RW | 2 |
 | `$05:0729` | WT1IDX | Wavetable channel 1 sample index | RW | 1 |
 | `$05:072a` | WT2CTRL | Wavetable channel 2 control bitmask (see below) | RW | 1 |
-| `$05:072b` | WT2PITCH | Wavetable channel 2 pitch | RW | 2 |
+| `$05:072b` | WT2PITCH | Wavetable channel 2 pitch (Q12.4 fixed point) | RW | 2 |
 | `$05:072d` | WT2VOL | Wavetable channel 2 volume (Q0.8 fixed point) | RW | 1 |
 | `$05:072e` | WT2ADSR | Wavetable channel 2 ADSR envelope | RW | 2 |
 | `$05:0730` | WT2IDX | Wavetable channel 2 sample index | RW | 1 |
