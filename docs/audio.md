@@ -1,6 +1,6 @@
 # Audio
 
-The APU is capable of synthesizing mono sound at 44.1kHz (44100 samples per second). This means that it produces
+The APU is capable of synthesizing stereo sound at 44.1kHz (44100 samples per second). This means that it produces
 exactly 735 (44100 / 60) audio samples per frame, handing them to the host sound system.
 
 ## Channels
@@ -163,15 +163,16 @@ At every tick, for each channel that is currently active:
 
 ## MMIO
 
-The MMIO region dedicated to MMIO begins at `$05:0700`:
+The MMIO region dedicated to MMIO begins at `0x050700`:
 
 ### Global controls
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
-| `$05:0700-9` | Audio DMA | Refer to [[dma#Audio memory DMA (main bus -> ARAM)]] | - | - |
-| `$05:070a` | APUCTRL | APU control bitmask (see below) | RW | 1 |
-| `$05:070b` | GLBLVOL | 8-bit master volume (Q0.8 fixed point) | RW | 1 |
+| `0x050700-9` | Audio DMA | Refer to [[dma#Audio memory DMA (main bus -> ARAM)]] | - | - |
+| `0x05070a` | APUCTRL | APU control bitmask (see below) | RW | 1 |
+| `0x05070b` | MASVOL | 8-bit master volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x05070c` | MASVOR | 8-bit master volume, right (Q0.8 fixed point) | RW | 1 |
 
 `APUCTRL` layout:
 
@@ -182,10 +183,11 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
-| `$05:070c` | PULCTRL | Pulse channel control bitmask (see below) | RW | 1 |
-| `$05:070d` | PULPITCH | Pulse channel pitch (Q12.4 fixed point) | RW | 2 |
-| `$05:070f` | PULVOL | Pulse channel volume (Q0.8 fixed point) | RW | 1 |
-| `$05:0710` | PULADSR | Pulse channel ADSR envelope | RW | 2 |
+| `0x05070d` | PULCTRL | Pulse channel control bitmask (see below) | RW | 1 |
+| `0x05070e` | PULPITCH | Pulse channel pitch (Q12.4 fixed point) | RW | 2 |
+| `0x050710` | PULVOL | Pulse channel volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x050711` | PULVOR | Pulse channel volume, right (Q0.8 fixed point) | RW | 1 |
+| `0x050712` | PULADSR | Pulse channel ADSR envelope | RW | 2 |
 
 `PULCTRL` layout:
 
@@ -199,10 +201,11 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
-| `$05:0712` | SAWCTRL | Saw channel control bitmask (see below) | RW | 1 |
-| `$05:0713` | SAWPITCH | Saw channel pitch (Q12.4 fixed point) | RW | 2 |
-| `$05:0715` | SAWVOL | Saw channel volume (Q0.8 fixed point) | RW | 1 |
-| `$05:0716` | SAWADSR | Saw channel ADSR envelope | RW | 2 |
+| `0x050714` | SAWCTRL | Saw channel control bitmask (see below) | RW | 1 |
+| `0x050715` | SAWPITCH | Saw channel pitch (Q12.4 fixed point) | RW | 2 |
+| `0x050717` | SAWVOL | Saw channel volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x050718` | SAWVOR | Saw channel volume, right (Q0.8 fixed point) | RW | 1 |
+| `0x050719` | SAWADSR | Saw channel ADSR envelope | RW | 2 |
 
 `SAWCTRL` layout:
 
@@ -214,10 +217,11 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
-| `$05:0717` | TRICTRL | Triangle channel control bitmask (see below) | RW | 1 |
-| `$05:0718` | TRIPITCH | Triangle channel pitch (Q12.4 fixed point) | RW | 2 |
-| `$05:071a` | TRIVOL | Triangle channel volume (Q0.8 fixed point) | RW | 1 |
-| `$05:071b` | TRIADSR | Triangle channel ADSR envelope | RW | 2 |
+| `0x05071b` | TRICTRL | Triangle channel control bitmask (see below) | RW | 1 |
+| `0x05071c` | TRIPITCH | Triangle channel pitch (Q12.4 fixed point) | RW | 2 |
+| `0x05071e` | TRIVOL | Triangle channel volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x05071f` | TRIVOR | Triangle channel volume, right (Q0.8 fixed point) | RW | 1 |
+| `0x050720` | TRIADSR | Triangle channel ADSR envelope | RW | 2 |
 
 `TRICTRL` layout:
 
@@ -229,10 +233,11 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
-| `$05:071d` | NOICTRL | Noise channel control bitmask (see below) | RW | 1 |
-| `$05:071e` | NOIRATE | Noise channel LFSR step rate | RW | 2 |
-| `$05:0720` | NOIVOL | Noise channel volume (Q0.8 fixed point) | RW | 1 |
-| `$05:0721` | NOIADSR | Noise channel ADSR envelope | RW | 2 |
+| `0x050722` | NOICTRL | Noise channel control bitmask (see below) | RW | 1 |
+| `0x050723` | NOIRATE | Noise channel LFSR step rate | RW | 2 |
+| `0x050725` | NOIVOL | Noise channel volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x050726` | NOIVOR | Noise channel volume, right (Q0.8 fixed point) | RW | 1 |
+| `0x050727` | NOIADSR | Noise channel ADSR envelope | RW | 2 |
 
 `NOICTRL` layout:
 
@@ -245,16 +250,18 @@ The MMIO region dedicated to MMIO begins at `$05:0700`:
 
 | Address | Name | Description | Read/Write? | Size (bytes) |
 | --------------- | --------------- | --------------- | --------------- | --------------- |
-| `$05:0723` | WT1CTRL | Wavetable channel 1 control bitmask (see below) | RW | 1 |
-| `$05:0724` | WT1PITCH | Wavetable channel 1 pitch (Q12.4 fixed point) | RW | 2 |
-| `$05:0726` | WT1VOL | Wavetable channel 1 volume (Q0.8 fixed point) | RW | 1 |
-| `$05:0727` | WT1ADSR | Wavetable channel 1 ADSR envelope | RW | 2 |
-| `$05:0729` | WT1IDX | Wavetable channel 1 sample index | RW | 1 |
-| `$05:072a` | WT2CTRL | Wavetable channel 2 control bitmask (see below) | RW | 1 |
-| `$05:072b` | WT2PITCH | Wavetable channel 2 pitch (Q12.4 fixed point) | RW | 2 |
-| `$05:072d` | WT2VOL | Wavetable channel 2 volume (Q0.8 fixed point) | RW | 1 |
-| `$05:072e` | WT2ADSR | Wavetable channel 2 ADSR envelope | RW | 2 |
-| `$05:0730` | WT2IDX | Wavetable channel 2 sample index | RW | 1 |
+| `0x050729` | WT1CTRL | Wavetable channel 1 control bitmask (see below) | RW | 1 |
+| `0x05072a` | WT1PITCH | Wavetable channel 1 pitch (Q12.4 fixed point) | RW | 2 |
+| `0x05072c` | WT1VOL | Wavetable channel 1 volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x05072d` | WT1VOR | Wavetable channel 1 volume, right (Q0.8 fixed point) | RW | 1 |
+| `0x05072e` | WT1ADSR | Wavetable channel 1 ADSR envelope | RW | 2 |
+| `0x050730` | WT1IDX | Wavetable channel 1 sample index | RW | 1 |
+| `0x050731` | WT2CTRL | Wavetable channel 2 control bitmask (see below) | RW | 1 |
+| `0x050732` | WT2PITCH | Wavetable channel 2 pitch (Q12.4 fixed point) | RW | 2 |
+| `0x050734` | WT2VOL | Wavetable channel 2 volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x050735` | WT2VOR | Wavetable channel 2 volume, right (Q0.8 fixed point) | RW | 1 |
+| `0x050736` | WT2ADSR | Wavetable channel 2 ADSR envelope | RW | 2 |
+| `0x050738` | WT2IDX | Wavetable channel 2 sample index | RW | 1 |
 
 `WTnCTRL` layout:
 
