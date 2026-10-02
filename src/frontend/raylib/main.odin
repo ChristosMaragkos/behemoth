@@ -40,7 +40,7 @@ main :: proc() {
 	rl.InitAudioDevice()
 	defer rl.CloseAudioDevice()
 
-	stream := rl.LoadAudioStream(44100, 32, 1)
+	stream := rl.LoadAudioStream(44100, 32, 2)
 	rl.SetAudioStreamCallback(stream, audio_callback)
 	rl.PlayAudioStream(stream)
 	defer rl.UnloadAudioStream(stream)
@@ -72,15 +72,16 @@ main :: proc() {
 
 }
 
-audio_callback :: proc "c" (buffer: rawptr, amnt: c.uint) {
+audio_callback :: proc "c" (buffer: rawptr, frames: c.uint) {
 	context = runtime.default_context()
 	samples := transmute([^]f32)buffer
-	for i in 0 ..< amnt {
+	for i in 0 ..< frames {
 		if emu.g_audio_fifo == nil {
-			samples[i] = 0.0
+			samples[2 * i], samples[2 * i + 1] = 0.0, 0.0
 			continue
 		}
-		sample, ok := emu.audio_fifo_consume(emu.g_audio_fifo)
-		samples[i] = sample if ok else 0.0
+		l, r, ok := emu.audio_fifo_consume(emu.g_audio_fifo)
+		samples[2 * i] = l if ok else 0.0
+		samples[2 * i + 1] = r if ok else 0.0
 	}
 }
