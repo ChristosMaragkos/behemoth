@@ -65,7 +65,7 @@ main :: proc() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.BLACK)
 
-		src := rl.Rectangle{0, 0, f32(tex.texture.width), -f32(tex.texture.height)}
+		src := rl.Rectangle{0, 0, f32(tex.texture.width), f32(tex.texture.height)}
 		rl.DrawTexturePro(tex.texture, src, dest, {0, 0}, 0.0, rl.WHITE)
 		rl.EndDrawing()
 	}
