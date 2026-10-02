@@ -158,7 +158,7 @@ At every tick, for each channel that is currently active:
 
 - The ADSR envelope of the channel is stepped to calculate the current amplitude multiplier (between 0 and 1).
 - The APU advances the channel's phase/rate and runs the channel's algorithm to get a sample (`±1 * channel volume * amplitude`).
-- The APU calculates the sum of all the outputs, divides it by 3.3 to normalize, and calculates its hyperbolic tangent (`tanh`).
+- The APU calculates the sum of all the outputs, divides it by 2.0 to normalize, and calculates its hyperbolic tangent (`tanh`).
 - The APU multiplies the mix by (global volume / 256) and hands the final value to the host.
 
 ## MMIO
