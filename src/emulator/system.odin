@@ -10,10 +10,12 @@ import "core:mem"
 import "core:os"
 import "core:sync"
 
-AUDIO_FIFO_SAMPLES :: 4096
+AUDIO_FIFO_FRAMES :: 4096 // stereo frames (~93ms @44.1kHz)
 
 AudioFifo :: struct {
-	buf:  [AUDIO_FIFO_SAMPLES]f32,
+	// Interleaved LRLR...; head/tail count stereo frames, not floats,
+	// so L/R can never tear apart mid-frame.
+	buf:  [AUDIO_FIFO_FRAMES * 2]f32,
 	head: u32,
 	tail: u32,
 }
@@ -173,23 +175,26 @@ system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank:
 	return consumed, entered_vblank
 }
 
-audio_fifo_produce :: proc(fifo: ^AudioFifo, sample: f32) {
+audio_fifo_produce :: proc(fifo: ^AudioFifo, l, r: f32) {
 	head := sync.atomic_load(&fifo.head)
 	tail := sync.atomic_load(&fifo.tail)
-	if head - tail >= AUDIO_FIFO_SAMPLES {
+	if head - tail >= AUDIO_FIFO_FRAMES {
 		sync.atomic_store(&fifo.tail, tail + 1)
 	}
-	fifo.buf[head & (AUDIO_FIFO_SAMPLES - 1)] = sample
+	base := (head & (AUDIO_FIFO_FRAMES - 1)) * 2
+	fifo.buf[base] = l
+	fifo.buf[base + 1] = r
 	sync.atomic_store(&fifo.head, head + 1)
 }
 
-audio_fifo_consume :: proc(fifo: ^AudioFifo) -> (sample: f32, ok: bool) {
+audio_fifo_consume :: proc(fifo: ^AudioFifo) -> (l, r: f32, ok: bool) {
 	head := sync.atomic_load(&fifo.head)
 	tail := sync.atomic_load(&fifo.tail)
-	if head == tail do return 0.0, false
-	sample = fifo.buf[tail & (AUDIO_FIFO_SAMPLES - 1)]
+	if head == tail do return 0.0, 0.0, false
+	base := (tail & (AUDIO_FIFO_FRAMES - 1)) * 2
+	l, r = fifo.buf[base], fifo.buf[base + 1]
 	sync.atomic_store(&fifo.tail, tail + 1)
-	return sample, true
+	return l, r, true
 }
 
 audio_fifo_pending :: proc(fifo: ^AudioFifo) -> u32 {

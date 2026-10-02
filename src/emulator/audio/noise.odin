@@ -1,9 +1,10 @@
 package audio
 
-NOICTRL :: 0x1d
-NOIRATE :: 0x1e
-NOIVOL :: 0x20
-NOIADSR :: 0x21
+NOICTRL :: 0x22
+NOIRATE :: 0x23
+NOIVOL :: 0x25
+NOIVOR :: 0x26
+NOIADSR :: 0x27
 
 LFSR_INIT :: 0x7654
 
@@ -21,7 +22,8 @@ NoiseCtrl :: bit_field u8 {
 
 NoiseChannel :: struct {
 	using ctrl:      NoiseCtrl,
-	volume:          u8,
+	volume_l:        u8,
+	volume_r:        u8,
 	rate:            u16,
 	adsr:            Envelope,
 	state:           EnvState,
@@ -29,8 +31,8 @@ NoiseChannel :: struct {
 	advance_counter: u16,
 }
 
-noise_generate :: proc(ch: ^NoiseChannel) -> f32 {
-	if ch.disabled do return 0.0
+noise_generate :: proc(ch: ^NoiseChannel) -> (l: f32, r: f32) {
+	if ch.disabled do return 0.0, 0.0
 
 	if ch.gate_on && !ch.state.prev_gate {
 		if ch.reset_on_retrigger {
@@ -49,11 +51,14 @@ noise_generate :: proc(ch: ^NoiseChannel) -> f32 {
 		advance_lfsr(&ch.lfsr, ch.mode)
 	}
 
-	vol := q0_8_expand(ch.volume)
+	vol_l := q0_8_expand(ch.volume_l)
+	vol_r := q0_8_expand(ch.volume_r)
 
-	sample: f32 = ch.lfsr & 1 == 1 ? 1.0 : -1.0
-	sample *= amp * vol
-	return sample
+	l = ch.lfsr & 1 == 1 ? 1.0 : -1.0
+	r = l
+	l *= amp * vol_l
+	r *= amp * vol_r
+	return l, r
 }
 
 @(private = "file")
