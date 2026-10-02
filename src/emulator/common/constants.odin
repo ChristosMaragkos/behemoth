@@ -1,7 +1,8 @@
 package common
 
 APUCTRL :: 0x0a
-GLBLVOL :: 0x0b
+MASVOL :: 0x0b
+MASVOR :: 0x0c
 MMIO_PAGE :: 0x05
 
 AUDIO_RAM_SIZE :: 16 * 1024
