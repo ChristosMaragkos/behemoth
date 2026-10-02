@@ -8,10 +8,10 @@ Pixel :: struct {
 }
 
 CramColor :: bit_field u16 {
-	_: u8 | 1,
-	b: u8 | 5,
-	g: u8 | 5,
 	r: u8 | 5,
+	g: u8 | 5,
+	b: u8 | 5,
+	_: u8 | 1,
 }
 
 FrameBuffer :: [SCREEN_WIDTH * SCREEN_HEIGHT]Pixel
