@@ -1,6 +1,16 @@
 package memory
 
+import "core:slice"
+@(private)
+@(rodata)
+READ_ONLY_REGISTERS: []u32 = {
+	0x05_0500, // PPUSTATUS
+	0x05_0501, // CRNTLN
+}
+
 is_valid_write :: proc(addr: u32) -> bool {
+	if slice.contains(READ_ONLY_REGISTERS, addr) do return false
+
 	switch addr {
 		case CART_ROM_START ..= CART_ROM_END:
 			return false
