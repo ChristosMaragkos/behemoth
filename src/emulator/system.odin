@@ -137,6 +137,13 @@ system_load_cart_from_bytes :: proc(sys: ^System, bytes: []byte) -> os.Error {
 }
 
 system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank: bool) {
+	// clear the IRQ line of the h-blank IRQ if the last instruction disabled it so a delayed h-blank that triggers after the I bit is cleared
+	// is dropped entirely
+	if .DisableHblank in sys.ppu.ctrl && exec.cpu_irq_is_raised(sys.cpu, .Hblnk) {
+		exec.cpu_drop_irq(sys.cpu, .Hblnk)
+	}
+
+	exec.cpu_service_irq(sys.cpu)
 	instr := exec.cpu_fetch_instruction(sys.cpu)
 	exec.cpu_decode_execute(sys.cpu, instr)
 
@@ -163,7 +170,7 @@ system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank:
 	if entered_vblank && .DisableVblank not_in sys.ppu.ctrl {
 		exec.cpu_trigger_interrupt(sys.cpu, exec.VBLNK_VEC_IDX, false)
 	} else if entered_hblank && .DisableHblank not_in sys.ppu.ctrl {
-		exec.cpu_trigger_interrupt(sys.cpu, exec.HBLNK_VEC_IDX, false, true)
+		exec.cpu_raise_irq(sys.cpu, .Hblnk)
 	}
 
 	sys.audio_cycle_scaled += consumed * c.AUDIO_SAMPLES_PER_FRAME

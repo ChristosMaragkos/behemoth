@@ -5,7 +5,20 @@ Each entry is a 3-byte (24-bit) absolute address pointing to an interrupt handle
 These handlers are initialized to zero and must be set by the
 programmer at runtime (most likely during the reset vector, which is not part of this table and must physically exist at `$06:0000`).
 
-Maskable interrupts can be ignored by setting the `I` bit of the `flags` register to 1, or configuring other respective MMIO registers.
+## Masking interrupts
+
+Setting the `I` bit of the `flags` register simply ignores all current and future interrupt requests (IRQs) until the bit is cleared.
+Disabling a maskable interrupt by writing to MMIO registers (such as `PPUCTRL`'s "disable H-blank" bit) also drops it if it was pending while
+interrupts were being masked. This is equivalent to acknowledging the interrupt but not servicing it.
+
+## Servicing interrupts
+
+Before the beginning of each fetch-decode-execute cycle, the CPU checks the bits of its IRQ line and services the first pending IRQ.
+The order in which IRQs are serviced is the same as the one in which they appear in the IVT: lowest vector index 0 means higher priority.
+
+If multiple requests of the same interrupt are fired, they do not compound; only the latest is ever serviced and the previous ones are implicitly
+dropped. Non-maskable interrupts (such as V-blank and hardware faults) do not issue an IRQ, instead jumping to their designated vector immediately.
+
 Fault-type interrupts trigger before any side-effects occur, and they save and restore the pre-instruction state in `$05:0300`-`$05:0304`
 to avoid stack I/O.
 

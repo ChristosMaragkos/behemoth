@@ -54,6 +54,7 @@ Cpu :: struct {
 	cycle_delta: u32,
 	pc_delta:    i16,
 	halted:      bool,
+	irq_line:    IrqLine,
 }
 
 cpu_init :: proc(cpu: ^Cpu, bus: ^memory.MemoryBus) {
@@ -178,7 +179,7 @@ cpu_push :: proc(cpu: ^Cpu, reg: shared.RegName) {
 	val: u16
 
 	if sp.full - 2 > sp.full {
-		cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true, false)
+		cpu_trigger_interrupt(cpu, STACK_OVF_VEC_IDX, true)
 		return
 	}
 
@@ -205,7 +206,7 @@ cpu_pop :: proc(cpu: ^Cpu, reg: shared.RegName) {
 	sp := cpu_get_reg(cpu, SP_REG_IDX)
 
 	if sp.full + 2 < sp.full {
-		cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true, false)
+		cpu_trigger_interrupt(cpu, STACK_UDF_VEC_IDX, true)
 		return
 	}
 
@@ -228,28 +229,4 @@ cpu_pop :: proc(cpu: ^Cpu, reg: shared.RegName) {
 		case .PC:
 			cpu.pc = val
 	}
-}
-
-cpu_trigger_interrupt :: proc(cpu: ^Cpu, interrupt_index: u8, fault: bool, maskable := false) {
-	if maskable && .IgnoreInterrupts in cpu.flags do return
-	cpu.halted = false
-	if !fault {
-		cpu_push(cpu, .Flags)
-		cpu_push(cpu, .PP)
-		cpu_push(cpu, .PC)
-	} else {
-		store_addr := memory.calculate_address(memory.IVT_PAGE, 0x0300)
-		cpu_write_word(cpu, store_addr, transmute(u16)cpu.flags)
-		cpu_write_byte(cpu, store_addr + 2, cpu.pp)
-		cpu_write_word(cpu, store_addr + 3, u16(i16(cpu.pc) - cpu.pc_delta)) // save the pre-instruction PC
-	}
-
-	addr := memory.calculate_address(memory.IVT_PAGE, u16(3 * interrupt_index))
-
-	pc_new := cpu_read_word(cpu, addr)
-	pp_new := cpu_read_byte(cpu, addr + size_of(u16))
-
-	cpu.flags += {.IgnoreInterrupts}
-	cpu.pc = pc_new
-	cpu.pp = pp_new
 }
