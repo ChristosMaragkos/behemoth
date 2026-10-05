@@ -60,6 +60,9 @@ replace_operands :: proc(stmts: []Statement) -> common.AssemblerError {
 				}
 		}
 	}
+
+	derr := desugar_shove_list(stmts)
+	if derr.raised do return derr
 	return common.no_error()
 }
 
@@ -90,11 +93,13 @@ split_statement :: proc(line: ^Line) -> (Statement, common.AssemblerError) {
 			line^ = {}
 			return dir, common.no_error()
 		} else {
-			if len(operands) > 3 {
+			max_operands := 3
+			if line[0].text == "shove" do max_operands = 11
+			if len(operands) > max_operands {
 				lastop := operands[len(operands) - 1].(RawOperand)
 				lasttok := lastop[len(lastop) - 1]
 				delete(operands)
-				return {}, token_error(&lasttok, "Too many operands found (no mnemonic requires more than 3)")
+				return {}, token_errorf(&lasttok, "Too many operands found (this mnemonic takes at most %d)", max_operands)
 			}
 			mnem := Mnemonic {
 				mnemonic = line[0],

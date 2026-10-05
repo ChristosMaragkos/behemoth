@@ -823,3 +823,113 @@ third:
 	testing.expect(t, strings.contains(terr.msg, "not defined in this scope"), "expected scope error")
 	testing.expect(t, strings.contains(terr.msg, "@loop"), "expected temp name in error")
 }
+
+@(test)
+shove_list_emit_bytes :: proc(t: ^testing.T) {
+	SOURCE :: `.org 0x060000
+shove push, a
+shove pop, a, b, hi, dp
+shove 0b0_00000_110_0000011
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	syntax.init_temp_labels()
+	defer syntax.free_temp_labels()
+	syntax.init_mnemonics()
+	defer syntax.free_mnemonics()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
+		testing.expectf(t, false, "pass1 failed: %s", perr.msg)
+		asm_common.free_error(&perr)
+		return
+	}
+	if aerr := syntax.pass2_emit(&e, stmts[:]); aerr.raised {
+		testing.expectf(t, false, "pass2 failed: %s", aerr.msg)
+		asm_common.free_error(&aerr)
+		return
+	}
+	// shove Word opcode 0x93,0x00 then the little-endian bitmask:
+	// push {a} = 0x0001, pop {a,b,hi,dp} = 0x8303, raw 0x0303.
+	want := [12]byte{0x93, 0x00, 0x01, 0x00, 0x93, 0x00, 0x03, 0x83, 0x93, 0x00, 0x03, 0x03}
+	testing.expect(t, len(e.output) == len(want), "output length mismatch")
+	if len(e.output) == len(want) {
+		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
+	}
+}
+
+@(test)
+shove_list_validation_rejects :: proc(t: ^testing.T) {
+	FAILING_SOURCES := []string{
+		"shove push, a, sp", // sp is not a shove register
+		"shove push, a, pp", // pp is not a shove register
+		"shove push, a, a", // duplicate register
+		"shove push, al", // low-byte spelling
+		"shove pop", // mode without registers
+		"shove push, frobnicate", // unknown register
+		"shove push, 1, a", // numeric operand
+	}
+	for src in FAILING_SOURCES {
+		tokens, lerr := syntax.tokenize("source.asm", src)
+		if lerr.raised {
+			testing.expectf(t, false, "lex failed for '%s': %s", src, lerr.msg)
+			asm_common.free_error(&lerr)
+			continue
+		}
+		lines := syntax.split_lines(tokens[:])
+		stmts, perr := syntax.parse_into_statements(lines[:])
+		if perr.raised {
+			testing.expectf(t, false, "parse failed for '%s': %s", src, perr.msg)
+			asm_common.free_error(&perr)
+			syntax.free_statements(stmts)
+			delete(lines)
+			delete(tokens)
+			continue
+		}
+		rerr := syntax.replace_operands(stmts[:])
+		testing.expectf(t, rerr.raised, "expected desugar to reject '%s', but it succeeded", src)
+		asm_common.free_error(&rerr)
+		syntax.free_statements(stmts)
+		delete(lines)
+		delete(tokens)
+	}
+}
+
+@(test)
+shove_unknown_mode_word_rejected :: proc(t: ^testing.T) {
+	SOURCE :: `shove frobnicate, a
+`
+	sync.lock(&TEST_MUTEX)
+	defer sync.unlock(&TEST_MUTEX)
+	syntax.init_labels()
+	defer syntax.free_labels()
+	syntax.init_constants()
+	defer syntax.free_constants()
+	syntax.init_temp_labels()
+	defer syntax.free_temp_labels()
+	syntax.init_mnemonics()
+	defer syntax.free_mnemonics()
+	tokens, stmts, ok := prepare_stmts(t, SOURCE)
+	if !ok do return
+	defer syntax.free_statements(stmts)
+	defer delete(tokens)
+	e := syntax.Emitter{}
+	syntax.emitter_init(&e)
+	defer syntax.emitter_free(&e)
+	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); !perr.raised {
+		testing.expect(t, false, "expected pass1 to reject non-mode first operand")
+		return
+	} else {
+		testing.expect(t, strings.contains(perr.msg, "No form"), "expected form-selection error")
+		asm_common.free_error(&perr)
+	}
+}

@@ -49,6 +49,13 @@ Pushing occurs in ascending order (a->dp) while popping is done in descending or
 | 9 | dp |
 | 10-14 | Reserved |
 
+The assembler also allows a more readable syntax in the form of `shove <push/pop>, <regs>`. Examples:
+
+```asm
+shove push, a, b, c, flags
+shove pop, d, e, f, hi, dp
+```
+
 ## Math opcodes & interaction with `FLAGS`
 
 | Mnemonic | Flags altered |

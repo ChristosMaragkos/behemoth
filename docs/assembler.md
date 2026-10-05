@@ -100,3 +100,7 @@ some_other_variable:
 ```
 
 - When in ROM, emission can continue normally. All mnemonics and directives can be used, but emission is restricted to ROM pages (6-197)
+
+> [!NOTE]
+> The `.include` directive is a simple text-include; an included file that ends in a different region than
+> the one it was included in changes the region for all subsequent code.

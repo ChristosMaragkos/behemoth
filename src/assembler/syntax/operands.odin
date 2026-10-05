@@ -82,7 +82,9 @@ Directive :: struct {
 
 Mnemonic :: struct {
 	mnemonic: Token,
-	operands: [3]OperandSlot, // The instructions with the most operands are blkcp and blkmv (reg8:reg16, reg8:reg16, reg16). Our cap is 3. Storing inline is fine.
+	// Most instructions take at most 3 operands (blkcp/blkmv), but the
+	// shove register-list form takes up to 11 (mode + 10 registers).
+	operands: [12]OperandSlot,
 	amount:   uint,
 	wide:     bool,
 }
