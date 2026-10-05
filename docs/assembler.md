@@ -71,6 +71,7 @@ Macros and inline constant folding (const ± const) are not yet supported.
 | `.dw` | Any amount of 16-bit integers | Emits 16-bit words starting at the current address and advances the cursor by (2 * amount of operands) |
 | `.d24` | Any amount of 24-bit integers | Emits 24-bit integers starting at the current address and advances the cursor by (3 * amount of operands) |
 | `.dl` | Any amount of 32-bit integers | Emits doublewords starting at the current address and advances the cursor by (4 * amount of operands) |
+| `.pageof` | Any label or constant | Emits the page of a label or constant (high 8 bits) |
 | `.equ` | (name), (value) | Creates a constant with name (name) and value (value) |
 | `.include` | (path) | Assembles file at (path) starting at the current address. Advances the cursor by the length of the output. Path may be absolute or relative. |
 | `.incbin` | (path) | Dumps all bytes of byte at (path) instead of assembling it. Path may be absolute or relative. |

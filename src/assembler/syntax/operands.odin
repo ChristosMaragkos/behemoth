@@ -14,6 +14,7 @@ Expression :: struct {
 	is_signed: bool,
 	type:      ExpressionType,
 	tok:       Token,
+	page_of:   bool, // require high 8 bits of symbol instead of full or truncated value
 }
 
 Op_Reg :: struct {
@@ -355,6 +356,26 @@ resolve_expr :: proc(toks: []Token) -> (Expression, common.AssemblerError) {
 		if len(tok_list) == 0 {
 			return {}, token_error(&toks[0], "Trailing '+' with no operand")
 		}
+	}
+
+	if len(tok_list) == 2 &&
+	   tok_list[0].type == .Identifier &&
+	   tok_list[0].text == ".pageof" &&
+	   tok_list[1].type == .Identifier {
+		if is_neg do return {}, token_error(&tok_list[0], "Cannot take page number of negative symbol")
+		target := tok_list[1]
+		if _, is_reg := cpu.parse_reg(target.text); is_reg {
+			return {}, token_errorf(&target, "Expected label or constant after '.pageof', got register '%s'", target.text)
+		}
+		return Expression {
+			symbol = target.text,
+			type = .Symbol,
+			tok = target,
+			page_of = true,
+		}, common.no_error()
+	}
+	if len(tok_list) == 1 && tok_list[0].type == .Identifier && tok_list[0].text == ".pageof" {
+		return {}, token_error(&tok_list[0], "Expected label or constant after '.pageof'")
 	}
 
 	if len(tok_list) != 1 {

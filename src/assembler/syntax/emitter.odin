@@ -23,6 +23,7 @@ FixupKind :: enum {
 	Abs32,
 	Rel8,
 	Rel16,
+	Page,
 }
 
 Fixup :: struct {
@@ -436,6 +437,7 @@ encode_mnemonic :: proc(
 	value_from_name := false
 	sym_count := 0
 	sym_tok := Token{}
+	sym_page_of := false
 	for i in 0 ..< len(form.shapes) {
 		op := mnem.operands[i].(ResolvedOperand)
 		switch form.shapes[i] {
@@ -458,6 +460,7 @@ encode_mnemonic :: proc(
 				if imm.expr.type != .Symbol do return common.make_error("Internal error: symbol operand malformed")
 				sym_count += 1
 				sym_tok = imm.expr.tok
+				if imm.expr.page_of do sym_page_of = true
 			case .String:
 				return common.make_error("Internal error: string operand in instruction")
 			case .RegPtr, .PostInc, .PreInc, .PostDec, .PreDec:
@@ -543,8 +546,17 @@ encode_mnemonic :: proc(
 	}
 
 	if sym_count > 0 {
-		kind, kerr := fixup_kind_for(form, trailing, sym_tok)
-		if kerr.raised do return kerr
+		kind := FixupKind.Page
+		if !sym_page_of {
+			k, kerr := fixup_kind_for(form, trailing, sym_tok)
+			if kerr.raised do return kerr
+			kind = k
+		} else {
+			instr := transmute(shared.Instruction)u16(form.opcode)
+			if instr.type == .ControlFlow {
+				return token_errorf(&sym_tok, ".pageof cannot be used on a branch or jump target")
+			}
+		}
 		pos := u32(len(e.output))
 		for _ in 0 ..< trailing {
 			if err := emitter_emit_byte(e, 0); err.raised do return err
@@ -625,6 +637,9 @@ apply_fixups :: proc(e: ^Emitter) -> common.AssemblerError {
 				if f.pos + 1 >= u32(len(e.output)) do return token_errorf(&f.tok, "Internal error: fixup outside output")
 				e.output[f.pos] = u8(u16(i16(rel)))
 				e.output[f.pos + 1] = u8(u16(i16(rel)) >> 8)
+			case .Page:
+				if f.pos >= u32(len(e.output)) do return token_errorf(&f.tok, "Internal error: fixup outside output")
+				e.output[f.pos] = u8((target >> 16) & 0xFF)
 			case .Invalid:
 				return token_errorf(&f.tok, "Internal error: invalid fixup")
 		}
@@ -834,12 +849,16 @@ substitute_expression :: proc(expr: ^Expression) {
 		return
 	}
 	val: i64 = c.is_signed ? i64(c.signed) : i64(c.unsigned)
+	if expr.page_of {
+		val = (val >> 16) & 0xFF
+	}
 	expr^ = Expression {
 		val       = val,
 		symbol    = expr.symbol,
 		is_signed = c.is_signed,
 		type      = .Integer,
 		tok       = expr.tok,
+		page_of   = expr.page_of,
 	}
 }
 
@@ -886,6 +905,7 @@ expr_value :: proc(expr: Expression) -> (val: i64, err: common.AssemblerError) {
 	if expr.type == .Integer do return expr.val, common.no_error()
 	v, _, rerr := resolve_symbol(expr.symbol)
 	if rerr.raised do return 0, rerr
+	if expr.page_of do return (v >> 16) & 0xFF, common.no_error()
 	return v, common.no_error()
 }
 
@@ -951,9 +971,11 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 				imm, ok := op.(ResolvedOperand).(Op_Imm)
 				if ok {
 					if imm.expr.type == .Symbol {
+						kind := FixupKind.Abs8
+						if imm.expr.page_of do kind = .Page
 						pos := u32(len(e.output))
 						if err := emitter_emit_byte(e, 0); err.raised do return err
-						append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs8})
+						append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = kind})
 						continue
 					}
 					if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: unresolved symbol in .db")
@@ -971,9 +993,11 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 			for op in dir.operands {
 				imm := op.(ResolvedOperand).(Op_Imm)
 				if imm.expr.type == .Symbol {
+					kind := FixupKind.Abs16
+					if imm.expr.page_of do kind = .Page
 					pos := u32(len(e.output))
 					if err := emitter_emit_u16(e, 0); err.raised do return err
-					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs16})
+					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = kind})
 					continue
 				}
 				if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: .dw operand not resolved")
@@ -984,9 +1008,11 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 			for op in dir.operands {
 				imm := op.(ResolvedOperand).(Op_Imm)
 				if imm.expr.type == .Symbol {
+					kind := FixupKind.Abs32
+					if imm.expr.page_of do kind = .Page
 					pos := u32(len(e.output))
 					if err := emitter_emit_u32(e, 0); err.raised do return err
-					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs32})
+					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = kind})
 					continue
 				}
 				if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: .dl operand not resolved")
@@ -997,9 +1023,11 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 			for op in dir.operands {
 				imm := op.(ResolvedOperand).(Op_Imm)
 				if imm.expr.type == .Symbol {
+					kind := FixupKind.Abs24
+					if imm.expr.page_of do kind = .Page
 					pos := u32(len(e.output))
 					if err := emitter_emit_u24(e, 0); err.raised do return err
-					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = .Abs24})
+					append(&e.fixups, Fixup{pos = pos, tok = imm.expr.tok, kind = kind})
 					continue
 				}
 				if imm.expr.type != .Integer do return token_error(&dtok, "Internal error: .d24 operand not resolved")
