@@ -74,6 +74,7 @@ Macros and inline constant folding (const ± const) are not yet supported.
 | `.pageof` | Any label or constant | Emits the page of a label or constant (high 8 bits) |
 | `.equ` | (name), (value) | Creates a constant with name (name) and value (value) |
 | `.include` | (path) | Assembles file at (path) starting at the current address. Advances the cursor by the length of the output. Path may be absolute or relative. |
+| `.once` | - | Prevents file from being included more than once (equivalent to C's `#pragma once`) |
 | `.incbin` | (path) | Dumps all bytes of byte at (path) instead of assembling it. Path may be absolute or relative. |
 | `.pad` | Any 24-bit integer | Advances the cursor by (amount). Empty space is filled with zeroes. |
 | `.wram` | - | Sets emitter into WRAM region. See below. |

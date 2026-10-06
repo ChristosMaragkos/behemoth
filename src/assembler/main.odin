@@ -61,7 +61,9 @@ main :: proc() {
 	defer delete(stack)
 	pool := make([dynamic]syntax.FileBlob)
 	defer syntax.free_file_blobs(pool)
-	if xerr := syntax.expand_includes(&stmts, in_path, 0, &stack, &pool); xerr.raised do fail(xerr.msg)
+	once_seen := make(map[string]bool)
+	defer delete(once_seen)
+	if xerr := syntax.expand_includes(&stmts, in_path, 0, &stack, &pool, &once_seen); xerr.raised do fail(xerr.msg)
 
 	if terr := syntax.resolve_temp_labels(stmts[:]); terr.raised do fail(terr.msg)
 	if rerr := syntax.replace_operands(stmts[:]); rerr.raised do fail(rerr.msg)

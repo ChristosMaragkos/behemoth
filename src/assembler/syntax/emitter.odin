@@ -171,6 +171,11 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 		case ".wram":
 		case ".rom":
 			if len(directive.operands) != 0 do return token_errorf(&directive.directive, "Directive '%s' takes no operands", directive.directive.text)
+		case ".once":
+			return token_error(
+				&directive.directive,
+				"Directive '.once' has no effect here; it only guards files pulled in through .include",
+			)
 		case:
 			return token_errorf(
 				&directive.directive,
@@ -759,6 +764,7 @@ expand_includes :: proc(
 	depth: int,
 	stack: ^[dynamic]string,
 	pool: ^[dynamic]FileBlob,
+	once_seen: ^map[string]bool,
 ) -> common.AssemblerError {
 	if depth > 32 do return common.make_error("Include depth exceeded")
 	for i in 0 ..< len(stack^) do if stack^[i] == origin do return common.make_errorf("Cyclical .include of '%s'", origin)
@@ -771,6 +777,18 @@ expand_includes :: proc(
 	out := make([dynamic]Statement)
 	for i in 0 ..< len(stmts^) {
 		drctv, is_dir := stmts[i].(Directive)
+		if is_dir && drctv.directive.text == ".once" {
+			if len(drctv.operands) != 0 {
+				delete(out)
+				return token_errorf(&drctv.directive, "Directive '.once' takes no operands")
+			}
+			delete(drctv.operands)
+			stmts^[i] = Directive {
+				directive = drctv.directive,
+			}
+			once_seen^[origin] = true
+			continue
+		}
 		if !is_dir || drctv.directive.text != ".include" {
 			append(&out, stmts[i])
 			continue
@@ -792,22 +810,48 @@ expand_includes :: proc(
 			)
 		}
 		rel := toks[0].text
+		delete(drctv.operands)
+		stmts^[i] = Directive {
+			directive = drctv.directive,
+		}
 		full, joined := sibling_path(origin, rel)
-		data, rerr := read_provided_file(full)
+		// normalize so including via different paths doesnt fail
+		canon, clean_err := filepath.clean(full)
+		if joined do delete(full)
+		if clean_err != .None {
+			delete(out)
+			return common.make_errorf("Could not normalize include path '%s'", rel)
+		}
+		is_cycle := false
+		for s in sub do if s == canon {
+			is_cycle = true
+			break
+		}
+		if is_cycle {
+			cerr := common.make_errorf("Cyclical .include of '%s'", canon)
+			delete(canon)
+			delete(out)
+			return cerr
+		}
+		if canon in once_seen^ {
+			delete(canon)
+			continue
+		}
+		data, rerr := read_provided_file(canon)
 		if rerr.raised {
-			if joined do delete(full)
+			delete(canon)
 			delete(out)
 			return rerr
 		}
 		blob := FileBlob {
 			text          = data,
-			filename      = full,
-			owns_filename = joined,
+			filename      = canon,
+			owns_filename = true,
 		}
 		text := string(data)
-		toks2, lerr := tokenize(full, text)
+		toks2, lerr := tokenize(canon, text)
 		if lerr.raised {
-			if joined do delete(full)
+			delete(canon)
 			delete(data)
 			delete(out)
 			return lerr
@@ -817,14 +861,14 @@ expand_includes :: proc(
 		sub_stmts, perr := parse_into_statements(lines[:])
 		delete(lines)
 		if perr.raised {
-			if joined do delete(full)
+			delete(canon)
 			delete(toks2)
 			delete(data)
 			delete(out)
 			return perr
 		}
-		if e2 := expand_includes(&sub_stmts, full, depth + 1, &sub, pool); e2.raised {
-			if joined do delete(full)
+		if e2 := expand_includes(&sub_stmts, canon, depth + 1, &sub, pool, once_seen); e2.raised {
+			delete(canon)
 			free_statements(sub_stmts)
 			delete(toks2)
 			delete(data)
