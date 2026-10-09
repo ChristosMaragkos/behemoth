@@ -121,9 +121,11 @@ bus_video_dma :: proc(bus: ^MemoryBus) {
 			video_ptr = bus.cram
 			mask = 0x1ff
 		case .Oam:
-		case .Reserved:
 			video_ptr = bus.oam
 			mask = 0x7ff
+		case .Reserved:
+			bus_write_byte(bus, VDMASTAT, 1)
+			return
 	}
 	video_addr := int(bus_read_u24(bus, VDMADST)) & mask
 	video_ptr = mem.ptr_offset(cast(^byte)video_ptr, video_addr)
@@ -135,7 +137,7 @@ bus_video_dma :: proc(bus: ^MemoryBus) {
 
 	switch ctrl.direction {
 		case .RamToVram:
-			if (video_addr + amnt) > mask {
+			if (video_addr + amnt) > mask + 1 {
 				bus_write_byte(bus, VDMASTAT, 1)
 				return
 			}
@@ -171,10 +173,11 @@ bus_try_vmp_read :: proc(bus: ^MemoryBus) {
 
 			ptr = (^u16)(bus.cram)
 		case .Oam:
-		case .Reserved:
 			if addr > 0x7ff do return
 
 			ptr = (^u16)(bus.oam)
+		case .Reserved:
+			return
 	}
 
 	ptr = mem.ptr_offset(ptr, addr)
@@ -214,10 +217,11 @@ bus_try_vmp_write :: proc(bus: ^MemoryBus) {
 
 			ptr = (^u8)(bus.cram)
 		case .Oam:
-		case .Reserved:
 			if addr > 0x7ff - offset do return
 
 			ptr = (^u8)(bus.oam)
+		case .Reserved:
+			return
 	}
 
 	ptr = mem.ptr_offset(ptr, addr)
