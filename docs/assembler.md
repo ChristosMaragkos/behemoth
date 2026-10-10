@@ -79,15 +79,15 @@ Macros and inline constant folding (const ± const) are not yet supported.
 | `.pad` | Any 24-bit integer | Advances the cursor by (amount). Empty space is filled with zeroes. |
 | `.wram` | - | Sets emitter into WRAM region. See below. |
 | `.rom` | - | Sets emitter into ROM region. See below. |
+| `.stack` | - | Sets emitter into stack page region. See below. |
+| `.sram` | - | Sets emitter into cartridge SRAM region. See below. |
 
-### `.wram`/`.rom` directives
+### `.wram`/`.rom`/`.stack`/`.sram` directives
 
-`.wram` and `.rom` change the way the emitter behaves:
+`.wram`, `.rom`, `.stack` and `.sram` change the way the emitter behaves:
 
-- When in WRAM, no data can be emitted, either through mnemonics or through `.db`/`.dw`/`.d24`/`.dl`/`.incbin`.
-Instead, `.wram` can be used to define labels that point to 24-bit addresses in the WRAM space. When in WRAM,
-any symbol definition or `.pad` directive that would result in landing past the end of page 3 (`0x03FFFF`) results in
-an error. Example:
+- Outside of ROM, no data can be emitted, either through mnemonics or through `.db`/`.dw`/`.d24`/`.dl`/`.incbin`.
+Instead, `.wram`, `.stack` and `.sram` can be used to define labels that point to 24-bit addresses in their respective space. Example:
 
 ```asm
 .wram
@@ -102,6 +102,11 @@ some_other_variable:
 ```
 
 - When in ROM, emission can continue normally. All mnemonics and directives can be used, but emission is restricted to ROM pages (6-197)
+
+`.wram` defines symbols within the work RAM pages (`0x00_0000`-`0x03_FFFF`).
+`.stack` defines symbols into the stack page (page 4, `0x04_0000`-`0x04_FFFF`), which grows down from the top.
+Be cautious with allocating stack space for static variables as the program may overwrite them.
+`.sram` defines symbols into cartridge SRAM (pages 198-201, `0xC6_0000`-`0xC9_FFFF`) so organizing save files is easier.
 
 > [!NOTE]
 > The `.include` directive is a simple text-include; an included file that ends in a different region than

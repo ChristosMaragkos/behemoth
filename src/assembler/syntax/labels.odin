@@ -81,23 +81,26 @@ resolve_temp_labels :: proc(stmts: []Statement) -> common.AssemblerError {
 
 	scope = 0
 	for i in 0 ..< len(stmts) {
-		if lbl, ok := stmts[i].(LabelDef); ok {
+		lbl, ok := stmts[i].(LabelDef)
+		if ok {
 			if !is_temp_name(lbl.label.text) do scope += 1
 			continue
 		}
 		#partial switch st in stmts[i] {
-		case Mnemonic:
-			for j in 0 ..< int(st.amount) {
-				raw, ok := st.operands[j].(RawOperand)
-				if !ok do continue
-				if berr := bind_temp_uses(([]Token)(raw), scope, i, defs); berr.raised do return berr
-			}
-		case Directive:
-			for j in 0 ..< len(st.operands) {
-				raw, ok := st.operands[j].(RawOperand)
-				if !ok do continue
-				if berr := bind_temp_uses(([]Token)(raw), scope, i, defs); berr.raised do return berr
-			}
+			case Mnemonic:
+				for j in 0 ..< int(st.amount) {
+					raw, ok := st.operands[j].(RawOperand)
+					if !ok do continue
+					berr := bind_temp_uses(([]Token)(raw), scope, i, defs)
+					if berr.raised do return berr
+				}
+			case Directive:
+				for j in 0 ..< len(st.operands) {
+					raw, ok := st.operands[j].(RawOperand)
+					if !ok do continue
+					berr := bind_temp_uses(([]Token)(raw), scope, i, defs)
+					if berr.raised do return berr
+				}
 		}
 	}
 
@@ -125,7 +128,11 @@ bind_temp_uses :: proc(
 			}
 		}
 		if chosen == -1 {
-			return token_errorf(&toks[k], "Temporary label '%s' is not defined in this scope", toks[k].text)
+			return token_errorf(
+				&toks[k],
+				"Temporary label '%s' is not defined in this scope",
+				toks[k].text,
+			)
 		}
 		toks[k].text = list[chosen].id
 	}

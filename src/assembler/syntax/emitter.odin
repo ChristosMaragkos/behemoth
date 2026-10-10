@@ -5,14 +5,80 @@ import "../common"
 import "../cpu"
 import "core:path/filepath"
 
+Region :: enum {
+	Rom,
+	Wram,
+	Stack,
+	Sram,
+}
+
 Emitter :: struct {
-	rom_offset:  u32,
-	mem_offset:  u32,
-	output:      [dynamic]byte,
-	cursor:      u32,
-	fixups:      [dynamic]Fixup,
-	wram_cursor: u32,
-	in_wram:     bool,
+	rom_offset:   u32,
+	mem_offset:   u32,
+	output:       [dynamic]byte,
+	cursor:       u32,
+	fixups:       [dynamic]Fixup,
+	wram_cursor:  u32,
+	stack_cursor: u32,
+	sram_cursor:  u32,
+	region:       Region,
+}
+
+region_from_directive :: proc(text: string) -> (Region, bool) {
+	switch text {
+		case ".rom":
+			return .Rom, true
+		case ".wram":
+			return .Wram, true
+		case ".stack":
+			return .Stack, true
+		case ".sram":
+			return .Sram, true
+		case:
+			return .Rom, false
+	}
+}
+
+active_cursor :: proc(e: ^Emitter) -> ^u32 {
+	switch e.region {
+		case .Rom:
+			return &e.cursor
+		case .Wram:
+			return &e.wram_cursor
+		case .Stack:
+			return &e.stack_cursor
+		case .Sram:
+			return &e.sram_cursor
+	}
+	return &e.cursor
+}
+
+region_end_cap :: proc(r: Region) -> u32 {
+	switch r {
+		case .Rom:
+			return cpu.ROM_END + 1
+		case .Wram:
+			return cpu.WRAM_END + 1
+		case .Stack:
+			return cpu.STACK_END + 1
+		case .Sram:
+			return cpu.SRAM_END + 1
+	}
+	return cpu.ROM_END + 1
+}
+
+region_name :: proc(r: Region) -> string {
+	switch r {
+		case .Rom:
+			return "ROM"
+		case .Wram:
+			return "WRAM"
+		case .Stack:
+			return "STACK"
+		case .Sram:
+			return "SRAM"
+	}
+	return "ROM"
 }
 
 FixupKind :: enum {
@@ -170,6 +236,8 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 			if pad.expr.val > 65535 do return token_error(&directive.directive, ".pad operand value can not be larger than the 16-bit limit (0xFFFF)")
 		case ".wram":
 		case ".rom":
+		case ".stack":
+		case ".sram":
 			if len(directive.operands) != 0 do return token_errorf(&directive.directive, "Directive '%s' takes no operands", directive.directive.text)
 		case ".once":
 			return token_error(
@@ -190,7 +258,7 @@ validate_directive_operands :: proc(directive: ^Directive) -> common.AssemblerEr
 statement_length :: proc(
 	stmt: ^Statement,
 	cursor: u32,
-	in_wram: bool,
+	region: Region,
 ) -> (
 	length: u32,
 	new_cursor: u32,
@@ -202,12 +270,13 @@ statement_length :: proc(
 			return 0, cursor, common.no_error()
 		case Directive:
 			dtok := v.directive
-			if in_wram {
+			if region != .Rom {
 				switch v.directive.text {
 					case ".db", ".dw", ".dl", ".d24", ".incbin":
-						return 0, cursor, token_error(
+						return 0, cursor, token_errorf(
 							&dtok,
-							"Data emission is not allowed in WRAM",
+							"Data emission is not allowed in %s",
+							region_name(region),
 						)
 				}
 			}
@@ -218,9 +287,16 @@ statement_length :: proc(
 					if !ok || op.expr.type != .Integer do return 0, cursor, token_error(&dtok, "Internal error: .org operand not resolved")
 					val := u32(op.expr.val)
 					if val < cursor do return 0, cursor, token_error(&dtok, ".org cannot move cursor backwards")
-					if in_wram {
-						if val < cpu.WRAM_START || val > cpu.WRAM_END + 1 do return 0, cursor, token_error(&dtok, ".org address outside WRAM bounds")
-					} else if val < cpu.ROM_START || val > cpu.ROM_END + 1 do return 0, cursor, token_error(&dtok, ".org address outside ROM bounds")
+					switch region {
+						case .Wram:
+							if val < cpu.WRAM_START || val > cpu.WRAM_END + 1 do return 0, cursor, token_error(&dtok, ".org address outside WRAM bounds")
+						case .Stack:
+							if val < cpu.STACK_START || val > cpu.STACK_END + 1 do return 0, cursor, token_error(&dtok, ".org address outside STACK bounds")
+						case .Sram:
+							if val < cpu.SRAM_START || val > cpu.SRAM_END + 1 do return 0, cursor, token_error(&dtok, ".org address outside SRAM bounds")
+						case .Rom:
+							if val < cpu.ROM_START || val > cpu.ROM_END + 1 do return 0, cursor, token_error(&dtok, ".org address outside ROM bounds")
+					}
 					return 0, val, common.no_error()
 				case ".equ":
 					return 0, cursor, common.no_error()
@@ -261,7 +337,7 @@ statement_length :: proc(
 					return n, cursor, common.no_error()
 				case ".include":
 					return 0, cursor, token_error(&dtok, "Internal error: unexpanded .include")
-				case ".wram", ".rom":
+				case ".wram", ".rom", ".stack", ".sram":
 					return 0, cursor, common.no_error()
 				case:
 					return 0, cursor, token_errorf(
@@ -273,7 +349,7 @@ statement_length :: proc(
 		case Mnemonic:
 			mn := v
 			mtok := mn.mnemonic
-			if in_wram do return 0, cursor, token_error(&mtok, "Opcodes are not allowed in WRAM")
+			if region != .Rom do return 0, cursor, token_errorf(&mtok, "Opcodes are not allowed in %s", region_name(region))
 			form, ferr := select_mnemonic_form(&mn, mn.wide)
 			if ferr.raised do return 0, cursor, ferr
 			return form.length, cursor, common.no_error()
@@ -346,41 +422,33 @@ pass1_size_and_relax :: proc(e: ^Emitter, stmts: []Statement) -> common.Assemble
 	for _ in 0 ..< 256 {
 		e.cursor = cpu.ROM_START
 		e.wram_cursor = cpu.WRAM_START
-		e.in_wram = false
+		e.stack_cursor = cpu.STACK_START
+		e.sram_cursor = cpu.SRAM_START
+		e.region = .Rom
 		keys := make([dynamic]string)
 		for k in LABELS do append(&keys, k)
 		for k in keys do delete_key(&LABELS, k)
 		delete(keys)
 		changed := false
 		for i in 0 ..< len(stmts) {
-			cur := e.cursor
-			if e.in_wram do cur = e.wram_cursor
+			cur := active_cursor(e)^
 			addrs[i] = cur
 			if lbl, ok := stmts[i].(LabelDef); ok {
 				if derr := define_label(lbl.label.text, cur); derr.raised do return derr
 				continue
 			}
 			if drctv, ok := stmts[i].(Directive); ok {
-				if drctv.directive.text == ".wram" {
-					e.in_wram = true
-					continue
-				}
-				if drctv.directive.text == ".rom" {
-					e.in_wram = false
+				if r, is_region := region_from_directive(drctv.directive.text); is_region {
+					e.region = r
 					continue
 				}
 				if drctv.directive.text == ".equ" do continue
 			}
-			length, new_cursor, lerr := statement_length(&stmts[i], cur, e.in_wram)
+			length, new_cursor, lerr := statement_length(&stmts[i], cur, e.region)
 			if lerr.raised do return lerr
-			end_cap := cpu.ROM_END + 1
-			if e.in_wram do end_cap = cpu.WRAM_END + 1
+			end_cap := region_end_cap(e.region)
 			if new_cursor + length > end_cap do return common.make_error("Exceeded region size limit")
-			if e.in_wram {
-				e.wram_cursor = new_cursor + length
-			} else {
-				e.cursor = new_cursor + length
-			}
+			active_cursor(e)^ = new_cursor + length
 		}
 		for i in 0 ..< len(stmts) {
 			mnem, ok := stmts[i].(Mnemonic)
@@ -656,7 +724,9 @@ apply_fixups :: proc(e: ^Emitter) -> common.AssemblerError {
 emitter_init :: proc(e: ^Emitter) {
 	e.cursor = cpu.ROM_START
 	e.wram_cursor = cpu.WRAM_START
-	e.in_wram = false
+	e.stack_cursor = cpu.STACK_START
+	e.sram_cursor = cpu.SRAM_START
+	e.region = .Rom
 	e.output = make([dynamic]byte)
 	e.fixups = make([dynamic]Fixup)
 }
@@ -671,28 +741,52 @@ emitter_has_room :: proc(e: ^Emitter, n: u32) -> bool {
 }
 
 emitter_set_cursor :: proc(e: ^Emitter, val: u32) -> common.AssemblerError {
-	if e.in_wram {
-		if val < e.wram_cursor do return common.make_error("Cursor cannot move backwards")
-		if val < cpu.WRAM_START || val > cpu.WRAM_END + 1 do return common.make_error("Cursor outside WRAM bounds")
-		e.wram_cursor = val
-		return common.no_error()
+	switch e.region {
+		case .Rom:
+			if val < e.cursor do return common.make_error("Cursor cannot move backwards")
+			if val < cpu.ROM_START || val > cpu.ROM_END + 1 do return common.make_error("Cursor outside ROM bounds")
+			resize(&e.output, int(val - cpu.ROM_START))
+			e.cursor = val
+			return common.no_error()
+		case .Wram:
+			if val < e.wram_cursor do return common.make_error("Cursor cannot move backwards")
+			if val < cpu.WRAM_START || val > cpu.WRAM_END + 1 do return common.make_error("Cursor outside WRAM bounds")
+			e.wram_cursor = val
+			return common.no_error()
+		case .Stack:
+			if val < e.stack_cursor do return common.make_error("Cursor cannot move backwards")
+			if val < cpu.STACK_START || val > cpu.STACK_END + 1 do return common.make_error("Cursor outside STACK bounds")
+			e.stack_cursor = val
+			return common.no_error()
+		case .Sram:
+			if val < e.sram_cursor do return common.make_error("Cursor cannot move backwards")
+			if val < cpu.SRAM_START || val > cpu.SRAM_END + 1 do return common.make_error("Cursor outside SRAM bounds")
+			e.sram_cursor = val
+			return common.no_error()
 	}
-	if val < e.cursor do return common.make_error("Cursor cannot move backwards")
-	if val < cpu.ROM_START || val > cpu.ROM_END + 1 do return common.make_error("Cursor outside ROM bounds")
-	resize(&e.output, int(val - cpu.ROM_START))
-	e.cursor = val
 	return common.no_error()
 }
 
 emitter_advance :: proc(e: ^Emitter, n: u32) -> common.AssemblerError {
-	if e.in_wram {
-		if n > cpu.WRAM_END + 1 - e.wram_cursor do return common.make_error("Exceeded WRAM size limit")
-		e.wram_cursor += n
-		return common.no_error()
+	switch e.region {
+		case .Rom:
+			if n > cpu.ROM_END + 1 - e.cursor do return common.make_error("Exceeded ROM size limit")
+			e.cursor += n
+			resize(&e.output, int(e.cursor - cpu.ROM_START))
+			return common.no_error()
+		case .Wram:
+			if n > cpu.WRAM_END + 1 - e.wram_cursor do return common.make_error("Exceeded WRAM size limit")
+			e.wram_cursor += n
+			return common.no_error()
+		case .Stack:
+			if n > cpu.STACK_END + 1 - e.stack_cursor do return common.make_error("Exceeded STACK size limit")
+			e.stack_cursor += n
+			return common.no_error()
+		case .Sram:
+			if n > cpu.SRAM_END + 1 - e.sram_cursor do return common.make_error("Exceeded SRAM size limit")
+			e.sram_cursor += n
+			return common.no_error()
 	}
-	if n > cpu.ROM_END + 1 - e.cursor do return common.make_error("Exceeded ROM size limit")
-	e.cursor += n
-	resize(&e.output, int(e.cursor - cpu.ROM_START))
 	return common.no_error()
 }
 
@@ -1097,8 +1191,8 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 			append(&e.output, ..data[:])
 			e.cursor += u32(len(data))
 			return common.no_error()
-		case ".wram", ".rom":
-			e.in_wram = dir.directive.text == ".wram"
+		case ".wram", ".rom", ".stack", ".sram":
+			e.region, _ = region_from_directive(dir.directive.text)
 			return common.no_error()
 		case:
 			return token_errorf(
@@ -1112,7 +1206,9 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 pass2_emit :: proc(e: ^Emitter, stmts: []Statement) -> common.AssemblerError {
 	e.cursor = cpu.ROM_START
 	e.wram_cursor = cpu.WRAM_START
-	e.in_wram = false
+	e.stack_cursor = cpu.STACK_START
+	e.sram_cursor = cpu.SRAM_START
+	e.region = .Rom
 	for i in 0 ..< len(stmts) {
 		if lbl, ok := stmts[i].(LabelDef); ok {
 			rlbl, lerr := resolve_label(lbl.label.text)
@@ -1124,8 +1220,7 @@ pass2_emit :: proc(e: ^Emitter, stmts: []Statement) -> common.AssemblerError {
 					lbl.label.text,
 				)
 			}
-			cur := e.cursor
-			if e.in_wram do cur = e.wram_cursor
+			cur := active_cursor(e)^
 			if rlbl.addr != cur do return token_errorf(&lbl.label, "Internal error: label address drifted in pass 2")
 			continue
 		}
