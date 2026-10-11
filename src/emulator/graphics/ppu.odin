@@ -122,13 +122,9 @@ ppu_encode_to_mmio :: proc(ppu: ^Ppu) {
 
 ppu_step :: proc(ppu: ^Ppu) {
 	PPU_STEP_COUNT += 1
-	if .ForceBlanking in ppu.ctrl {
-		ppu.status -= {.InHblank, .InVblank}
-		ppu.current_col = 0
-		ppu.current_line = 0
-		return
-	}
-	if .InVblank not_in ppu.status && .InHblank not_in ppu.status {
+	if .ForceBlanking not_in ppu.ctrl &&
+	   .InVblank not_in ppu.status &&
+	   .InHblank not_in ppu.status {
 		if ppu.line_cache_line != ppu.current_line do ppu_cache_line_sprites(ppu)
 		candidates: [5]PixelCandidate
 		for i in PixelSource.Bg1 ..= PixelSource.Bg4 {
