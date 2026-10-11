@@ -74,14 +74,19 @@ main :: proc() {
 
 audio_callback :: proc "c" (buffer: rawptr, frames: c.uint) {
 	context = runtime.default_context()
+	@(static) last_l, last_r: f32
 	samples := transmute([^]f32)buffer
 	for i in 0 ..< frames {
 		if emu.g_audio_fifo == nil {
+			last_l, last_r = 0.0, 0.0
 			samples[2 * i], samples[2 * i + 1] = 0.0, 0.0
 			continue
 		}
 		l, r, ok := emu.audio_fifo_consume(emu.g_audio_fifo)
-		samples[2 * i] = l if ok else 0.0
-		samples[2 * i + 1] = r if ok else 0.0
+		if ok {
+			last_l, last_r = l, r
+		}
+		samples[2 * i] = last_l
+		samples[2 * i + 1] = last_r
 	}
 }
