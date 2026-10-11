@@ -20,10 +20,10 @@ get_input :: proc() -> (j1, j2, j3, j4: inp.Joypad) {
 	if rl.IsKeyDown(.TAB) do j1 += {.Option}
 	if rl.IsKeyDown(.ENTER) do j1 += {.Start}
 
-	j1 = apply_controller_state(0, j1)
-	j2 = apply_controller_state(1, j2)
-	j3 = apply_controller_state(2, j3)
-	j4 = apply_controller_state(3, j4)
+	j1 |= apply_controller_state(1, j1)
+	j2 = apply_controller_state(2, j2)
+	j3 = apply_controller_state(3, j3)
+	j4 = apply_controller_state(4, j4)
 
 	return
 }
