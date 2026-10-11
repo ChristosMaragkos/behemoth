@@ -45,6 +45,16 @@ main :: proc() {
 	rl.PlayAudioStream(stream)
 	defer rl.UnloadAudioStream(stream)
 
+	seen_pad := false
+	for i in 1 ..< 4 {
+		idx := i32(i)
+		if rl.IsGamepadAvailable(idx) {
+			fmt.printfln("[BHMTH] Found gamepad: '%s' (slot %d)", rl.GetGamepadName(idx), i)
+			seen_pad = true
+		}
+	}
+	if !seen_pad do fmt.println("[BHMTH] No gamepads detected, keyboard only")
+
 	for !rl.WindowShouldClose() {
 		win_w := f32(rl.GetScreenWidth())
 		win_h := f32(rl.GetScreenHeight())
