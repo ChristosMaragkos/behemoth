@@ -31,6 +31,7 @@ get_input :: proc() -> (j1, j2, j3, j4: inp.Joypad) {
 apply_controller_state :: proc(idx: i32, joy_in: inp.Joypad) -> inp.Joypad {
 	joy_out := joy_in
 	if rl.IsGamepadAvailable(idx) {
+		joy_out += {.Connected}
 		if rl.IsGamepadButtonDown(idx, .LEFT_FACE_UP) do joy_out += {.Up}
 		if rl.IsGamepadButtonDown(idx, .LEFT_FACE_DOWN) do joy_out += {.Down}
 		if rl.IsGamepadButtonDown(idx, .LEFT_FACE_LEFT) do joy_out += {.Left}
@@ -39,6 +40,10 @@ apply_controller_state :: proc(idx: i32, joy_in: inp.Joypad) -> inp.Joypad {
 		if rl.IsGamepadButtonDown(idx, .RIGHT_FACE_DOWN) do joy_out += {.B}
 		if rl.IsGamepadButtonDown(idx, .RIGHT_FACE_UP) do joy_out += {.X}
 		if rl.IsGamepadButtonDown(idx, .RIGHT_FACE_LEFT) do joy_out += {.Y}
+		if rl.IsGamepadButtonDown(idx, .LEFT_TRIGGER_1) do joy_out += {.L}
+		if rl.IsGamepadButtonDown(idx, .RIGHT_TRIGGER_1) do joy_out += {.R}
+		if rl.IsGamepadButtonDown(idx, .LEFT_TRIGGER_2) do joy_out += {.L}
+		if rl.IsGamepadButtonDown(idx, .RIGHT_TRIGGER_2) do joy_out += {.R}
 		if rl.IsGamepadButtonDown(idx, .MIDDLE_LEFT) do joy_out += {.Option}
 		if rl.IsGamepadButtonDown(idx, .MIDDLE_RIGHT) do joy_out += {.Start}
 
@@ -48,8 +53,8 @@ apply_controller_state :: proc(idx: i32, joy_in: inp.Joypad) -> inp.Joypad {
 		if axisX > DEADZONE do joy_out += {.Right}
 		else if axisX < -DEADZONE do joy_out += {.Left}
 
-		if axisY > DEADZONE do joy_out += {.Up}
-		else if axisY < -DEADZONE do joy_out += {.Down}
+		if axisY > DEADZONE do joy_out += {.Down}
+		else if axisY < -DEADZONE do joy_out += {.Up}
 	}
 
 	return joy_out
