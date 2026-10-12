@@ -4,19 +4,33 @@ import emu "../../emulator"
 import "base:runtime"
 import "core:c"
 import "core:fmt"
+import "core:mem"
 import "core:os"
+import "core:strings"
 import rl "vendor:raylib"
 
 SCREEN_WIDTH :: 256
 SCREEN_HEIGHT :: 240
 
+sram_dirty: bool
+
 main :: proc() {
 	sys := emu.system_init()
 	defer emu.system_cleanup(sys)
 
+	save_path := ""
+
 	fpath_passed := len(os.args) > 1
-	if fpath_passed {
+	load: if fpath_passed {
 		fpath := os.args[1]
+		if !strings.has_suffix(fpath, ".bhm") {
+			fmt.printfln(
+				"Could not load cartridge: unknown file extension '%s' (cartridges must be .bhm files)",
+				os.ext(fpath),
+			)
+			mem_free_all(context.temp_allocator)
+			break load
+		}
 		load_err := emu.system_load_cart_from_file(sys, fpath)
 		if load_err != os.General_Error.None {
 			fmt.printfln(
@@ -24,6 +38,17 @@ main :: proc() {
 				load_err,
 			)
 		}
+
+		save_path, _ = strings.replace(fpath, ".bhm", ".sav", 1)
+		saved_data, save_error := os.read_entire_file(save_path, context.temp_allocator)
+		if save_error != nil || len(saved_data) == 0 {
+			fmt.println("Could not load save data (file was not found or was empty)")
+			break load
+		}
+		sys.bus.sram_high = u32(0xC6_0000 + len(saved_data) - 1)
+		mem.copy(&sys.bus.ram[0xC6_0000], &saved_data[0], min(len(saved_data), 4 * 0xffff))
+		mem_free_all(context.temp_allocator)
+		fmt.printfln("Successfully loaded save file '%s'", save_path)
 	}
 
 	rl.SetConfigFlags({.WINDOW_RESIZABLE})
@@ -55,6 +80,7 @@ main :: proc() {
 	}
 	if !seen_pad do fmt.println("[BHMTH] No gamepads detected, keyboard only")
 
+	frame_counter: u32 = 0
 	for !rl.WindowShouldClose() {
 		win_w := f32(rl.GetScreenWidth())
 		win_h := f32(rl.GetScreenHeight())
@@ -78,8 +104,22 @@ main :: proc() {
 		src := rl.Rectangle{0, 0, f32(tex.texture.width), f32(tex.texture.height)}
 		rl.DrawTexturePro(tex.texture, src, dest, {0, 0}, 0.0, rl.WHITE)
 		rl.EndDrawing()
+
+		if sys.bus.sram_dirty {
+			if frame_counter % 600 == 0 && save_path != "" {
+				save_data := sys.bus.ram[0xC6_0000:sys.bus.sram_high + 1]
+				err := dump_save_data(save_path, save_data)
+				if err == nil do sys.bus.sram_dirty = false
+			}
+		}
+
+		frame_counter += 1
 	}
 
+	if save_path != "" && sys.bus.sram_dirty {
+		save_data := sys.bus.ram[0xC6_0000:sys.bus.sram_high + 1]
+		dump_save_data(save_path, save_data)
+	}
 }
 
 audio_callback :: proc "c" (buffer: rawptr, frames: c.uint) {
@@ -99,4 +139,11 @@ audio_callback :: proc "c" (buffer: rawptr, frames: c.uint) {
 		samples[2 * i] = last_l
 		samples[2 * i + 1] = last_r
 	}
+}
+
+dump_save_data :: proc(path: string, data: []byte) -> os.Error {
+	err := os.write_entire_file(path, data)
+	if err != nil do fmt.printfln("[BHMTH] Cannot write to save file '%s': %s", path, err)
+	else do fmt.printfln("[BHMTH] Wrote %d bytes to save file '%s'", len(data), path)
+	return err
 }

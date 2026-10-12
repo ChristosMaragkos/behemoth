@@ -224,5 +224,3 @@ system_write_input :: proc(sys: ^System, j1, j2, j3, j4: input.Joypad) {
 	memory.bus_write_word(sys.bus, c.JOYPAD3, transmute(u16)j3)
 	memory.bus_write_word(sys.bus, c.JOYPAD4, transmute(u16)j4)
 }
-
-system_stream_audio :: audio.apu_generate_sample

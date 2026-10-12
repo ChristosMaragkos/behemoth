@@ -5,6 +5,8 @@ RAM_SIZE_TOTAL :: 256 * PAGE_SIZE // 256 pages total -> 16mb address space
 
 CART_ROM_START :: 6 * PAGE_SIZE
 CART_ROM_END :: 198 * PAGE_SIZE - 1 // The final address, not the start of the next region
+SRAM_START :: 198 * PAGE_SIZE // Cartridge SRAM (save data) pages 198-201
+SRAM_END :: 202 * PAGE_SIZE - 1 // The final address, not the start of the next region
 TOTAL_ROM_PAGES :: 192
 TOTAL_ROM_SPACE :: TOTAL_ROM_PAGES * PAGE_SIZE
 

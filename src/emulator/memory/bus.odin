@@ -36,6 +36,8 @@ MemoryBus :: struct {
 	oam:        rawptr,
 	aram:       rawptr,
 	contention: u32,
+	sram_dirty: bool,
+	sram_high:  u32,
 }
 
 bus_read_byte :: proc(bus: ^MemoryBus, addr: u32) -> byte {
@@ -59,6 +61,13 @@ bus_write_byte :: proc(bus: ^MemoryBus, addr: u32, val: byte) {
 
 	ram_write_byte(bus.ram[:], addr, val)
 
+	lo := max(addr, SRAM_START)
+	hi := min(addr + size_of(byte), SRAM_END + 1)
+	if hi > lo {
+		if hi - 1 > bus.sram_high do bus.sram_high = hi - 1
+		bus.sram_dirty = true
+	}
+
 	if addr == SDMASTART do bus_system_dma(bus)
 	else if addr == VDMASTART do bus_video_dma(bus)
 	else if addr == ADMASTART do bus_audio_dma(bus)
@@ -70,6 +79,14 @@ bus_write_word :: proc(bus: ^MemoryBus, addr: u32, val: u16) {
 	if !is_valid_write(addr + 1) do return
 
 	ram_write_word(bus.ram[:], addr, val)
+
+	lo := max(addr, SRAM_START)
+	hi := min(addr + size_of(u16), SRAM_END + 1)
+	if hi > lo {
+		if hi - 1 > bus.sram_high do bus.sram_high = hi - 1
+		bus.sram_dirty = true
+	}
+
 	if addr == SDMASTART do bus_system_dma(bus)
 	else if addr == VDMASTART do bus_video_dma(bus)
 	else if addr == ADMASTART do bus_audio_dma(bus)
