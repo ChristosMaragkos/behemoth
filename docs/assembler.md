@@ -62,12 +62,14 @@ third:
 
 Macros and inline constant folding (const ± const) are not yet supported.
 
+String literals in `.db` support backslash escapes: `\\`, `\'`, `\"`, `\n`, `\t`, `\r`, `\0` and `\xHH` (exactly two hex digits). Anything else is an assembly error. Character literals (`'A'`, `'\n'`) are lexed directly into integer tokens using the same escapes. String operands elsewhere (such as `.include` and `.incbin` paths) are taken literally with no escape processing.
+
 ## Directives
 
 | Directive | Operands | Effect |
 | --------------- | --------------- | --------------- |
 | `.org` | Any 24-bit integer | Change address that symbols and instructions are emitted at. Address must not be lower than the current emitter address. |
-| `.db` | Any amount of 8-bit integers | Emits bytes starting at the current address and advances the cursor by (amount of operands) |
+| `.db` | 8-bit integers, strings, chars | Emits bytes starting at the current address and advances the cursor by (amount of operands) |
 | `.dw` | Any amount of 16-bit integers | Emits 16-bit words starting at the current address and advances the cursor by (2 * amount of operands) |
 | `.d24` | Any amount of 24-bit integers | Emits 24-bit integers starting at the current address and advances the cursor by (3 * amount of operands) |
 | `.dl` | Any amount of 32-bit integers | Emits doublewords starting at the current address and advances the cursor by (4 * amount of operands) |

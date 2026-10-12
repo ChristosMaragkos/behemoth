@@ -104,6 +104,12 @@ emit_string :: proc(t: ^Tokenizer) -> (Token, common.AssemblerError) {
 			out.text = t.source[opening:closing]
 			tokenizer_advance(t)
 			return out, common.no_error()
+		} else if current == '\\' {
+			tokenizer_advance(t) // consume the backslash
+			if tokenizer_peek(t) == '\n' || tokenizer_peek(t) == 0 {
+				return {}, token_error(&out, "Unterminated string literal")
+			}
+			tokenizer_advance(t) // consume the escaped char
 		} else {
 			tokenizer_advance(t)
 		}
@@ -185,6 +191,36 @@ emit_integer :: proc(t: ^Tokenizer) -> Token {
 	}
 }
 
+emit_char :: proc(t: ^Tokenizer) -> (Token, common.AssemblerError) {
+	tokenizer_advance_single(t) // step over opening quote
+	opening := t.pos
+
+	out := Token {
+		type     = .IntegerLiteral,
+		filename = t.filename,
+		line     = t.line,
+	}
+
+	for {
+		current := tokenizer_peek(t)
+		if current == '\n' || current == 0 {
+			return {}, token_error(&out, "Unterminated character literal")
+		} else if current == '\'' {
+			tokenizer_advance(t) // step over closing quote
+			out.text = t.source[opening - 1:t.pos]
+			return out, common.no_error()
+		} else if current == '\\' {
+			tokenizer_advance(t) // consume the backslash
+			if tokenizer_peek(t) == '\n' || tokenizer_peek(t) == 0 {
+				return {}, token_error(&out, "Unterminated character literal")
+			}
+			tokenizer_advance(t) // consume the escaped char
+		} else {
+			tokenizer_advance(t)
+		}
+	}
+}
+
 emit_identifier :: proc(t: ^Tokenizer) -> Token {
 	start := t.pos
 	for is_identifier_char(tokenizer_peek(t)) {
@@ -242,6 +278,10 @@ tokenizer_next_token :: proc(t: ^Tokenizer) -> (Token, common.AssemblerError) {
 				if err.raised do return {}, err
 			case '0' ..= '9':
 				out = emit_integer(t)
+			case '\'':
+				err: common.AssemblerError
+				out, err = emit_char(t)
+				if err.raised do return {}, err
 			case:
 				if is_identifier_start(current) {
 					out = emit_identifier(t)

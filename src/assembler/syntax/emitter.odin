@@ -310,7 +310,10 @@ statement_length :: proc(
 						}
 						str, sok := op.(ResolvedOperand).(Op_String)
 						if !sok do return 0, cursor, token_error(&dtok, "Internal error: .db operand not resolved")
-						n += u32(len(str.value))
+						decoded, bad, dok := unescape_db_string(str.value)
+						if !dok do return 0, cursor, token_errorf(&dtok, "Invalid escape sequence '\\%c' in string literal", bad)
+						n += u32(len(decoded))
+						delete(decoded)
 					}
 					return n, cursor, common.no_error()
 				case ".dw":
@@ -1097,6 +1100,65 @@ fixup_kind_for :: proc(
 	return .Invalid, token_errorf(&t, "Internal error: cannot fix up symbol operand")
 }
 
+decode_escape :: proc(raw: string) -> (val: u8, consumed: int, bad: u8, ok: bool) {
+	if len(raw) == 0 do return 0, 0, '\\', false
+	switch raw[0] {
+		case '\\':
+			return '\\', 1, 0, true
+		case '\'':
+			return '\'', 1, 0, true
+		case '"':
+			return '"', 1, 0, true
+		case 'n':
+			return '\n', 1, 0, true
+		case 't':
+			return '\t', 1, 0, true
+		case 'r':
+			return '\r', 1, 0, true
+		case '0':
+			return 0, 1, 0, true
+		case 'x':
+			if len(raw) < 3 do return 0, 0, 'x', false
+			hi := hex_digit_val(raw[1])
+			lo := hex_digit_val(raw[2])
+			if hi < 0 || lo < 0 do return 0, 0, 'x', false
+			return u8(hi * 16 + lo), 3, 0, true
+	}
+	return 0, 0, raw[0], false
+}
+
+unescape_db_string :: proc(raw: string) -> (decoded: [dynamic]u8, bad: u8, ok: bool) {
+	out := make([dynamic]u8, 0, len(raw))
+	i := 0
+	for i < len(raw) {
+		if raw[i] != '\\' {
+			append(&out, raw[i])
+			i += 1
+			continue
+		}
+		val, consumed, bad_esc, dok := decode_escape(raw[i + 1:])
+		if !dok {
+			delete(out)
+			return nil, bad_esc, false
+		}
+		append(&out, val)
+		i += 1 + consumed
+	}
+	return out, 0, true
+}
+
+hex_digit_val :: proc(c: u8) -> int {
+	switch c {
+		case '0' ..= '9':
+			return int(c - '0')
+		case 'a' ..= 'f':
+			return int(c - 'a') + 10
+		case 'A' ..= 'F':
+			return int(c - 'A') + 10
+	}
+	return -1
+}
+
 emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerError {
 	dtok := dir.directive
 	switch dir.directive.text {
@@ -1122,9 +1184,15 @@ emitter_emit_directive :: proc(e: ^Emitter, dir: Directive) -> common.AssemblerE
 				}
 				str, sok := op.(ResolvedOperand).(Op_String)
 				if !sok do return token_error(&dtok, "Internal error: malformed .db operand")
-				for i in 0 ..< len(str.value) {
-					if err := emitter_emit_byte(e, str.value[i]); err.raised do return err
+				decoded, bad, dok := unescape_db_string(str.value)
+				if !dok do return token_errorf(&dtok, "Invalid escape sequence '\\%c' in string literal", bad)
+				for i in 0 ..< len(decoded) {
+					if err := emitter_emit_byte(e, decoded[i]); err.raised {
+						delete(decoded)
+						return err
+					}
 				}
+				delete(decoded)
 			}
 			return common.no_error()
 		case ".dw":
