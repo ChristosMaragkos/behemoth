@@ -38,8 +38,10 @@ apu_init :: proc(apu: ^Apu, mmio_start_ptr: ^byte) {
 	apu.noise.volume_r = 192
 	apu.wave1.volume_l = 208
 	apu.wave1.volume_r = 208
+	apu.wave1.index_current = apu.wave1.index_start
 	apu.wave2.volume_l = 208
 	apu.wave2.volume_r = 208
+	apu.wave2.index_current = apu.wave2.index_start
 	apu_encode_to_mmio(apu)
 	apu.noise.lfsr = LFSR_INIT
 }
@@ -101,7 +103,7 @@ apu_decode_from_mmio :: proc(apu: ^Apu) {
 	apu.wave1.volume_r = apu.mmio_view[WT1VOR]
 	apu.wave1.adsr.rs = apu.mmio_view[WT1ADSR]
 	apu.wave1.adsr.da = apu.mmio_view[WT1ADSR + 1]
-	apu.wave1.index = apu.mmio_view[WT1IDX]
+	wavetable_sync_span(&apu.wave1, apu.mmio_view[WT1IDX], apu.mmio_view[WT1END])
 
 	apu.wave2.ctrl = transmute(WavetableCtrl)apu.mmio_view[WT2CTRL]
 	apu.wave2.pitch = u16(apu.mmio_view[WT2PITCH]) | (u16(apu.mmio_view[WT2PITCH + 1]) << 8)
@@ -109,7 +111,7 @@ apu_decode_from_mmio :: proc(apu: ^Apu) {
 	apu.wave2.volume_r = apu.mmio_view[WT2VOR]
 	apu.wave2.adsr.rs = apu.mmio_view[WT2ADSR]
 	apu.wave2.adsr.da = apu.mmio_view[WT2ADSR + 1]
-	apu.wave2.index = apu.mmio_view[WT2IDX]
+	wavetable_sync_span(&apu.wave2, apu.mmio_view[WT2IDX], apu.mmio_view[WT2END])
 }
 
 apu_generate_sample :: proc(apu: ^Apu) -> (l: f32, r: f32) {
@@ -122,6 +124,9 @@ apu_generate_sample :: proc(apu: ^Apu) -> (l: f32, r: f32) {
 	nl, nr := noise_generate(&apu.noise)
 	w1l, w1r := wavetable_generate(&apu.wave1, apu.aram[:])
 	w2l, w2r := wavetable_generate(&apu.wave2, apu.aram[:])
+
+	if !apu.wave1.gate_on do apu.mmio_view[WT1CTRL] &~= 0x02
+	if !apu.wave2.gate_on do apu.mmio_view[WT2CTRL] &~= 0x02
 
 	avg_l := (pl + tl + sl + nl + w1l + w2l) / 2.0
 	vol_l := q0_8_expand(apu.master_vol_l)
