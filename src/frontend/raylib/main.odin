@@ -15,6 +15,7 @@ SCREEN_HEIGHT :: 240
 sram_dirty: bool
 
 main :: proc() {
+	rl.SetTraceLogLevel(.ERROR)
 	sys := emu.system_init()
 	defer emu.system_cleanup(sys)
 
@@ -25,7 +26,7 @@ main :: proc() {
 		fpath := os.args[1]
 		if !strings.has_suffix(fpath, ".bhm") {
 			fmt.printfln(
-				"Could not load cartridge: unknown file extension '%s' (cartridges must be .bhm files)",
+				"[BHMTH] Could not load cartridge: unknown file extension '%s' (cartridges must be .bhm files)",
 				os.ext(fpath),
 			)
 			mem_free_all(context.temp_allocator)
@@ -34,7 +35,7 @@ main :: proc() {
 		load_err := emu.system_load_cart_from_file(sys, fpath)
 		if load_err != os.General_Error.None {
 			fmt.printfln(
-				"Could not load cartridge from command line argument; load failed with error: %s",
+				"[BHMTH] Could not load cartridge from command line argument; load failed with error: %s",
 				load_err,
 			)
 		}
@@ -42,13 +43,13 @@ main :: proc() {
 		save_path, _ = strings.replace(fpath, ".bhm", ".sav", 1)
 		saved_data, save_error := os.read_entire_file(save_path, context.temp_allocator)
 		if save_error != nil || len(saved_data) == 0 {
-			fmt.println("Could not load save data (file was not found or was empty)")
+			fmt.println("[BHMTH] Could not load save data (file was not found or was empty)")
 			break load
 		}
 		sys.bus.sram_high = u32(0xC6_0000 + len(saved_data) - 1)
 		mem.copy(&sys.bus.ram[0xC6_0000], &saved_data[0], min(len(saved_data), 4 * 0xffff))
 		mem_free_all(context.temp_allocator)
-		fmt.printfln("Successfully loaded save file '%s'", save_path)
+		fmt.printfln("[BHMTH] Successfully loaded save file '%s'", save_path)
 	}
 
 	rl.SetConfigFlags({.WINDOW_RESIZABLE})
