@@ -65,9 +65,12 @@ main :: proc() {
 	defer delete(once_seen)
 	if xerr := syntax.expand_includes(&stmts, in_path, 0, &stack, &pool, &once_seen); xerr.raised do fail(xerr.msg)
 
-	if terr := syntax.resolve_temp_labels(stmts[:]); terr.raised do fail(terr.msg)
-	if rerr := syntax.replace_operands(stmts[:]); rerr.raised do fail(rerr.msg)
-	if eqerr := syntax.emitter_pass_0(stmts[:]); eqerr.raised do fail(eqerr.msg)
+	terr := syntax.resolve_temp_labels(stmts[:])
+	if terr.raised do fail(terr.msg)
+	reperr := syntax.replace_operands(stmts[:])
+	if reperr.raised do fail(reperr.msg)
+	eqerr := syntax.emitter_pass_0(stmts[:])
+	if eqerr.raised do fail(eqerr.msg)
 	syntax.substitute_constants(stmts[:])
 	for i in 0 ..< len(stmts) {
 		d, is_dir := stmts[i].(syntax.Directive)
@@ -80,5 +83,6 @@ main :: proc() {
 	if aerr := syntax.pass1_size_and_relax(&e, stmts[:]); aerr.raised do fail(aerr.msg)
 	if aerr := syntax.pass2_emit(&e, stmts[:]); aerr.raised do fail(aerr.msg)
 
-	if werr := os.write_entire_file(out_path, e.output[:]); werr != nil do fail("could not write output file")
+	if werr := os.write_entire_file(out_path, e.output[:]); werr != nil do fail("Could not write output file")
+	fmt.printfln("Wrote %d bytes -> %s", len(e.output), out_path)
 }
