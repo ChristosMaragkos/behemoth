@@ -83,6 +83,8 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 					exec_ld_reg_regptr(instr.size, instr.reg1, instr.reg2, cpu)
 				case .Ld_Reg_ImmPtr:
 					exec_ld_reg_immptr(instr.size, instr.reg1, cpu)
+				case .Ld_Reg_ImmPtr_RegOffs:
+					exec_ld_immptr_regoffs(instr.reg1, instr.reg2, instr.size, cpu)
 				case .Ld_Reg_ImmOffs:
 					exec_ld_reg_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
 				case .Ld_Reg_RegOffs:
@@ -99,6 +101,8 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 					exec_st_reg_regptr(instr.size, instr.reg1, instr.reg2, cpu)
 				case .St_Reg_ImmPtr:
 					exec_st_reg_immptr(instr.size, instr.reg1, cpu)
+				case .St_Reg_ImmPtr_RegOffs:
+					exec_st_immptr_regoffs(instr.reg1, instr.reg2, instr.size, cpu)
 				case .St_Reg_ImmOffs:
 					exec_st_reg_immoffs(instr.size, instr.reg1, instr.reg2, cpu)
 				case .St_Reg_RegOffs:

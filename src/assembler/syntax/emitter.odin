@@ -587,6 +587,14 @@ encode_mnemonic :: proc(
 				append(&value_toks, deref.imm_offs.tok)
 				if deref.imm_offs.symbol != "" do value_from_name = true
 				append(&regs, int(deref.reg_offs.index))
+			case .ImmPtrRegOffs:
+				deref := op.(Op_Deref)
+				v, verr := expr_value(deref.imm_offs)
+				if verr.raised do return verr
+				append(&values, int(v))
+				append(&value_toks, deref.imm_offs.tok)
+				if deref.imm_offs.symbol != "" do value_from_name = true
+				append(&regs, int(deref.reg_offs.index))
 		}
 	}
 	for r in regs {

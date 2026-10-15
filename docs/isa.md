@@ -122,28 +122,35 @@ shove pop, d, e, f, hi, dp
 
 ### Near forms (top 8 bits of 24-bit address supplied by `dp`)
 
+> [!NOTE]
+> In all near offset modes, base and offset are added with 16-bit wrapping; `dp` (or the
+> hardwired stack page for `sp`-relative forms) supplies the page *after* wrapping, so near
+> accesses never cross pages. Use the long forms below when an access must span pages.
+
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :---------------: | :---------------: | --------------- | :---------------: | --------------- | - |
 | 0x00 | ld | reg, simm | 3 | Set value of register to immediate value | 8, 16 |
 | 0x01 | ld | reg, regptr | 3 | Set value of register to value stored in `dp:regptr` | 8, 16 |
 | 0x02 | ld | reg, immptr | 4 | Set value of register to value stored in `dp:immptr` | 8, 16 |
-| 0x03 | ld | reg, regptr + simm16 | 4 | Set value of register to value stored in (`dp:regptr` + simm16) | 8, 16 |
-| 0x04 | ld | reg, regptr + reg16 | 4 | Set value of register to value stored in (`dp:regptr` + reg16) | 8, 16 |
-| 0x05 | ld | reg, [regptr+] | 3 | Dereference pointer and increment (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
-| 0x06 | ld | reg, [+regptr] | 3 | Increment and dereference pointer | 8, 16 |
-| 0x07 | ld | reg, [regptr-] | 3 | Dereference pointer and decrement (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
-| 0x08 | ld | reg, [-regptr] | 3 | Decrement and dereference pointer | 8, 16 |
-| 0x09 | st | reg, regptr | 3 | Store value of register into word/byte starting at `dp:regptr` | 8, 16 |
-| 0x0a | st | reg, immptr | 4 | Store value of register into `dp:immptr` | 8, 16 |
-| 0x0b | st | reg, regptr + simm16 | 4 | Store value of register into address (`dp:regptr` + simm16) | 8, 16 |
-| 0x0c | st | reg, regptr + reg16 | 4 | Store value of register into address (`dp:regptr` + reg16) | 8, 16 |
-| 0x0d | st | reg, [regptr+] | 3 | Store value of register and increment pointer (by 1 in 8-bit mode, 2 in 16-bit mode) | 8, 16 |
-| 0x0e | st | reg, [+regptr] | 3 | Increment pointer and store register value | 8, 16 |
-| 0x0f | st | reg, [regptr-] | 3 | Store value of register and decrement pointer | 8, 16 |
-| 0x10 | st | reg, [-regptr] | 3 | Decrement pointer and store register value | 8, 16 |
-| 0x11 | push | reg16 | 3 | Push register onto stack and decrement `sp` | 16 |
-| 0x12 | pop | reg16 | 3 | Pop register from stack and increment `sp` | 16 |
-| 0x13 | shove | imm16 | 3 + n | Push or pop multiple registers from the stack (see [[#`SHOVE` opcode bitmask]]). | 16 |
+| 0x03 | ld | reg, immptr + reg16 | 4 | Set value of register to value stored in `dp:immptr` + reg16 | 8, 16 |
+| 0x04 | ld | reg, regptr + simm16 | 4 | Set value of register to value stored in (`dp:regptr` + simm16) | 8, 16 |
+| 0x05 | ld | reg, regptr + reg16 | 4 | Set value of register to value stored in (`dp:regptr` + reg16) | 8, 16 |
+| 0x06 | ld | reg, [regptr+] | 3 | Dereference pointer and increment (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
+| 0x07 | ld | reg, [+regptr] | 3 | Increment and dereference pointer | 8, 16 |
+| 0x08 | ld | reg, [regptr-] | 3 | Dereference pointer and decrement (by 1 in 8-bit mode, 2 in 16-bit) | 8, 16 |
+| 0x09 | ld | reg, [-regptr] | 3 | Decrement and dereference pointer | 8, 16 |
+| 0x0a | st | reg, regptr | 3 | Store value of register into word/byte starting at `dp:regptr` | 8, 16 |
+| 0x0b | st | reg, immptr | 4 | Store value of register into `dp:immptr` | 8, 16 |
+| 0x0c | st | reg, immptr + reg16 | 4 | Store value of register into `dp:immptr` + reg16 | 8, 16 |
+| 0x0d | st | reg, regptr + simm16 | 4 | Store value of register into address (`dp:regptr` + simm16) | 8, 16 |
+| 0x0e | st | reg, regptr + reg16 | 4 | Store value of register into address (`dp:regptr` + reg16) | 8, 16 |
+| 0x0f | st | reg, [regptr+] | 3 | Store value of register and increment pointer (by 1 in 8-bit mode, 2 in 16-bit mode) | 8, 16 |
+| 0x10 | st | reg, [+regptr] | 3 | Increment pointer and store register value | 8, 16 |
+| 0x11 | st | reg, [regptr-] | 3 | Store value of register and decrement pointer | 8, 16 |
+| 0x12 | st | reg, [-regptr] | 3 | Decrement pointer and store register value | 8, 16 |
+| 0x13 | push | reg16 | 3 | Push register onto stack and decrement `sp` | 16 |
+| 0x14 | pop | reg16 | 3 | Pop register from stack and increment `sp` | 16 |
+| 0x15 | shove | imm16 | 3 + n | Push or pop multiple registers from the stack (see [[#`SHOVE` opcode bitmask]]). | 16 |
 
 ### Long forms (ignore `dp`)
 
@@ -151,16 +158,16 @@ These hard-code the full 24-bit address. All offsets are sign-extended into 24 b
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :---------------: | :---------------: | --------------- | :---------------: | --------------- | - |
-| 0x14 | ld.l | reg, `ptr24` | 5 | Load from absolute 24-bit address (ptr24 = 3 bytes) | 8, 16 |
-| 0x15 | ld.l | reg, `ptr24 + reg16` | 5 | Load from ptr24 + sign-extended offset | 8, 16 |
-| 0x16 | ld.l | reg, `reg8:reg16` | 4 | Load from address formed by: reg8 = bank, reg16 = offset). | 8, 16 |
-| 0x17 | ld.l | reg, `reg8:reg16 + simm16` | 5 | Load from pair address + simm16 | 8, 16 |
-| 0x18 | ld.l | reg, `reg8:reg16 + reg16` | 4 | Load from pair address + sign-extended reg offset | 8, 16 |
-| 0x19 | st.l | reg, `ptr24` | 5 | Store to absolute 24-bit address | 8, 16 |
-| 0x1a | st.l | reg, `ptr24 + reg16` | 5 | Store to ptr24 + sign-extended offset | 8, 16 |
-| 0x1b | st.l | reg, `reg8:reg16` | 4 | Store to address formed by pair | 8, 16 |
-| 0x1c | st.l | reg, `reg8:reg16 + simm16` | 5 | Store to pair address + simm16 | 8, 16 |
-| 0x1d | st.l | reg, `reg8:reg16 + reg16` | 4 | Store to pair address + sign-extended reg offset | 8, 16 |
+| 0x16 | ld.l | reg, `ptr24` | 5 | Load from absolute 24-bit address (ptr24 = 3 bytes) | 8, 16 |
+| 0x17 | ld.l | reg, `ptr24 + reg16` | 5 | Load from ptr24 + sign-extended offset | 8, 16 |
+| 0x18 | ld.l | reg, `reg8:reg16` | 4 | Load from address formed by: reg8 = bank, reg16 = offset). | 8, 16 |
+| 0x19 | ld.l | reg, `reg8:reg16 + simm16` | 5 | Load from pair address + simm16 | 8, 16 |
+| 0x1a | ld.l | reg, `reg8:reg16 + reg16` | 4 | Load from pair address + sign-extended reg offset | 8, 16 |
+| 0x1b | st.l | reg, `ptr24` | 5 | Store to absolute 24-bit address | 8, 16 |
+| 0x1c | st.l | reg, `ptr24 + reg16` | 5 | Store to ptr24 + sign-extended offset | 8, 16 |
+| 0x1d | st.l | reg, `reg8:reg16` | 4 | Store to address formed by pair | 8, 16 |
+| 0x1e | st.l | reg, `reg8:reg16 + simm16` | 5 | Store to pair address + simm16 | 8, 16 |
+| 0x1f | st.l | reg, `reg8:reg16 + reg16` | 4 | Store to pair address + sign-extended reg offset | 8, 16 |
 
 ### Block moves
 
