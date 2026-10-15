@@ -30,6 +30,8 @@ to avoid stack I/O.
 | `05:0009` | 3 | STOF | `sp` wraps from `$04:0000` back to `$04:FFFF` | No (fault) |
 | `05:000C` | 4 | STUF | `sp` wraps from `$04:FFFF` to `$04:0000` | No (fault) |
 | `05:000F` | 5 | INVOP | CPU tries to execute invalid/reserved opcode | No (fault) |
+| `05:0012` | 6 | WT1FI | Wavetable channel 1 reached `WT1MARK` | Yes |
+| `05:0015` | 7 | WT2FI | Wavetable channel 2 reached `WT2MARK` | Yes |
 | `05:0180` - `05:02FD` | 128-255 | Software Interrupts | Not used by the hardware, can be defined for use with `swi` | No (triggered deliberately) |
 
 When an interrupt fires:

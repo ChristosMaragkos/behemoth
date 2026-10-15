@@ -257,13 +257,15 @@ The MMIO region dedicated to MMIO begins at `0x050700`:
 | `0x05072e` | WT1ADSR | Wavetable channel 1 ADSR envelope | RW | 2 |
 | `0x050730` | WT1IDX | Wavetable channel 1 sample index | RW | 1 |
 | `0x050731` | WT1END | Wavetable channel 1 end index | RW | 1 |
-| `0x050732` | WT2CTRL | Wavetable channel 2 control bitmask (see below) | RW | 1 |
-| `0x050733` | WT2PITCH | Wavetable channel 2 pitch (Q12.4 fixed point) | RW | 2 |
-| `0x050735` | WT2VOL | Wavetable channel 2 volume, left (Q0.8 fixed point) | RW | 1 |
-| `0x050736` | WT2VOR | Wavetable channel 2 volume, right (Q0.8 fixed point) | RW | 1 |
-| `0x050737` | WT2ADSR | Wavetable channel 2 ADSR envelope | RW | 2 |
-| `0x050739` | WT2IDX | Wavetable channel 2 sample index | RW | 1 |
-| `0x05073a` | WT2END | Wavetable channel 2 end index | RW | 1 |
+| `0x050732` | WT1MARK | Wavetable 1 mark IRQ fires when index reaches this value (see below) | RW | 1 |
+| `0x050733` | WT2CTRL | Wavetable channel 2 control bitmask (see below) | RW | 1 |
+| `0x050734` | WT2PITCH | Wavetable channel 2 pitch (Q12.4 fixed point) | RW | 2 |
+| `0x050736` | WT2VOL | Wavetable channel 2 volume, left (Q0.8 fixed point) | RW | 1 |
+| `0x050737` | WT2VOR | Wavetable channel 2 volume, right (Q0.8 fixed point) | RW | 1 |
+| `0x050738` | WT2ADSR | Wavetable channel 2 ADSR envelope | RW | 2 |
+| `0x05073a` | WT2IDX | Wavetable channel 2 sample index | RW | 1 |
+| `0x05073b` | WT2END | Wavetable channel 2 end index | RW | 1 |
+| `0x05073c` | WT1MARK | Wavetable 2 mark IRQ fires when index reaches this value (see below) | RW | 1 |
 
 `WTnCTRL` layout:
 
@@ -272,6 +274,7 @@ The MMIO region dedicated to MMIO begins at `0x050700`:
 - Bit 2: Phase reset toggle (set 1 to reset waveform phase to 0 when retriggering)
 - Bit 3: Set to 1 to automatically advance index by 1 when phase wraps. Does not alter value of `WTnIDX`.
 - Bit 4: Set to 0 for loop, or 1 for one-shot. See below.
+- Bit 5: Set to 1 to disable IRQ when wavetable index reaches `WTnMARK` value (and drop if pending)
 - Bits 5-7: Reserved
 
 As a reminder, wavetable samples are expected to be aligned to 64 bytes.
@@ -286,3 +289,9 @@ The value of the loop/one-shot bit dictates what happens when `WTnEND` is reache
 
 The same behavior occurs when using loop and one-shot without auto-advance: the channel simply wraps or toggles off on `WTnIDX`.
 Effectively the value of `WTnEND` does not matter if auto-advance is off.
+
+#### `WTnMASK` IRQ
+
+If bit 5 of `WTnCTRL` is not set and the respective wavetable channel is set to auto-advance, an IRQ will be fired when the internal table index
+reaches the value contained in `WTnMARK`. Each channel fires a separate IRQ. This mechanic can be (ab)used to stream larger samples of raw PCM data
+while using less audio RAM but slightly more CPU, such as by double-buffering.
