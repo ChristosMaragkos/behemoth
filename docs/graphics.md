@@ -140,7 +140,7 @@ DMA controllers are documented in [dma.md](./dma.md).
 - PPUCTRL:
   - Bit 0: Force blanking. Set to 1 to disable PPU rendering entirely and get free access to VRAM/OAM/CRAM on the main bus.
   - Bit 1: Disables interrupt on v-blank if set to 1
-  - Bit 2: Disables interrupt on h-blank if set to 1
+  - Bit 2: Disables interrupt on h-blank if set to 1. If set while an h-blank IRQ is pending, it is dropped.
   - Bits 3-7: Reserved
 
 - BACKDROP:
