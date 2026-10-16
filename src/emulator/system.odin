@@ -142,6 +142,12 @@ system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank:
 	if .DisableHblank in sys.ppu.ctrl && exec.cpu_irq_is_raised(sys.cpu, .Hblnk) {
 		exec.cpu_drop_irq(sys.cpu, .Hblnk)
 	}
+	if sys.apu.wave1.ctrl.disable_irq && exec.cpu_irq_is_raised(sys.cpu, .Wt1Fi) {
+		exec.cpu_drop_irq(sys.cpu, .Wt1Fi)
+	}
+	if sys.apu.wave2.ctrl.disable_irq && exec.cpu_irq_is_raised(sys.cpu, .Wt2Fi) {
+		exec.cpu_drop_irq(sys.cpu, .Wt2Fi)
+	}
 
 	exec.cpu_service_irq(sys.cpu)
 	instr := exec.cpu_fetch_instruction(sys.cpu)
@@ -177,6 +183,14 @@ system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank:
 	for sys.audio_cycle_scaled >= c.CPU_CYCLES_PER_FRAME {
 		sys.audio_cycle_scaled -= c.CPU_CYCLES_PER_FRAME
 		audio_fifo_produce(&sys.audio_fifo, audio.apu_generate_sample(sys.apu))
+		if sys.apu.wave1.mark_reached && !sys.apu.wave1.ctrl.disable_irq {
+			exec.cpu_raise_irq(sys.cpu, .Wt1Fi)
+		}
+		sys.apu.wave1.mark_reached = false
+		if sys.apu.wave2.mark_reached && !sys.apu.wave2.ctrl.disable_irq {
+			exec.cpu_raise_irq(sys.cpu, .Wt2Fi)
+		}
+		sys.apu.wave2.mark_reached = false
 	}
 
 	return consumed, entered_vblank

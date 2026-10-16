@@ -14,6 +14,8 @@ DIV0_VEC_IDX :: 0x02
 STACK_OVF_VEC_IDX :: 0x03
 STACK_UDF_VEC_IDX :: 0x04
 INVALID_OPCODE_VEC_IDX :: 0x05
+WT1FI_VEC_IDX :: 0x06
+WT2FI_VEC_IDX :: 0x07
 
 // This will NEVER be run in a big-endian computer,
 // but best to play it safe.

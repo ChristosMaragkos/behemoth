@@ -5,6 +5,8 @@ import "core:fmt"
 
 MaskableInterrupt :: enum u16 {
 	Hblnk,
+	Wt1Fi,
+	Wt2Fi,
 }
 
 IrqLine :: bit_set[MaskableInterrupt;u16]
@@ -62,7 +64,11 @@ get_irq_vector_idx :: proc(irq: MaskableInterrupt) -> u8 {
 	switch irq {
 		case .Hblnk:
 			return HBLNK_VEC_IDX
+		case .Wt1Fi:
+			return WT1FI_VEC_IDX
+		case .Wt2Fi:
+			return WT2FI_VEC_IDX
 		case:
-			fmt.panicf("Fatal error: received non-existent IRQ '%d'", irq)
+			fmt.panicf("[BHMTH] Fatal error: received non-existent IRQ '%d'", irq)
 	}
 }

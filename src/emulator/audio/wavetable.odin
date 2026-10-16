@@ -11,14 +11,16 @@ WT1VOR :: 0x2d
 WT1ADSR :: 0x2e
 WT1IDX :: 0x30
 WT1END :: 0x31
+WT1MARK :: 0x32
 
-WT2CTRL :: 0x32
-WT2PITCH :: 0x33
-WT2VOL :: 0x35
-WT2VOR :: 0x36
-WT2ADSR :: 0x37
-WT2IDX :: 0x39
-WT2END :: 0x3a
+WT2CTRL :: 0x33
+WT2PITCH :: 0x34
+WT2VOL :: 0x36
+WT2VOR :: 0x37
+WT2ADSR :: 0x38
+WT2IDX :: 0x3a
+WT2END :: 0x3b
+WT2MARK :: 0x3c
 
 TABLE_SIZE :: 64
 
@@ -31,7 +33,8 @@ WavetableCtrl :: bit_field u8 {
 		Loop,
 		One_Shot,
 	}     | 1,
-	reserved:           u8   | 3,
+	disable_irq:        bool | 1,
+	reserved:           u8   | 2,
 }
 
 WavetableChannel :: struct {
@@ -43,6 +46,8 @@ WavetableChannel :: struct {
 	index_start:    u8,
 	index_end:      u8,
 	index_current:  u8,
+	index_mark:     u8,
+	mark_reached:   bool,
 	oneshot_done:   bool,
 	gate_mmio_prev: bool,
 	phase:          f32,
@@ -69,11 +74,13 @@ wavetable_advance :: proc(ch: ^WavetableChannel) {
 	end := max(ch.index_start, ch.index_end)
 	if ch.index_current < end {
 		ch.index_current += 1
+		ch.mark_reached = ch.index_current == ch.index_mark
 		return
 	}
 	if ch.mode == .Loop {
 		ch.index_current = ch.index_start
 	} else {
+		ch.mark_reached = ch.index_current == ch.index_mark
 		wavetable_finish_oneshot(ch)
 	}
 }
