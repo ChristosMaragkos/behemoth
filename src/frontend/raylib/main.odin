@@ -55,6 +55,7 @@ main :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE})
 	rl.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "BHMTH")
 	rl.SetWindowMonitor(0)
+	rl.MaximizeWindow()
 	rl.SetTargetFPS(60)
 	rl.SetWindowMinSize(SCREEN_WIDTH, SCREEN_HEIGHT)
 
