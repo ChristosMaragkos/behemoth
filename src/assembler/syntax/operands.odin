@@ -42,7 +42,7 @@ DerefMode :: enum {
 	Reg_Pair,
 	Reg_Pair_ImmOffset,
 	Reg_Pair_RegOffset,
-	Imm_RegOffset,
+	Imm_Long_RegOffset, // [ptr24 + reg16]
 }
 
 Op_Deref :: struct {
@@ -330,7 +330,7 @@ resolve_deref :: proc(toks: []Token) -> (Op_Deref, common.AssemblerError) {
 			return {}, token_errorf(&right_toks[0], "Index register '%s' must be a 16-bit register", right_toks[0].text)
 		}
 
-		op.mode = .Imm_RegOffset
+		op.mode = .Imm_Long_RegOffset
 		op.imm_offs = left_expr
 		op.reg_offs = off_reg
 		return op, common.no_error()

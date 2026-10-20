@@ -583,33 +583,3 @@ exec_blkmv :: proc(reg1, reg2: u8, cpu: ^Cpu) {
 	r5.full -= 1
 	cpu_advance_pc(cpu, -1 * BLKCP_BLKMV_SIZE)
 }
-
-exec_ld_immptr_regoffs :: proc(reg1, reg2: u8, size: shared.SizeMode, cpu: ^Cpu) {
-	r1 := cpu_get_reg(cpu, reg1)
-	r2 := cpu_get_reg(cpu, reg2)
-
-	immptr := cpu_pc_fetch_word(cpu)
-	effective := u16(i16(immptr) + i16(r2.full))
-
-	switch size {
-		case .Word:
-			r1.full = cpu_dp_fetch_word(cpu, effective)
-		case .Byte:
-			r1.low = cpu_dp_fetch_byte(cpu, effective)
-	}
-}
-
-exec_st_immptr_regoffs :: proc(reg1, reg2: u8, size: shared.SizeMode, cpu: ^Cpu) {
-	r1 := cpu_get_reg(cpu, reg1)
-	r2 := cpu_get_reg(cpu, reg2)
-
-	immptr := cpu_pc_fetch_word(cpu)
-	effective := u16(i16(immptr) + i16(r2.full))
-
-	switch size {
-		case .Word:
-			cpu_dp_store_word(cpu, effective, r1.full)
-		case .Byte:
-			cpu_dp_store_byte(cpu, effective, r1.low)
-	}
-}

@@ -251,7 +251,7 @@ main:
 	check_mnemonic_deref_mode(t, stmts[11], 1, .Reg_ImmOffset)
 
 	// ld.l a, [0x060000 + e]
-	check_mnemonic_deref_mode(t, stmts[12], 1, .Imm_RegOffset)
+	check_mnemonic_deref_mode(t, stmts[12], 1, .Imm_Long_RegOffset)
 }
 
 @(test)
@@ -782,23 +782,7 @@ main:
 		asm_common.free_error(&aerr)
 		return
 	}
-	want := [15]byte {
-		0x80,
-		0x00,
-		0x03,
-		0x00,
-		0x37,
-		0x01,
-		0x88,
-		0x03,
-		0xfb,
-		0x82,
-		0x01,
-		0x0d,
-		0x00,
-		0x00,
-		0x00,
-	}
+	want := [15]byte{0x80, 0x00, 0x03, 0x00, 0x37, 0x01, 0x88, 0x03, 0xfb, 0x82, 0x01, 0x0d, 0x00, 0x00, 0x00}
 	testing.expect(t, len(e.output) == len(want), "output length mismatch")
 	if len(e.output) == len(want) {
 		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
@@ -836,11 +820,7 @@ third:
 	defer asm_common.free_error(&terr)
 	testing.expect(t, terr.raised, "expected out-of-scope temp use to fail")
 	if !terr.raised do return
-	testing.expect(
-		t,
-		strings.contains(terr.msg, "not defined in this scope"),
-		"expected scope error",
-	)
+	testing.expect(t, strings.contains(terr.msg, "not defined in this scope"), "expected scope error")
 	testing.expect(t, strings.contains(terr.msg, "@loop"), "expected temp name in error")
 }
 
@@ -880,119 +860,16 @@ shove 0b0_00000_110_0000011
 	}
 	// shove Word opcode 0x93,0x00 then the little-endian bitmask:
 	// push {a} = 0x0001, pop {a,b,hi,dp} = 0x8303, raw 0x0303.
-	// Shove is opcode 0x15 (docs-conformant numbering): word low byte 0x80|0x15.
-	want := [12]byte{0x95, 0x00, 0x01, 0x00, 0x95, 0x00, 0x03, 0x83, 0x95, 0x00, 0x03, 0x03}
+	want := [12]byte{0x93, 0x00, 0x01, 0x00, 0x93, 0x00, 0x03, 0x83, 0x93, 0x00, 0x03, 0x03}
 	testing.expect(t, len(e.output) == len(want), "output length mismatch")
 	if len(e.output) == len(want) {
 		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
-	}
-}
-
-@(test)
-immptr_regoffs_emit_bytes :: proc(t: ^testing.T) {
-	SOURCE :: `.org 0x060000
-ld al, [0x1234 + c]
-ld a, [0x1234 + c]
-st al, [0x1234 + c]
-st a, [0x1234 + c]
-ld.l al, [0x1234 + c]
-`
-	sync.lock(&TEST_MUTEX)
-	defer sync.unlock(&TEST_MUTEX)
-	syntax.init_labels()
-	defer syntax.free_labels()
-	syntax.init_constants()
-	defer syntax.free_constants()
-	syntax.init_temp_labels()
-	defer syntax.free_temp_labels()
-	syntax.init_mnemonics()
-	defer syntax.free_mnemonics()
-	tokens, stmts, ok := prepare_stmts(t, SOURCE)
-	if !ok do return
-	defer syntax.free_statements(stmts)
-	defer delete(tokens)
-	e := syntax.Emitter{}
-	syntax.emitter_init(&e)
-	defer syntax.emitter_free(&e)
-	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
-		testing.expectf(t, false, "pass1 failed: %s", perr.msg)
-		asm_common.free_error(&perr)
-		return
-	}
-	if aerr := syntax.pass2_emit(&e, stmts[:]); aerr.raised {
-		testing.expectf(t, false, "pass2 failed: %s", aerr.msg)
-		asm_common.free_error(&aerr)
-		return
-	}
-	// ld al/b=0x03: 83 42 | 34 12; ld a word: 83 40 | 34 12
-	// st al/b=0x0c: 8c 42 | 34 12; st a word: 8c 40 | 34 12
-	// ld.l al/b=0x17: 97 42 | 34 12 00 (ptr24 + reg index rides in word)
-	want := [21]byte {
-		0x83,
-		0x42,
-		0x34,
-		0x12,
-		0x83,
-		0x40,
-		0x34,
-		0x12,
-		0x8c,
-		0x42,
-		0x34,
-		0x12,
-		0x8c,
-		0x40,
-		0x34,
-		0x12,
-		0x97,
-		0x42,
-		0x34,
-		0x12,
-		0x00,
-	}
-	testing.expect(t, len(e.output) == len(want), "output length mismatch")
-	if len(e.output) == len(want) {
-		for i in 0 ..< len(want) do testing.expectf(t, e.output[i] == want[i], "byte %d mismatch", i)
-	}
-}
-
-@(test)
-immptr_regoffs_out_of_range_rejected :: proc(t: ^testing.T) {
-	// 24-bit base cannot use the near imm16 form; ld.l still works.
-	SOURCE := `ld al, [0x123456 + c]
-`
-	sync.lock(&TEST_MUTEX)
-	defer sync.unlock(&TEST_MUTEX)
-	syntax.init_labels()
-	defer syntax.free_labels()
-	syntax.init_constants()
-	defer syntax.free_constants()
-	syntax.init_temp_labels()
-	defer syntax.free_temp_labels()
-	syntax.init_mnemonics()
-	defer syntax.free_mnemonics()
-	tokens, stmts, ok := prepare_stmts(t, SOURCE)
-	if !ok do return
-	defer syntax.free_statements(stmts)
-	defer delete(tokens)
-	e := syntax.Emitter{}
-	syntax.emitter_init(&e)
-	defer syntax.emitter_free(&e)
-	if perr := syntax.pass1_size_and_relax(&e, stmts[:]); perr.raised {
-		asm_common.free_error(&perr)
-	}
-	if aerr := syntax.pass2_emit(&e, stmts[:]); !aerr.raised {
-		testing.expect(t, false, "expected out-of-range error for 24-bit base in near form")
-		return
-	} else {
-		testing.expect(t, strings.contains(aerr.msg, "out of range"), "expected range error")
-		asm_common.free_error(&aerr)
 	}
 }
 
 @(test)
 shove_list_validation_rejects :: proc(t: ^testing.T) {
-	FAILING_SOURCES := []string {
+	FAILING_SOURCES := []string{
 		"shove push, a, sp", // sp is not a shove register
 		"shove push, a, pp", // pp is not a shove register
 		"shove push, a, a", // duplicate register

@@ -18,7 +18,6 @@ OperandShape :: enum {
 	String,
 	RegPtr,
 	ImmPtr,
-	ImmPtrRegOffs,
 	RegPtrImmOffs,
 	RegPtrRegOffs,
 	PairPtr,
@@ -101,9 +100,6 @@ operand_matches_shape :: proc(shape: OperandShape, op: ResolvedOperand) -> bool 
 		case .ImmPtr:
 			deref, ok := op.(Op_Deref)
 			return ok && deref.mode == .Imm
-		case .ImmPtrRegOffs:
-			deref, ok := op.(Op_Deref)
-			return ok && deref.mode == .Imm_RegOffset
 		case .RegPtrImmOffs:
 			deref, ok := op.(Op_Deref)
 			return ok && deref.mode == .Reg_ImmOffset
@@ -121,7 +117,7 @@ operand_matches_shape :: proc(shape: OperandShape, op: ResolvedOperand) -> bool 
 			return ok && deref.mode == .Reg_Pair_RegOffset
 		case .Imm24RegOffs:
 			deref, ok := op.(Op_Deref)
-			return ok && deref.mode == .Imm_RegOffset
+			return ok && deref.mode == .Imm_Long_RegOffset
 	}
 	return false
 }
@@ -277,18 +273,6 @@ define_mem_ops :: #force_inline proc() {
 		{shapes = {.Reg8, .ImmPtr}, opcode = mem_opcode(.Byte, .Ld_Reg_ImmPtr), length = 4},
 		{shapes = {.Reg16, .ImmPtr}, opcode = mem_opcode(.Word, .Ld_Reg_ImmPtr), length = 4},
 
-		// ld reg, [imm + reg]
-		{
-			shapes = {.Reg8, .ImmPtrRegOffs},
-			opcode = mem_opcode(.Byte, .Ld_Reg_ImmPtr_RegOffs),
-			length = 4,
-		},
-		{
-			shapes = {.Reg16, .ImmPtrRegOffs},
-			opcode = mem_opcode(.Word, .Ld_Reg_ImmPtr_RegOffs),
-			length = 4,
-		},
-
 		// ld reg, [reg + imm]
 		{
 			shapes = {.Reg8, .RegPtrImmOffs},
@@ -371,18 +355,6 @@ define_mem_ops :: #force_inline proc() {
 		{
 			shapes = {.Reg16, .RegPtrImmOffs},
 			opcode = mem_opcode(.Word, .St_Reg_ImmOffs),
-			length = 4,
-		},
-
-		// st reg, [imm + reg]
-		{
-			shapes = {.Reg8, .ImmPtrRegOffs},
-			opcode = mem_opcode(.Byte, .St_Reg_ImmPtr_RegOffs),
-			length = 4,
-		},
-		{
-			shapes = {.Reg16, .ImmPtrRegOffs},
-			opcode = mem_opcode(.Word, .St_Reg_ImmPtr_RegOffs),
 			length = 4,
 		},
 
