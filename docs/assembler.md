@@ -39,7 +39,7 @@ Temporary labels can be created by prefixing them with an '@' sign.
 
 ```asm
 @loop:
-    djnz al, @loop
+    djnc al, @loop
 ```
 
 A temporary label is only valid between the two non-temporary labels that surround it:
@@ -51,7 +51,7 @@ first:
 second:
     ld al, 25
     @loop:
-        djnz al, @loop ; Valid
+        djnc al, @loop ; Valid
 
     @loop2:
         jnz @loop ; Valid

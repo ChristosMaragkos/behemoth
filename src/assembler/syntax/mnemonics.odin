@@ -1171,12 +1171,12 @@ define_flow_ops :: #force_inline proc() {
 		{shapes = {.Symbol}, opcode = flow_opcode(.Word, .Jleu), length = 4},
 	}
 
-	// djnz reg, simm
-	MNEMONICS["djnz"] = {
-		{shapes = {.Reg8, .Imm8}, opcode = flow_opcode(.Byte, .Djnz), length = 3},
-		{shapes = {.Reg8, .Symbol}, opcode = flow_opcode(.Byte, .Djnz), length = 3},
-		{shapes = {.Reg16, .Imm16}, opcode = flow_opcode(.Word, .Djnz), length = 4},
-		{shapes = {.Reg16, .Symbol}, opcode = flow_opcode(.Word, .Djnz), length = 4},
+	// djnc reg, simm
+	MNEMONICS["djnc"] = {
+		{shapes = {.Reg8, .Imm8}, opcode = flow_opcode(.Byte, .Djnc), length = 3},
+		{shapes = {.Reg8, .Symbol}, opcode = flow_opcode(.Byte, .Djnc), length = 3},
+		{shapes = {.Reg16, .Imm16}, opcode = flow_opcode(.Word, .Djnc), length = 4},
+		{shapes = {.Reg16, .Symbol}, opcode = flow_opcode(.Word, .Djnc), length = 4},
 	}
 
 	// jsr.l imm24

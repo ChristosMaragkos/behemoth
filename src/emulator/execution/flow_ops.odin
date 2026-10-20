@@ -125,9 +125,16 @@ exec_jleu :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_djnz :: #force_inline proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_djnc :: #force_inline proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 	exec_dec(size, reg1, cpu)
-	exec_jnz(size, cpu)
+	cpu.flags -= {.Carry}
+	switch size {
+		case .Word:
+			if i16(cpu_get_reg(cpu, reg1).full) == -1 do cpu.flags += {.Carry}
+		case .Byte:
+			if i8(cpu_get_reg(cpu, reg1).low) == -1 do cpu.flags += {.Carry}
+	}
+	exec_jnc(size, cpu)
 }
 
 exec_jsr_l_imm :: proc(cpu: ^Cpu) {

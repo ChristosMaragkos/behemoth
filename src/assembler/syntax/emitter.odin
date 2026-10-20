@@ -1088,7 +1088,7 @@ fixup_kind_for :: proc(
 		     .Jlts,
 		     .Jgtu,
 		     .Jleu,
-		     .Djnz:
+		     .Djnc:
 			if trailing == 1 do return .Rel8, common.no_error()
 			if trailing == 2 do return .Rel16, common.no_error()
 		case .Jsr_Imm, .Jmp_Imm:

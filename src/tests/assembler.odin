@@ -796,7 +796,7 @@ temp_labels_reject_out_of_scope :: proc(t: ^testing.T) {
 second:
     ld al, 25
 @loop:
-    djnz al, @loop
+    djnc al, @loop
 third:
     jmp @loop
 `

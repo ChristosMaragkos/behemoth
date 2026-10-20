@@ -437,8 +437,8 @@ cpu_decode_execute :: proc(cpu: ^Cpu, instr: shared.Instruction) {
 					exec_jgtu(instr.size, cpu)
 				case .Jleu:
 					exec_jleu(instr.size, cpu)
-				case .Djnz:
-					exec_djnz(instr.size, instr.reg1, cpu)
+				case .Djnc:
+					exec_djnc(instr.size, instr.reg1, cpu)
 				case .Jsr_L_Imm:
 					exec_jsr_l_imm(cpu)
 				case .Jsr_L_Regpair:

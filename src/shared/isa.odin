@@ -72,7 +72,7 @@ FlowOpcodes :: enum u8 {
 	Jlts,
 	Jgtu,
 	Jleu,
-	Djnz,
+	Djnc,
 	Jsr_L_Imm,
 	Jsr_L_Regpair,
 	Jmp_L_Imm,

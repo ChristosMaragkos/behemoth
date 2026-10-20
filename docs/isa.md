@@ -61,7 +61,7 @@ shove pop, d, e, f, hi, dp
 | Mnemonic | Flags altered |
 | :-: | :-: |
 | add(.l) | Computes Z C N V |
-| sub(.l) | Computes Z C N V |
+| sub(.l)/djnc | Computes Z C N V |
 | mulu | Computes Z N, sets C and V if hi != 0 (cleared otherwise) |
 | muls | Computes Z N, sets C and V if hi is not sign-extension of reg (cleared otherwise) |
 | divu | Computes Z N, clears C V (division by 0 raises exception) |
@@ -70,7 +70,7 @@ shove pop, d, e, f, hi, dp
 | sbc | Computes Z C N V |
 | cmp(.l) | Computes Z C N V |
 | inc | Computes Z N V, preserves C |
-| dec/djnz | Computes Z N V, preserves C |
+| dec | Computes Z N V, preserves C |
 | neg | Computes Z C N V (sets C if reg != 0, sets V on min_int overflow) |
 | and | Computes Z N, clears C V |
 | or | Computes Z N, clears C V |
@@ -359,10 +359,10 @@ Branches incur a 1-cycle penalty when taken.
 | 0x12 | jlts | simm | 4 (5 if taken) | Jump if less, signed (V != N) | 8, 16 |
 | 0x13 | jgtu | simm | 4 (5 if taken) | Jump if greater, unsigned (C not set, Z not set) | 8, 16 |
 | 0x14 | jleu | simm | 4 (5 if taken) | Jump if less or equal, unsigned (C set OR Z set) | 8, 16 |
-| 0x15 | djnz | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if result is not zero | 8, 16 |
+| 0x15 | djnc | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if no borrow occurred (carry flag not set) | 8, 16 |
 
 > [!NOTE]
-> To avoid confusion, the value of the size bit in `djnz` dictates the width of both the register and the immediate operand.
+> To avoid confusion, the value of the size bit in `djnc` dictates the width of both the register and the immediate operand.
 
 ### Long jumps
 
