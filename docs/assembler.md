@@ -1,3 +1,7 @@
+> [!NOTE]
+> As of v0.3, bmasm will be deprecated and no longer worked on. It will remain in the repository and will still be packaged as the default
+> assembler for BHMTH, but all of my work will be done in vasm. This reference will also remain here since vasm cannot be distributed.
+
 # Assembler
 
 The `bmasm` assembler parses the mnemonics found in [The ISA specification](./isa.md) to emit machine code instructions.
