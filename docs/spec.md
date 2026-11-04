@@ -102,7 +102,7 @@ The 16mb address space is split into 256 pages of 64kb each, for the following r
 - Page 4: Stack (64kb)
 - Page 5: Interrupt vector table (256 24-bit little endian addresses), memory-mapped registers (PPU, APU), 3 DMA
   controllers, 4 expansion ports
-  - The reset vector is not part of the IVT, and is instead located at `0x0000` within the ROM-mapped region. More below.
+  - The reset vector is not part of the IVT, and is instead located at `0x0020` within the ROM header. More below.
 - Pages 6-197: Game ROM. The reset vector is located at `$06:0000`, so on boot, `pp` is set to `0x06` and `pc` to `0x0000`. Not writable.
 - Pages 198-201: Cartridge SRAM (the save file, if found at boot, is mapped here, and writes are flushed periodically).
 - Pages 202-255: Reserved for future expansion.
@@ -119,6 +119,17 @@ i.e. 12800 CPU cycles. In total:
 
 Sum total: 183480 cycles per frame. Targeting 60 frames per second, this amounts
 to a frequency of ~11MHz.
+
+# ROM format
+
+ROMs are just flat binaries with a 32-byte header prepended:
+
+- Bytes 0-2: The magic string "BHM".
+- Byte 3: ROM format version (currently v1)
+- Bytes 4-11: 8-byte ASCII ROM name (doesn't need to match file name but can)
+- Bytes 12-31: Reserved
+
+Backwards compatibility with bare ROMs (without a header) will be maintained but can be dropped at any time.
 
 > [!NOTE]
 > Please keep in mind that this is purely a specification and future revisions may add or remove content.
