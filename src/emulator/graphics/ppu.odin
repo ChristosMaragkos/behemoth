@@ -148,8 +148,8 @@ ppu_step :: proc(ppu: ^Ppu) {
 			break
 		}
 
-		color := ppu.cram[chosen_color]
-		r, g, b := scale_to_rgb(color)
+		color := (transmute(u16)(ppu.cram[chosen_color]) & 0x7fff)
+		r, g, b := scale_to_rgb(transmute(CramColor)color)
 
 		pixel_idx := uint(ppu.current_line) * SCREEN_WIDTH + uint(ppu.current_col)
 		ppu.frame_buffer[pixel_idx].r = r
