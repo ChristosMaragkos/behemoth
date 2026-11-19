@@ -1,5 +1,6 @@
 package behemoth
 
+import s "../shared"
 import "./audio"
 import c "./common"
 import exec "./execution"
@@ -134,6 +135,20 @@ system_load_cart_from_bytes :: proc(sys: ^System, bytes: []byte) -> os.Error {
 
 	mem.copy(&sys.bus.ram[low], &bytes[0], length)
 	return os.General_Error.None
+}
+
+// Call AFTER loading a cart. Sets PC to the position specified by the cartridge format version.
+system_parse_header :: proc(sys: ^System) {
+	h := ((^s.Header)(&sys.bus.ram[memory.CART_ROM_START]))^
+	if !s.Header_validate_magic(&h) {
+		sys.cpu.pc = 0x0000
+		return
+	}
+
+	switch h.version {
+		case:
+			sys.cpu.pc = size_of(s.Header)
+	}
 }
 
 system_step_instruction :: proc(sys: ^System) -> (consumed: u64, entered_vblank: bool) {

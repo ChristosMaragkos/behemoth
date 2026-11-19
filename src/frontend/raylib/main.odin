@@ -38,6 +38,8 @@ main :: proc() {
 				"[BHMTH] Could not load cartridge from command line argument; load failed with error: %s",
 				load_err,
 			)
+		} else {
+			emu.system_parse_header(sys)
 		}
 
 		save_path, _ = strings.replace(fpath, ".bhm", ".sav", 1)
