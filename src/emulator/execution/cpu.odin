@@ -144,15 +144,11 @@ sp_math_wraps :: #force_inline proc(sp: u16, delta: int, subtract: bool) -> bool
 }
 
 cpu_advance_pc :: proc(cpu: ^Cpu, amnt: i16) {
-	pc_new := i16(cpu.pc) + amnt
-	if amnt < 0 {
-		if transmute(u16)pc_new > cpu.pc do cpu.pp -= 1
-	} else {
-		if transmute(u16)pc_new < cpu.pc do cpu.pp += 1
-	}
-
+	full_addr := i32((u32(cpu.pp) << 16) | (u32(cpu.pc)))
+	target := u32(full_addr + i32(amnt))
 	cpu.pc_delta += amnt
-	cpu.pc = transmute(u16)pc_new
+	cpu.pc = u16(target & 0xffff)
+	cpu.pp = u8(target >> 16)
 }
 
 cpu_read_word :: #force_inline proc(cpu: ^Cpu, addr: u32) -> u16 {
