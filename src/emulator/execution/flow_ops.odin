@@ -125,7 +125,22 @@ exec_jleu :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
 	exec_relative_branch(size, cond, cpu)
 }
 
-exec_djnc :: #force_inline proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
+exec_jrel :: #force_inline proc(size: shared.SizeMode, cpu: ^Cpu) {
+	exec_relative_branch(size, true, cpu)
+}
+
+Condition :: enum u8 {
+	Zero,
+	NotZero,
+	Carry,
+	NoCarry,
+	Minus,
+	Plus,
+	Overflow,
+	NoOverflow,
+}
+
+exec_djcc :: #force_inline proc(size: shared.SizeMode, reg1, cond: u8, cpu: ^Cpu) {
 	exec_dec(size, reg1, cpu)
 	cpu.flags -= {.Carry}
 	switch size {
@@ -134,7 +149,26 @@ exec_djnc :: #force_inline proc(size: shared.SizeMode, reg1: u8, cpu: ^Cpu) {
 		case .Byte:
 			if i8(cpu_get_reg(cpu, reg1).low) == -1 do cpu.flags += {.Carry}
 	}
-	exec_jnc(size, cpu)
+	condition: bool
+	switch Condition(cond) {
+		case .Zero:
+			condition = .Zero in cpu.flags
+		case .NotZero:
+			condition = .Zero not_in cpu.flags
+		case .Carry:
+			condition = .Carry in cpu.flags
+		case .NoCarry:
+			condition = .Carry not_in cpu.flags
+		case .Minus:
+			condition = .Negative in cpu.flags
+		case .Plus:
+			condition = .Negative not_in cpu.flags
+		case .Overflow:
+			condition = .Overflow in cpu.flags
+		case .NoOverflow:
+			condition = .Overflow not_in cpu.flags
+	}
+	exec_relative_branch(size, condition, cpu)
 }
 
 exec_jsr_l_imm :: proc(cpu: ^Cpu) {

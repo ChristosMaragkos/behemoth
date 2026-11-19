@@ -359,10 +359,12 @@ Branches incur a 1-cycle penalty when taken.
 | 0x12 | jlts | simm | 4 (5 if taken) | Jump if less, signed (V != N) | 8, 16 |
 | 0x13 | jgtu | simm | 4 (5 if taken) | Jump if greater, unsigned (C not set, Z not set) | 8, 16 |
 | 0x14 | jleu | simm | 4 (5 if taken) | Jump if less or equal, unsigned (C set OR Z set) | 8, 16 |
-| 0x15 | djnc | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if no borrow occurred (carry flag not set) | 8, 16 |
+| 0x15 | jrel | simm | 5 | Jump always (unconditional relative branch) | 8, 16 |
+| 0x16 | dj`cc` | reg, simm | 5 (6 if taken) | Decrement register by 1 and jump if condition occured. | 8, 16 |
 
 > [!NOTE]
-> To avoid confusion, the value of the size bit in `djnc` dictates the width of both the register and the immediate operand.
+> To avoid confusion, the value of the size bit in dj`cc` dictates the width of both the register and the immediate operand.
+> The conditions available for dj`cc` are: z (zero), nz (not zero), c (carry), nc (no carry), mi (minus), pl (plus), v (overflow), nv (no overflow)
 
 ### Long jumps
 
@@ -370,9 +372,9 @@ These instructions use the same 24-bit addressing as loads and stores (though on
 
 | Opcode | Mnemonic | Operands | Cycles | Notes | Size |
 | :----: | :------: | -------- | :----: | ----- | ---- |
-| 0x16 | jsr.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
-| 0x17 | jsr.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
-| 0x18 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
-| 0x19 | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
-| 0x1a | rts.l | - | 4 | Pop `pc` and `pp` from stack | - |
-| 0x1b-0x7f | Reserved | < | < | < | < |
+| 0x17 | jsr.l | imm24 | 8 | Push `pp` and `pc` to stack, set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x18 | jsr.l | reg8:reg16 | 6 | Push `pp` and `pc` to stack, set `pp` to reg8, set `pc` to reg16 | - |
+| 0x19 | jmp.l | imm24 | 6 | Set `pp` to highest byte of imm24, set `pc` to low word of imm24 | - |
+| 0x1a | jmp.l | reg8:reg16 | 4 | Set `pp` to reg8, set `pc` to reg16 | - |
+| 0x1b | rts.l | - | 4 | Pop `pc` and `pp` from stack | - |
+| 0x1c-0x7f | Reserved | < | < | < | < |
