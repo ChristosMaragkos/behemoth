@@ -49,10 +49,13 @@ jobs:
           DIST_DIR="behemoth-${TAG_NAME}-${{ matrix.platform }}-${{ matrix.arch }}"
           mkdir -p "$DIST_DIR"
 
-          odin build src/assembler -out:"$DIST_DIR/bmasm" -o:size
           odin build src/frontend/raylib -out:"$DIST_DIR/behemoth" -o:speed
 
           cp -r docs "$DIST_DIR/"
+
+          mkdir -p "$DIST_DIR/vendored"
+          cp vendored/bin/vasmbhmth_std "$DIST_DIR/vendored/vasm"
+          cp vendored/bin/vlink "$DIST_DIR/vendored/vlink"
 
           tar -czvf "${DIST_DIR}.tar.gz" "$DIST_DIR"
 
@@ -63,10 +66,14 @@ jobs:
           $TagName = "${{ github.ref_name }}"
           $DistDir = "behemoth-$TagName-${{ matrix.platform }}-${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $DistDir
+          New-Item -ItemType Directory -Force -Path $DistDir/vendored
 
-          odin build src/assembler -out:"$DistDir/bmasm.exe" -o:size
           odin build src/frontend/raylib -out:"$DistDir/behemoth.exe" -o:speed -subsystem:windows
           Copy-Item -Path docs -Destination $DistDir -Recurse
+
+          Copy-Item -Path vendored/bin/vasmbhmth_std -Destination $DistDir/vendored/vasm
+          Copy-Item -Path vendored/bin/vlink -Destination $DistDir/vendored/vlink
+
           Compress-Archive -Path $DistDir -DestinationPath "$DistDir.zip"
 
       - name: Upload to Github Release
