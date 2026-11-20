@@ -1,119 +1,22 @@
-> [!NOTE]
-> As of v0.3, bmasm will be deprecated and no longer worked on. It will remain in the repository and will still be packaged as the default
-> assembler for BHMTH, but all of my work will be done in vasm. This reference will also remain here since vasm cannot be distributed.
-
 # Assembler
 
-The `bmasm` assembler parses the mnemonics found in [The ISA specification](./isa.md) to emit machine code instructions.
+The legacy `bmasm` assembler has been removed in favor of `vasm`, to allow expressions, macros and real multi-file assembling using `vlink`.
+Both `vasm` and `vlink` are vendored in this repo for your convenience as well as mine.
+However, please note that they are subject to their own licenses (which include clauses that forbid redistribution for commercial purposes).
 
 ## Syntax
 
-Operands must be comma-separated, like so:
+By default, the assembler uses `vasm`'s `std` syntax module which closely resembles GNU `as`.
+This means the following:
 
-```asm
-ld a, 25
-add a, 5
-.db 20, 20
-```
+- Directives use a dot prefix
+- Temporary labels may be composed of a dot followed only by digits
+- Integer literals use the same syntax as C: 0 prefix for octal, 0x prefix for hexadecimal, 0b for binary.
 
-Integers use modern syntax:
+For more information please refer to [the vasm documentation](http://www.ibaug.de/vasm/doc/vasm.pdf) which, if the source tree is updated,
+should also contain documentation regarding the BHMTH CPU module.
 
-- No prefix: decimal
-- `0x` prefix: hexadecimal
-- `0b` prefix: binary
-- `0o` prefix: octal
+These are the directives the CPU module implements beyond the syntax module's own:
 
-Operands that dereference memory must be surrounded by brackets, as such:
-
-```asm
-ld.l a, [0x123456]
-ld.l a, [al:b]
-ld a, [c]
-```
-
-Symbols can also be dereferenced or loaded directly:
-
-```asm
-label:
-    ld a, label ; Loads the address that 'label' resolves to
-    ld a, [label] ; Loads the word at the address 'label' points to
-```
-
-Temporary labels can be created by prefixing them with an '@' sign.
-
-```asm
-@loop:
-    djnc al, @loop
-```
-
-A temporary label is only valid between the two non-temporary labels that surround it:
-
-```asm
-first:
-    jmp @loop ; Invalid
-
-second:
-    ld al, 25
-    @loop:
-        djnc al, @loop ; Valid
-
-    @loop2:
-        jnz @loop ; Valid
-
-third:
-    jmp @loop ; Invalid
-```
-
-Macros and inline constant folding (const ± const) are not yet supported.
-
-String literals in `.db` support backslash escapes: `\\`, `\'`, `\"`, `\n`, `\t`, `\r`, `\0` and `\xHH` (exactly two hex digits). Anything else is an assembly error. Character literals (`'A'`, `'\n'`) are lexed directly into integer tokens using the same escapes. String operands elsewhere (such as `.include` and `.incbin` paths) are taken literally with no escape processing.
-
-## Directives
-
-| Directive | Operands | Effect |
-| --------------- | --------------- | --------------- |
-| `.org` | Any 24-bit integer | Change address that symbols and instructions are emitted at. Address must not be lower than the current emitter address. |
-| `.db` | 8-bit integers, strings, chars | Emits bytes starting at the current address and advances the cursor by (amount of operands) |
-| `.dw` | Any amount of 16-bit integers | Emits 16-bit words starting at the current address and advances the cursor by (2 * amount of operands) |
-| `.d24` | Any amount of 24-bit integers | Emits 24-bit integers starting at the current address and advances the cursor by (3 * amount of operands) |
-| `.dl` | Any amount of 32-bit integers | Emits doublewords starting at the current address and advances the cursor by (4 * amount of operands) |
-| `.pageof` | Any label or constant | Emits the page of a label or constant (high 8 bits) |
-| `.equ` | (name), (value) | Creates a constant with name (name) and value (value) |
-| `.include` | (path) | Assembles file at (path) starting at the current address. Advances the cursor by the length of the output. Path may be absolute or relative. |
-| `.once` | - | Prevents file from being included more than once (equivalent to C's `#pragma once`) |
-| `.incbin` | (path) | Dumps all bytes of byte at (path) instead of assembling it. Path may be absolute or relative. |
-| `.pad` | Any 24-bit integer | Advances the cursor by (amount). Empty space is filled with zeroes. |
-| `.wram` | - | Sets emitter into WRAM region. See below. |
-| `.rom` | - | Sets emitter into ROM region. See below. |
-| `.stack` | - | Sets emitter into stack page region. See below. |
-| `.sram` | - | Sets emitter into cartridge SRAM region. See below. |
-
-### `.wram`/`.rom`/`.stack`/`.sram` directives
-
-`.wram`, `.rom`, `.stack` and `.sram` change the way the emitter behaves:
-
-- Outside of ROM, no data can be emitted, either through mnemonics or through `.db`/`.dw`/`.d24`/`.dl`/`.incbin`.
-Instead, `.wram`, `.stack` and `.sram` can be used to define labels that point to 24-bit addresses in their respective space. Example:
-
-```asm
-.wram
-.org 0x00_0000 ; Page 0, offset 0
-some_variable:
-    .pad 2 ; Two bytes
-some_other_variable:
-    .pad 4 ; Four bytes
-.include "file_with_vars.asm" ; Files can also be .include'd provided their contents are valid for WRAM
-
-.equ MY_CONST, 20 ; Constants can be defined without issue since they emit no data
-```
-
-- When in ROM, emission can continue normally. All mnemonics and directives can be used, but emission is restricted to ROM pages (6-197)
-
-`.wram` defines symbols within the work RAM pages (`0x00_0000`-`0x03_FFFF`).
-`.stack` defines symbols into the stack page (page 4, `0x04_0000`-`0x04_FFFF`), which grows down from the top.
-Be cautious with allocating stack space for static variables as the program may overwrite them.
-`.sram` defines symbols into cartridge SRAM (pages 198-201, `0xC6_0000`-`0xC9_FFFF`) so organizing save files is easier.
-
-> [!NOTE]
-> The `.include` directive is a simple text-include; an included file that ends in a different region than
-> the one it was included in changes the region for all subsequent code.
+- `.faraddr i, [i1, ... , iN`: Emits packed 24-bit literals
+- `.pageof i`: Emits the top 8 bits of a 24-bit expression
