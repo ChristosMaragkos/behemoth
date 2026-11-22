@@ -8,11 +8,14 @@ READ_ONLY_REGISTERS: []u32 = {
 	0x05_0501, // CRNTLN
 }
 
+@(private)
+rom_end, sram_end: u32
+
 is_valid_write :: proc(addr: u32) -> bool {
 	if slice.contains(READ_ONLY_REGISTERS, addr) do return false
 
 	switch addr {
-		case CART_ROM_START ..= CART_ROM_END:
+		case CART_ROM_START ..= rom_end:
 			return false
 		case:
 			return true
@@ -20,7 +23,6 @@ is_valid_write :: proc(addr: u32) -> bool {
 }
 
 is_valid_read :: proc(addr: u32) -> bool {
-	// FIXME: This is a no-op until MMIO is implemented
 	return true
 }
 
@@ -30,14 +32,21 @@ calculate_address :: proc(page: u8, offset: u16) -> u32 {
 
 MemoryBus :: struct {
 	ram:        MainRam,
-	latch:      u16,
 	vram:       rawptr,
 	cram:       rawptr,
 	oam:        rawptr,
 	aram:       rawptr,
 	contention: u32,
-	sram_dirty: bool,
 	sram_high:  u32,
+	latch:      u16,
+	sram_dirty: bool,
+	rom_pages:  u8,
+	sram_pages: u8,
+}
+
+calculate_memory_layout :: proc(bus: ^MemoryBus) {
+	rom_end = CART_ROM_START + (PAGE_SIZE * u32(bus.rom_pages)) - 1
+	sram_end = SRAM_START + (PAGE_SIZE * u32(bus.sram_pages)) - 1
 }
 
 bus_read_byte :: proc(bus: ^MemoryBus, addr: u32) -> byte {
@@ -81,7 +90,7 @@ bus_write_word :: proc(bus: ^MemoryBus, addr: u32, val: u16) {
 	ram_write_word(bus.ram[:], addr, val)
 
 	lo := max(addr, SRAM_START)
-	hi := min(addr + size_of(u16), SRAM_END + 1)
+	hi := min(addr + size_of(u16), sram_end + 1)
 	if hi > lo {
 		if hi - 1 > bus.sram_high do bus.sram_high = hi - 1
 		bus.sram_dirty = true

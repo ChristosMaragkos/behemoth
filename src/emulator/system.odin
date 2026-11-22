@@ -11,11 +11,9 @@ import "core:mem"
 import "core:os"
 import "core:sync"
 
-AUDIO_FIFO_FRAMES :: 4096 // stereo frames (~93ms @44.1kHz)
+AUDIO_FIFO_FRAMES :: 4096
 
 AudioFifo :: struct {
-	// Interleaved LRLR...; head/tail count stereo frames, not floats,
-	// so L/R can never tear apart mid-frame.
 	buf:  [AUDIO_FIFO_FRAMES * 2]f32,
 	head: u32,
 	tail: u32,
@@ -146,8 +144,13 @@ system_parse_header :: proc(sys: ^System) {
 	}
 
 	switch h.version {
-		case:
+		case 1:
 			sys.cpu.pc = size_of(s.Header)
+			fallthrough
+		case 2:
+			sys.bus.rom_pages = clamp(h.rom_pages, 1, memory.TOTAL_ROM_PAGES)
+			sys.bus.sram_pages = clamp(h.sram_pages, 0, 4)
+			memory.calculate_memory_layout(sys.bus)
 	}
 }
 

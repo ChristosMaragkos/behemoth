@@ -20,8 +20,7 @@ These registers can not be addressed directly but can instead by manipulated imp
   - Bit 3: Overflow flag V
   - Bit 4: IRQ disable flag I. Set to 1 to ignore all (maskable) interrupts.
   - Bits 5-15: reserved
-- pc: 16-bit program counter
-- hi: 16-bit, receives high word (or byte) of multiplication and remainder of division. Accessed through "move from/to `hi`" instructions à la MIPS.
+- pc: 16-bit program counter hi: 16-bit, receives high word (or byte) of multiplication and remainder of division. Accessed through "move from/to `hi`" instructions à la MIPS.
 - dp: 8-bit data page (read [[#Memory]])
 - pp: 8-bit program page
 
@@ -127,9 +126,12 @@ ROMs are just flat binaries with a 32-byte header prepended:
 - Bytes 0-2: The magic string "BHM".
 - Byte 3: ROM format version (currently v1)
 - Bytes 4-11: 8-byte ASCII ROM name (doesn't need to match file name but can)
-- Bytes 12-31: Reserved
+- Byte 12: Amount of pages reserved for cartridge ROM (theoretically a mapper could drop external on-board RAM in the unreserved space)
+- Byte 13: Amount of pages reserved for battery-backed SRAM.
+- Bytes 14-31: Reserved
 
 Backwards compatibility with bare ROMs (without a header) will be maintained but can be dropped at any time.
+The number of mapped pages must conform with the memory map's maximum values or get clamped (1-192 for ROM, 0-4 for SRAM)
 
 > [!NOTE]
 > Please keep in mind that this is purely a specification and future revisions may add or remove content.
